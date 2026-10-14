@@ -27,3 +27,9 @@
 - COM/TypeLib under %WINDIR% skipped: Windows ships dangling WOW64 registrations (SysWOW64\Speech_OneCore, Midi2.*). WOW CLSID counts as broken only if both x86 and x64 expansions are missing (ink\tipskin.dll).
 - TypeLib paths carry a resource index suffix (`foo.dll\2`); WOW6432Node\Classes\TypeLib is the same key as the 64-bit one.
 - Real system: ~250 items in ~1.1 s, mostly MUICache and Edge/EdgeUpdate leftovers.
+
+## Snapshots / install traces
+- Format: gzip stream of entries in one canonical order (DFS, siblings sorted case-insensitively with the path separator lowest), so a diff is a single merge pass with nothing held in memory. Values are stored raw (type + bytes); files as size + mtime.
+- A trace saves only the diff, with the old state for modified/removed entries. Rollback deletes what was added (registry via UndoTx, files to the Recycle Bin), restores changed/removed values, and reports modified/removed files as not restorable.
+- Default roots: HKCU\Software, HKLM\SOFTWARE, Program Files (x64/x86), ProgramData, AppData Roaming/Local. Temp and our own data folder are skipped.
+- Real system: 1.59M entries, 24 MB, taken in ~40 s, ~10 s per read pass. A self-diff gives 0 changes, so the order is stable.
