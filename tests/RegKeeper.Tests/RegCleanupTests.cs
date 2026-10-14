@@ -9,7 +9,7 @@ public class RegCleanupTests
     public void BrokenOpenWith_FoundFixedAndUndone()
     {
         const string key = @"HKEY_CURRENT_USER\Software\Classes\Applications\RegKeeperTest.exe";
-        using (var tx = UndoTx.Begin("test add"))
+        using (var tx = UndoTx.Begin("test add cleanup"))
         {
             tx.CreateKey(key + @"\shell\open\command");
             tx.SetValue(key + @"\shell\open\command", RawValue.String("", @"""C:\nope dir\x.exe"" ""%1"""));
@@ -26,7 +26,7 @@ public class RegCleanupTests
         }
         finally
         {
-            UndoCenter.Restore(UndoCenter.List().First(u => u.Title == "test add"));
+            UndoCenter.Restore(UndoCenter.List().First(u => u.Title == "test add cleanup"));
             Assert.False(Reg.Exists(key));
         }
     }

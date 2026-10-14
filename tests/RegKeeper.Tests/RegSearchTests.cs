@@ -10,7 +10,7 @@ public class RegSearchTests
     [Fact]
     public void FindReplaceUndo()
     {
-        using (var tx = UndoTx.Begin("test add"))
+        using (var tx = UndoTx.Begin("test add search"))
         {
             tx.SetValue(Root + @"\Sub_Foo", RawValue.String("FooName", "a foo b"));
             tx.SetValue(Root + @"\Sub_Foo\Deeper_foo", RawValue.Multi("m", new[] { "foo", "x$1" }));
@@ -38,7 +38,7 @@ public class RegSearchTests
         }
         finally
         {
-            UndoCenter.Restore(UndoCenter.List().First(u => u.Title == "test add"));
+            UndoCenter.Restore(UndoCenter.List().First(u => u.Title == "test add search"));
             Assert.False(Reg.Exists(Root));
         }
     }
