@@ -38,7 +38,8 @@ public sealed class UndoTx : IDisposable
 
     UndoTx(string title)
     {
-        _dir = Path.Combine(AppPaths.Undo, DateTime.Now.ToString("yyyyMMdd_HHmmss_fff"));
+        // timestamp keeps folders sortable; the suffix keeps two transactions in the same millisecond apart
+        _dir = Path.Combine(AppPaths.Undo, DateTime.Now.ToString("yyyyMMdd_HHmmss_fff") + "_" + Guid.NewGuid().ToString("N")[..6]);
         Directory.CreateDirectory(_dir);
         _regFile = Path.Combine(_dir, "undo.reg");
         File.WriteAllText(_regFile, RegFile.Header + "\r\n", Encoding.Unicode);

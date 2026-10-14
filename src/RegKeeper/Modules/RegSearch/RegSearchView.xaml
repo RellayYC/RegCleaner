@@ -1,0 +1,53 @@
+<UserControl x:Class="RegKeeper.Modules.RegSearchView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top">
+            <TextBlock Text="Поиск и замена в реестре" Style="{StaticResource Title}"/>
+            <Grid Margin="0,12,0,6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Найти:" VerticalAlignment="Center" Margin="0,0,8,4"/>
+                <TextBox x:Name="Pattern" Grid.Column="1" Margin="0,0,0,4" KeyDown="Pattern_KeyDown"/>
+                <TextBlock Grid.Row="1" Text="Заменить на:" VerticalAlignment="Center" Margin="0,0,8,4"/>
+                <TextBox x:Name="Replacement" Grid.Row="1" Grid.Column="1" Margin="0,0,0,4"/>
+                <TextBlock Grid.Row="2" Text="Где искать:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <TextBox x:Name="Roots" Grid.Row="2" Grid.Column="1" ToolTip="Ключи через ; (например HKLM\SOFTWARE; HKCU)"/>
+            </Grid>
+            <WrapPanel Margin="0,0,0,8">
+                <CheckBox x:Name="InKeys" Content="Разделы" IsChecked="True" Margin="0,0,12,0"/>
+                <CheckBox x:Name="InNames" Content="Имена значений" IsChecked="True" Margin="0,0,12,0"/>
+                <CheckBox x:Name="InData" Content="Данные" IsChecked="True" Margin="0,0,24,0"/>
+                <CheckBox x:Name="MatchCase" Content="Учитывать регистр" Margin="0,0,12,0"/>
+                <CheckBox x:Name="WholeWord" Content="Слово целиком" Margin="0,0,12,0"/>
+                <CheckBox x:Name="IsRegex" Content="Регулярное выражение"/>
+            </WrapPanel>
+            <DockPanel Margin="0,0,0,10">
+                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
+                <WrapPanel>
+                    <Button x:Name="SearchBtn" Content="Искать" Style="{StaticResource Primary}" Click="Search_Click"/>
+                    <Button Content="Заменить в отмеченных" Click="Replace_Click"/>
+                    <Button Content="Удалить отмеченные" Style="{StaticResource DangerBtn}" Click="Delete_Click"/>
+                    <Button Content="Отметить все" Click="All_Click"/>
+                    <Button Content="Снять все" Click="None_Click"/>
+                    <Button Content="Открыть в редакторе" Click="Open_Click"/>
+                </WrapPanel>
+            </DockPanel>
+        </StackPanel>
+        <DataGrid x:Name="Grid" SelectionMode="Extended" MouseDoubleClick="Open_Click">
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="32"/>
+                <DataGridTextColumn Header="Где" Binding="{Binding KindText}" IsReadOnly="True" Width="80"/>
+                <DataGridTextColumn Header="Ключ" Binding="{Binding Display}" IsReadOnly="True" Width="3*"/>
+                <DataGridTextColumn Header="Совпадение" Binding="{Binding Text}" IsReadOnly="True" Width="2*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</UserControl>

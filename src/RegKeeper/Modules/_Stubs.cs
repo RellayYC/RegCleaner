@@ -1,7 +1,6 @@
 using System.Windows.Controls;
 namespace RegKeeper.Modules;
 public class StoreAppsView : UserControl { }
-public class RegSearchView : UserControl { }
 public class SnapshotsView : UserControl { }
 public class TweaksView : UserControl { }
 public class CompactionView : UserControl { }

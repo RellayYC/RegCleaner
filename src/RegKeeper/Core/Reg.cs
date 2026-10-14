@@ -143,13 +143,16 @@ public static class Reg
 
     public static RawValue? Read(RegistryKey k, string name)
     {
+        SafeRegistryHandle h;
+        try { h = k.Handle; } // throws on some protected keys (e.g. under HKLM\SECURITY)
+        catch (UnauthorizedAccessException) { return null; }
         uint size = 0;
-        var rc = RegQueryValueExW(k.Handle, name, IntPtr.Zero, out var type, null, ref size);
+        var rc = RegQueryValueExW(h, name, IntPtr.Zero, out var type, null, ref size);
         if (rc != 0 && rc != ErrorMoreData) return null;
         while (true)
         {
             var buf = new byte[size];
-            rc = RegQueryValueExW(k.Handle, name, IntPtr.Zero, out type, buf, ref size);
+            rc = RegQueryValueExW(h, name, IntPtr.Zero, out type, buf, ref size);
             if (rc == ErrorMoreData) continue;
             if (rc != 0) return null;
             if (size != buf.Length) Array.Resize(ref buf, (int)size);
