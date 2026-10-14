@@ -116,6 +116,17 @@ public static partial class Sys
 
     public static void ShowInExplorer(string path) => Process.Start("explorer.exe", $"/select,\"{path}\"");
 
+    public static string? ShortcutTarget(string lnk)
+    {
+        try
+        {
+            dynamic shell = Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell")!)!;
+            var s = shell.CreateShortcut(lnk);
+            return ((string)s.TargetPath + " " + (string)s.Arguments).Trim();
+        }
+        catch { return null; }
+    }
+
     const uint FO_DELETE = 3;
     const ushort FOF_SILENT = 0x4, FOF_NOCONFIRMATION = 0x10, FOF_ALLOWUNDO = 0x40, FOF_NOERRORUI = 0x400;
 

@@ -150,7 +150,7 @@ public partial class UninstallerView : UserControl
     {
         if (_all.Count == 0) { _pendingFocus = file; return; }
         _pendingFocus = null;
-        var target = file.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase) ? ResolveShortcut(file) ?? file : file;
+        var target = file.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase) ? Sys.ExtractPath(Sys.ShortcutTarget(file)) ?? file : file;
         var app = _all.FirstOrDefault(a => a.InstallDir is { } d && Leftovers.IsSameOrInside(target, d));
         if (app == null)
         {
@@ -160,15 +160,5 @@ public partial class UninstallerView : UserControl
         Search.Text = "";
         Grid.SelectedItem = app;
         Grid.ScrollIntoView(app);
-    }
-
-    static string? ResolveShortcut(string lnk)
-    {
-        try
-        {
-            dynamic shell = Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell")!)!;
-            return (string)shell.CreateShortcut(lnk).TargetPath;
-        }
-        catch { return null; }
     }
 }

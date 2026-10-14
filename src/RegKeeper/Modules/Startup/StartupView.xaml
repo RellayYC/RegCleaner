@@ -1,0 +1,38 @@
+<UserControl x:Class="RegKeeper.Modules.StartupView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top">
+            <TextBlock Text="Автозагрузка" Style="{StaticResource Title}"/>
+            <TextBlock Style="{StaticResource Hint}" Text="Ключи Run, папки автозагрузки, задачи планировщика при входе/старте и сторонние службы. Отключение обратимо, всё пишется в Центр отмены."/>
+            <DockPanel Margin="0,14,0,10">
+                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
+                <TextBox x:Name="Search" Width="320" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск по названию, команде и издателю"/>
+            </DockPanel>
+            <WrapPanel Margin="0,0,0,10">
+                <Button Content="Вкл / выкл" Style="{StaticResource Primary}" Click="Toggle_Click"/>
+                <Button Content="Удалить" Style="{StaticResource DangerBtn}" Click="Delete_Click"/>
+                <Button Content="Добавить" Click="Add_Click"/>
+                <Button Content="Папка файла" Click="Folder_Click"/>
+                <Button Content="Перейти к записи" Click="Goto_Click"/>
+                <Button Content="Обновить" Click="Refresh_Click"/>
+                <CheckBox x:Name="ShowServices" Content="Службы" IsChecked="True" VerticalAlignment="Center" Margin="8,0" Click="Filter_Click"/>
+                <CheckBox x:Name="ShowTasks" Content="Задачи" IsChecked="True" VerticalAlignment="Center" Click="Filter_Click"/>
+            </WrapPanel>
+        </StackPanel>
+        <DataGrid x:Name="Grid" IsReadOnly="True" SelectionMode="Extended" MouseDoubleClick="Toggle_Click">
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Header="Вкл" Binding="{Binding Enabled, Mode=OneWay}" Width="44"/>
+                <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="2*"/>
+                <DataGridTextColumn Header="Тип" Binding="{Binding KindText}" Width="140"/>
+                <DataGridTextColumn Header="Издатель" Binding="{Binding Publisher}" Width="*"/>
+                <DataGridTextColumn Header="Команда" Binding="{Binding Command}" Width="3*"/>
+                <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="110">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock"><Setter Property="Foreground" Value="{StaticResource Danger}"/></Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</UserControl>

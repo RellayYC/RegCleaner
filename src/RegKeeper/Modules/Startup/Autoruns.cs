@@ -1,0 +1,202 @@
+using System.ServiceProcess;
+using RegKeeper.Core;
+using TS = Microsoft.Win32.TaskScheduler;
+
+namespace RegKeeper.Modules;
+
+public enum StartupKind { Registry, Folder, Task, Service }
+
+public sealed class StartupItem
+{
+    public StartupKind Kind { get; init; }
+    public string Name { get; init; } = "";
+    public string Command { get; init; } = "";
+    /// <summary>Run key, startup file, task path or service key.</summary>
+    public string Location { get; init; } = "";
+    /// <summary>StartupApproved key holding the on/off flag; null for RunOnce (can't be disabled, only deleted).</summary>
+    public string? Approved { get; init; }
+    public bool Enabled { get; set; }
+    public string Publisher { get; set; } = "";
+    public bool Missing { get; set; }
+
+    public bool CanToggle => Kind is StartupKind.Task or StartupKind.Service || Approved != null;
+    public string ApprovedName => Kind == StartupKind.Folder ? Path.GetFileName(Location) : Name;
+    public string Status => Missing ? "файл не найден" : "";
+    public string KindText => Kind switch
+    {
+        StartupKind.Registry => Approved == null ? "Реестр (однократно)" : "Реестр",
+        StartupKind.Folder => "Папка автозагрузки",
+        StartupKind.Task => "Планировщик",
+        _ => "Служба"
+    };
+}
+
+/// <summary>
+/// Autostart entries. On/off for Run keys and startup folders uses Windows' own Explorer\StartupApproved flags
+/// (the same switch Task Manager flips), so the entry itself never moves.
+/// </summary>
+public static class Autoruns
+{
+    const string Cv = @"SOFTWARE\Microsoft\Windows\CurrentVersion";
+    const string Hkcu = @"HKEY_CURRENT_USER\", Hklm = @"HKEY_LOCAL_MACHINE\";
+    const string Approved = @"\Explorer\StartupApproved\";
+    const string Services = @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services";
+    /// <summary>Services we switched to manual; remembered so they stay in the list.</summary>
+    const string DisabledServices = @"HKEY_LOCAL_MACHINE\SOFTWARE\RegKeeper\DisabledServices";
+
+    public static readonly (string Key, string? Approved)[] RunKeys =
+    {
+        (Hkcu + Cv + @"\Run", Hkcu + Cv + Approved + "Run"),
+        (Hkcu + Cv + @"\RunOnce", null),
+        (Hklm + Cv + @"\Run", Hklm + Cv + Approved + "Run"),
+        (Hklm + Cv + @"\RunOnce", null),
+        (Hklm + @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run", Hklm + Cv + Approved + "Run32"),
+        (Hklm + @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\RunOnce", null),
+    };
+
+    public static readonly (string Dir, string Approved)[] Folders =
+    {
+        (Environment.GetFolderPath(Environment.SpecialFolder.Startup), Hkcu + Cv + Approved + "StartupFolder"),
+        (Environment.GetFolderPath(Environment.SpecialFolder.CommonStartup), Hklm + Cv + Approved + "StartupFolder"),
+    };
+
+    public static List<StartupItem> Load()
+    {
+        var items = RunAndFolders().Concat(Tasks()).Concat(ServiceItems()).ToList();
+        foreach (var i in items)
+        {
+            i.Publisher = Sys.Company(Sys.ExtractPath(i.Command));
+            i.Missing = Sys.IsMissing(i.Command);
+        }
+        return items;
+    }
+
+    public static IEnumerable<StartupItem> RunAndFolders()
+    {
+        foreach (var (key, approved) in RunKeys)
+        {
+            using var k = Reg.Open(key);
+            if (k == null) continue;
+            foreach (var name in Reg.ValueNames(k))
+                if (name != "" && Reg.GetString(k, name) is { } cmd)
+                    yield return new StartupItem
+                    {
+                        Kind = StartupKind.Registry, Name = name, Command = cmd, Location = key, Approved = approved,
+                        Enabled = approved == null || IsOn(approved, name)
+                    };
+        }
+
+        foreach (var (dir, approved) in Folders)
+        {
+            if (!Directory.Exists(dir)) continue;
+            foreach (var file in Directory.GetFiles(dir).Where(f => !Path.GetFileName(f).Equals("desktop.ini", StringComparison.OrdinalIgnoreCase)))
+                yield return new StartupItem
+                {
+                    Kind = StartupKind.Folder, Name = Path.GetFileNameWithoutExtension(file), Location = file, Approved = approved,
+                    Command = file.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase) ? Sys.ShortcutTarget(file) ?? file : file,
+                    Enabled = IsOn(approved, Path.GetFileName(file))
+                };
+        }
+    }
+
+    /// <summary>StartupApproved: no value = on; byte 0 odd = off (02 on, 03 off, + FILETIME of the switch).</summary>
+    static bool IsOn(string approved, string name) => Reg.Read(approved, name) is not { Data.Length: > 0 } v || (v.Data[0] & 1) == 0;
+
+    static IEnumerable<StartupItem> Tasks()
+    {
+        var tasks = TS.TaskService.Instance.FindAllTasks(t =>
+        {
+            try
+            {
+                return !t.Path.StartsWith(@"\Microsoft\", StringComparison.OrdinalIgnoreCase)
+                       && t.Definition.Triggers.Any(tr => tr is TS.LogonTrigger or TS.BootTrigger);
+            }
+            catch { return false; }
+        });
+        foreach (var t in tasks)
+            yield return new StartupItem
+            {
+                Kind = StartupKind.Task, Name = t.Name, Location = t.Path, Enabled = t.Enabled,
+                Command = string.Join(" & ", t.Definition.Actions.OfType<TS.ExecAction>()
+                    .Select(a => a.Path.Trim('"') is var p && p.Contains(' ') ? $"\"{p}\" {a.Arguments}".Trim() : $"{p} {a.Arguments}".Trim()))
+            };
+    }
+
+    /// <summary>Third-party auto-start services (plus the ones we put on manual).</summary>
+    static IEnumerable<StartupItem> ServiceItems()
+    {
+        HashSet<string> mine;
+        using (var k = Reg.Open(DisabledServices))
+            mine = new(k == null ? Array.Empty<string>() : Reg.ValueNames(k), StringComparer.OrdinalIgnoreCase);
+
+        foreach (var sc in ServiceController.GetServices())
+        {
+            using (sc)
+            {
+                var key = Services + "\\" + sc.ServiceName;
+                using var k = Reg.Open(key);
+                if (k?.GetValue("Start") is not int start) continue;
+                if (start != 2 && !mine.Contains(sc.ServiceName)) continue;
+                var image = Reg.GetString(k, "ImagePath") ?? "";
+                if (Sys.IsMicrosoft(Sys.ExtractPath(image))) continue;
+                yield return new StartupItem { Kind = StartupKind.Service, Name = sc.DisplayName, Command = image, Location = key, Enabled = start == 2 };
+            }
+        }
+    }
+
+    public static void SetEnabled(StartupItem item, bool on, UndoTx tx)
+    {
+        switch (item.Kind)
+        {
+            case StartupKind.Registry or StartupKind.Folder when item.Approved != null:
+                var flag = new byte[12];
+                flag[0] = (byte)(on ? 2 : 3);
+                if (!on) BitConverter.GetBytes(DateTime.UtcNow.ToFileTimeUtc()).CopyTo(flag, 4);
+                tx.SetValue(item.Approved, new RawValue(item.ApprovedName, RawValue.Binary, flag));
+                break;
+            case StartupKind.Task:
+                using (var t = TS.TaskService.Instance.GetTask(item.Location) ?? throw new IOException("Задача не найдена: " + item.Location))
+                {
+                    tx.BackupTask(t.Path, t.Xml);
+                    t.Enabled = on;
+                }
+                break;
+            case StartupKind.Service:
+                var svc = Reg.Leaf(item.Location);
+                if (on) tx.DeleteValue(DisabledServices, svc);
+                else tx.SetValue(DisabledServices, RawValue.String(svc, ""));
+                tx.SetValue(item.Location, RawValue.FromDword("Start", on ? 2u : 3u));
+                break;
+            default:
+                throw new InvalidOperationException("Однократный запуск (RunOnce) нельзя отключить, только удалить.");
+        }
+        item.Enabled = on;
+    }
+
+    public static void Delete(StartupItem item, UndoTx tx)
+    {
+        switch (item.Kind)
+        {
+            case StartupKind.Registry:
+                tx.DeleteValue(item.Location, item.Name);
+                break;
+            case StartupKind.Folder:
+                if (!Sys.Recycle(item.Location)) throw new IOException("Не удалось удалить файл: " + item.Location);
+                tx.Note("В корзину: " + item.Location);
+                break;
+            case StartupKind.Task:
+                using (var t = TS.TaskService.Instance.GetTask(item.Location) ?? throw new IOException("Задача не найдена: " + item.Location))
+                {
+                    tx.BackupTask(t.Path, t.Xml);
+                    t.Folder.DeleteTask(t.Name, false);
+                }
+                return;
+            default:
+                throw new InvalidOperationException("Службы не удаляются, только переводятся на ручной запуск.");
+        }
+        if (item.Approved != null) tx.DeleteValue(item.Approved, item.ApprovedName);
+    }
+
+    public static void Add(string name, string command, bool allUsers, UndoTx tx) =>
+        tx.SetValue(RunKeys[allUsers ? 2 : 0].Key, RawValue.String(name, command));
+}

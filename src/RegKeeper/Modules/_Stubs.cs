@@ -1,7 +1,6 @@
 using System.Windows.Controls;
 namespace RegKeeper.Modules;
 public class StoreAppsView : UserControl { }
-public class StartupView : UserControl { }
 public class DiskCleanupView : UserControl { }
 public class RegCleanupView : UserControl { }
 public class RegEditorView : UserControl { public void Navigate(string p) { } }
