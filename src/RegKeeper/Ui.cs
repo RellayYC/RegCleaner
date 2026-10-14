@@ -30,10 +30,10 @@ public static class Ui
         }
     }
 
-    /// <summary>Single-line text prompt.</summary>
-    public static string? Prompt(string title, string label, string initial = "")
+    /// <summary>Text prompt; multiline for REG_MULTI_SZ and the like.</summary>
+    public static string? Prompt(string title, string label, string initial = "", bool multiline = false)
     {
-        var box = new TextBox { Text = initial, MinWidth = 380, Margin = new Thickness(0, 6, 0, 12) };
+        var box = new TextBox { Text = initial, MinWidth = 380, Margin = new Thickness(0, 6, 0, 12), AcceptsReturn = multiline, Height = multiline ? 220 : double.NaN, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         var ok = new Button { Content = "OK", IsDefault = true, Style = (Style)Application.Current.Resources["Primary"] };
         var cancel = new Button { Content = "Отмена", IsCancel = true, Margin = new Thickness(0) };
         var w = new Window
