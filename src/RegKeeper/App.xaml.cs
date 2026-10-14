@@ -1,13 +1,18 @@
-﻿using System.Configuration;
-using System.Data;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace RegKeeper;
 
-/// <summary>
-/// Interaction logic for App.xaml
-/// </summary>
 public partial class App : Application
 {
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+        DispatcherUnhandledException += (_, ex) =>
+        {
+            Ui.Error(ex.Exception);
+            ex.Handled = true;
+        };
+        new MainWindow(e.Args).Show();
+    }
 }
-
