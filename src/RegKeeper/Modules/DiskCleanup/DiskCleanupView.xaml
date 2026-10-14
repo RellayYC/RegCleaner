@@ -1,0 +1,37 @@
+<UserControl x:Class="RegKeeper.Modules.DiskCleanupView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top">
+            <TextBlock Text="Очистка диска" Style="{StaticResource Title}"/>
+            <TextBlock Style="{StaticResource Hint}" TextWrapping="Wrap" Text="Встроенные пункты Windows плюс база winapp2.ini (CC-BY-SA, проект Winapp2). Показаны только правила для программ, найденных на этом ПК. Сначала анализ, потом очистка."/>
+            <DockPanel Margin="0,14,0,10">
+                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
+                <TextBox x:Name="Search" Width="320" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск по названию и категории"/>
+            </DockPanel>
+            <WrapPanel Margin="0,0,0,10">
+                <Button Content="Анализ" Style="{StaticResource Primary}" Click="Analyze_Click"/>
+                <Button Content="Очистить" Style="{StaticResource DangerBtn}" Click="Clean_Click"/>
+                <Button Content="Подробно" Click="Details_Click" ToolTip="Найденные файлы выбранного правила, можно снять галочки"/>
+                <Button Content="Отметить видимые" Click="All_Click"/>
+                <Button Content="Снять все" Click="None_Click"/>
+                <Button Content="Обновить winapp2.ini" Click="Download_Click"/>
+                <Button Content="Исключения" Click="Ignore_Click" ToolTip="Папки и файлы, которые никогда не удаляются"/>
+            </WrapPanel>
+        </StackPanel>
+        <DataGrid x:Name="Grid" SelectionMode="Single" MouseDoubleClick="Details_Click">
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="32"/>
+                <DataGridTextColumn Header="Название" Binding="{Binding Name}" IsReadOnly="True" Width="3*"/>
+                <DataGridTextColumn Header="Категория" Binding="{Binding Category}" IsReadOnly="True" Width="*"/>
+                <DataGridTextColumn Header="Объектов" Binding="{Binding CountText}" SortMemberPath="Count" IsReadOnly="True" Width="90"/>
+                <DataGridTextColumn Header="Размер" Binding="{Binding SizeText}" SortMemberPath="Size" IsReadOnly="True" Width="90"/>
+                <DataGridTextColumn Header="Предупреждение" Binding="{Binding Warning}" IsReadOnly="True" Width="2*">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock"><Setter Property="Foreground" Value="{StaticResource Danger}"/></Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</UserControl>

@@ -9,8 +9,9 @@ public sealed class Leftover
     public string Kind { get; init; } = "";
     public string Path { get; init; } = "";
     public long Size { get; init; }
+    public string? ValueName { get; init; }
     public string SizeText => Size > 0 ? Sys.Size(Size) : "";
-    public bool IsRegistry => Kind == "Ключ реестра";
+    public bool IsRegistry => Path.StartsWith("HKEY_");
 }
 
 /// <summary>
