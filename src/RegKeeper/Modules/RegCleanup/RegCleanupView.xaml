@@ -1,0 +1,31 @@
+<UserControl x:Class="RegKeeper.Modules.RegCleanupView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top">
+            <TextBlock Text="Чистка реестра" Style="{StaticResource Title}"/>
+            <TextBlock Style="{StaticResource Hint}" TextWrapping="Wrap" Text="Ищет записи, ссылающиеся на удалённые файлы: деинсталляция, пути приложений, общие DLL, COM, библиотеки типов, автозагрузка, брандмауэр. Всё исправленное возвращается из Центра отмены."/>
+            <DockPanel Margin="0,14,0,10">
+                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
+                <TextBox x:Name="Search" Width="320" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск по категории, ключу и проблеме"/>
+            </DockPanel>
+            <WrapPanel Margin="0,0,0,10">
+                <Button Content="Сканировать" Style="{StaticResource Primary}" Click="Scan_Click"/>
+                <Button Content="Исправить отмеченное" Style="{StaticResource DangerBtn}" Click="Fix_Click"/>
+                <Button Content="Отметить все" Click="All_Click"/>
+                <Button Content="Снять все" Click="None_Click"/>
+                <Button Content="В исключения" Click="Ignore_Click" ToolTip="Выбранные записи больше не будут показываться"/>
+                <Button Content="Ключ в редакторе" Click="Open_Click"/>
+                <Button Content="Список исключений" Click="IgnoreList_Click"/>
+            </WrapPanel>
+        </StackPanel>
+        <DataGrid x:Name="Grid" SelectionMode="Extended" MouseDoubleClick="Open_Click">
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="32"/>
+                <DataGridTextColumn Header="Категория" Binding="{Binding Category}" IsReadOnly="True" Width="150"/>
+                <DataGridTextColumn Header="Ключ" Binding="{Binding Display}" IsReadOnly="True" Width="3*"/>
+                <DataGridTextColumn Header="Проблема" Binding="{Binding Problem}" IsReadOnly="True" Width="2*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</UserControl>

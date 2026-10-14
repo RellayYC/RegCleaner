@@ -21,3 +21,9 @@
 - Твики: ключ, имя значения, тип, список фиксированных состояний {значение, default}, флаги NeedLogOff/OS-маска.
 - Отключение автозапуска: в Windows есть родной `Explorer\StartupApproved\{Run,Run32,StartupFolder}` (байт 0: 02=вкл, 03=выкл).
   Используем его, а не свой ключ - совместимо с Диспетчером задач.
+
+## Registry cleanup
+- Checks: Uninstall (uninstaller and InstallLocation both gone, msiexec skipped), App Paths, SharedDLLs, MUICache, Run, Installer\Folders, Applications\*\shell\open, firewall rules (GUID-named only; non-GUID are Windows built-ins), CLSID In/LocalServer32 (HKLM, WOW, HKCU), TypeLib.
+- COM/TypeLib under %WINDIR% skipped: Windows ships dangling WOW64 registrations (SysWOW64\Speech_OneCore, Midi2.*). WOW CLSID counts as broken only if both x86 and x64 expansions are missing (ink\tipskin.dll).
+- TypeLib paths carry a resource index suffix (`foo.dll\2`); WOW6432Node\Classes\TypeLib is the same key as the 64-bit one.
+- Real system: ~250 items in ~1.1 s, mostly MUICache and Edge/EdgeUpdate leftovers.

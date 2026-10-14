@@ -7,7 +7,7 @@ namespace RegKeeper.Core;
 /// <summary>Command lines, file paths, recycle bin.</summary>
 public static partial class Sys
 {
-    [GeneratedRegex(@"^(.+?\.(exe|dll|com|bat|cmd|ocx|sys|cpl|msc|scr|vbs|js|ps1|lnk|jar|ax|drv|tlb|olb|msi))(?=$|[\s,""/])", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^(.+?\.(exe|dll|com|bat|cmd|ocx|sys|cpl|msc|scr|vbs|js|ps1|lnk|jar|ax|drv|tlb|olb|msi))(?=$|[\s,""/\\])",RegexOptions.IgnoreCase)]
     private static partial Regex ExeRx();
 
     /// <summary>Extracts the executable/file path from a command line or icon reference.
