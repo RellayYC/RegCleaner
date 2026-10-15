@@ -32,6 +32,7 @@ public sealed record UndoInfo(string Title, DateTime Date, int Count, List<strin
 public sealed class UndoTx : IDisposable
 {
     const string BlockMark = "; ---- block";
+    internal const string ItemsFile = "items.txt";
     readonly string _dir, _regFile;
     readonly UndoInfo _info;
     int _tasks;
@@ -55,7 +56,7 @@ public sealed class UndoTx : IDisposable
     void Block(string text, string what)
     {
         File.AppendAllText(_regFile, $"\r\n{BlockMark}\r\n{text}", Encoding.Unicode);
-        _info.Items.Add(what);
+        Item(what);
     }
 
     /// <summary>Restore block that deletes the highest missing ancestor of <paramref name="key"/> (null if key exists).</summary>
@@ -137,18 +138,26 @@ public sealed class UndoTx : IDisposable
     {
         File.WriteAllText(Path.Combine(_dir, $"task_{_tasks++}.xml"), xml);
         File.AppendAllLines(Path.Combine(_dir, "tasks.txt"), new[] { path });
-        _info.Items.Add("Задача " + path);
+        Item("Задача " + path);
     }
 
     /// <summary>Records a task this transaction registered, so restore deletes it.</summary>
     public void CreatedTask(string path)
     {
         File.AppendAllLines(Path.Combine(_dir, "created_tasks.txt"), new[] { path });
-        _info.Items.Add("Создана задача " + path);
+        Item("Создана задача " + path);
     }
 
     /// <summary>Free-form entry for non-registry actions that are not undoable (shown in the log only).</summary>
-    public void Note(string what) => _info.Items.Add(what);
+    public void Note(string what) => Item(what);
+
+    // written as it happens: a transaction cut short by a crash still lists what its undo.reg holds
+    void Item(string what)
+    {
+        what = what.ReplaceLineEndings(" ");
+        _info.Items.Add(what);
+        File.AppendAllLines(Path.Combine(_dir, ItemsFile), new[] { what });
+    }
 
     static string DisplayName(string n) => n == "" ? "(По умолчанию)" : n;
 
@@ -168,7 +177,13 @@ public static class UndoCenter
         Directory.GetDirectories(AppPaths.Undo)
             .Select(d =>
             {
-                try { return JsonSerializer.Deserialize<UndoInfo>(File.ReadAllText(Path.Combine(d, "info.json")))! with { Dir = d }; }
+                try
+                {
+                    var i = JsonSerializer.Deserialize<UndoInfo>(File.ReadAllText(Path.Combine(d, "info.json")))!;
+                    var items = Path.Combine(d, UndoTx.ItemsFile);
+                    if (i.Items.Count == 0 && File.Exists(items)) i = i with { Items = File.ReadAllLines(items).ToList() };
+                    return i with { Dir = d, Count = i.Items.Count };
+                }
                 catch { return null; }
             })
             .Where(i => i != null).Select(i => i!)
