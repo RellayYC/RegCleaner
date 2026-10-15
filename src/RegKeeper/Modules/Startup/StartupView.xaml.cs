@@ -41,7 +41,7 @@ public partial class StartupView : UserControl
     void Toggle_Click(object s, RoutedEventArgs e)
     {
         var items = Selected.Where(i => i.CanToggle).ToList();
-        if (items.Count == 0) return;
+        if (items.Count == 0) { if (Selected.Count > 0) Ui.Info("Однократный запуск (RunOnce) нельзя отключить, только удалить."); return; }
         var on = !items[0].Enabled;
         var errors = new List<string>();
         using (var tx = UndoTx.Begin((on ? "Включено в автозагрузке: " : "Отключено в автозагрузке: ") + string.Join(", ", items.Select(i => i.Name))))
