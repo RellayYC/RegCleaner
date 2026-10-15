@@ -140,6 +140,13 @@ public sealed class UndoTx : IDisposable
         _info.Items.Add("Задача " + path);
     }
 
+    /// <summary>Records a task this transaction registered, so restore deletes it.</summary>
+    public void CreatedTask(string path)
+    {
+        File.AppendAllLines(Path.Combine(_dir, "created_tasks.txt"), new[] { path });
+        _info.Items.Add("Создана задача " + path);
+    }
+
     /// <summary>Free-form entry for non-registry actions that are not undoable (shown in the log only).</summary>
     public void Note(string what) => _info.Items.Add(what);
 
@@ -169,6 +176,11 @@ public static class UndoCenter
 
     public static void Restore(UndoInfo info)
     {
+        var created = Path.Combine(info.Dir, "created_tasks.txt");
+        if (File.Exists(created))
+            foreach (var p in File.ReadAllLines(created))
+                if (TaskService.Instance.GetTask(p) is { } t) using (t) t.Folder.DeleteTask(t.Name, false);
+
         var tasks = Path.Combine(info.Dir, "tasks.txt");
         if (File.Exists(tasks))
         {

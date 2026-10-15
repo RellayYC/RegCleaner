@@ -69,8 +69,8 @@ Scope: every module real and tested, the clone measured against Reg Organizer an
   EXPECT: REVIEWS OK
   EVIDENCE: pending
 
-- [ ] G13: five sampled review quotes appear word for word on their linked pages
-  EVIDENCE: pending
+- [x] G13: five sampled review quotes appear word for word on their linked pages
+  EVIDENCE: 2026-10-15 re-fetched the linked pages and compared verbatim: otvet.mail.ru/question/174402556 (ivan_russkii_161), softportal ...-2.html (Онаним, Kira, www, Санчос, Валерий, Андрей), softportal ...-4.html (3Dflame, Вано, Дмитрий.), forums.malwarebytes.com/topic/262535 (alexghilovsky - author fixed from "автор темы", AdvancedSetup), snapfiles 102885 (dsbluecoffee443, Nelson-Carvalho); all match.
 
 - [ ] G14: parity with the original: all must features, at least 90% of should, every must from feedback done
   CHECK: node scripts/gates/check.mjs parity 0.9

@@ -1,0 +1,52 @@
+url,author,text,theme
+https://otvet.mail.ru/question/185718580,автор вопроса,"Знакомый говорит что REG ORGANIZER плохая программа, она удаляет все подряд что нужно и что не нужно,",F1
+https://otvet.mail.ru/question/185718580,alexander_4570,Но есть проблемы с виндовс 8. Там она действительно может что то не то и не там удалить.,F1
+https://otvet.mail.ru/question/174402556,ivan_russkii_161,Это плохая программа и при неграмотном использовании она легко ломает ОС. Комп становится неработоспособным.,F1
+https://otvet.mail.ru/question/174402556,loony_5,"Для любителей часто ставить-сносить софт есть отслеживание изменений в реестре и файловой системе, так что, удаляет следы и программу на 99,9 проц.",F9
+https://otvet.mail.ru/question/174402556,user_8285648,"работает, но считаю система сама должна собой заниматься, все нужное в ней для этого есть, лишний софт ненужен",F10
+https://www.softportal.com/response-549-reg-organizer-1.html,evi161048,Начиная с версии 9.0 вызывает ошибку «Стандартное приложение сброшено» в Windows 10 при каждой загрузке-перезагрузке системы.,F5
+https://www.softportal.com/response-549-reg-organizer-1.html,Александр,"Удаление программ вообще вообще великолепное, ищет ВСЕ изменения во всех папках и удаляет полностью при этом спрашивает.",F9
+https://www.softportal.com/response-549-reg-organizer-1.html,Александр,"Но у неё есть особенность - НЕЛЬЗЯ пользоваться часто иначе она начинает ""жрать"" нужный контент.",F1
+https://www.softportal.com/response-549-reg-organizer-1.html,Роман,"в версии RegOrg 8.7 в контекстном меню на папке ""Документы"" выходит пункт ""Удалить с помощью RegOrg..."" Заааачем????",F3
+https://www.softportal.com/response-549-reg-organizer-1.html,Роман,в 8.6 тот же глюк и ещё глюки с удалением программ из автозапуска,F4
+https://www.softportal.com/response-549-reg-organizer-1.html,master2700,Не советую ставил все версии больше вреда чем пользы может повредить реестр и систему алгоритм сканирования своеобразный непродуманный под замах может удалить нужные параметры особенно часто падает система восстановления.,F1
+https://www.softportal.com/response-549-reg-organizer-1.html,Дмитрий,"Чистил этой прогой реестр, она нашла 60 мусорных ключей реестра, и после этого прошёлся утилитой Vit Registry Fix Pro и было найдено ещё 150 ненужных ключей, делайте вывод.",F6
+https://www.softportal.com/response-549-reg-organizer-1.html,Олег,"меня смущало, что при прочистке реестра этой программой и СиКлинером они находили ошибки и причём сотнями и даже тысячами",F6
+https://www.softportal.com/response-549-reg-organizer-1.html,Павел,Паршивая программа.После неё пришлось делать восстановление системы.,F1
+https://www.softportal.com/response-549-reg-organizer-1.html,PowerUser,"Сейчас в ней, пожалуй, актуален лишь редактор реестра с удобным поиском. Всё прочее работает хуже, чем, к примеру, в бесплатном CCleaner.",F14
+https://www.softportal.com/response-549-reg-organizer-1.html,sergeyar,После полгода нормальной работы с Ред. Органайзер комп стал понемногу зависать.,F1
+https://www.softportal.com/response-549-reg-organizer-1.html,Игорь,"Хорошая программа,но как то попробовал дефрагментировать реестр и комп не запустился,пришлось делать откат Acronis",F2
+https://www.softportal.com/response-549-reg-organizer-1.html,юрий,"каждый день предлагается почиститься. Кликаю - находит 15 гиков чего-то , и так ежедневно.",F7
+https://www.softportal.com/response-549-reg-organizer-1.html,Иван Лабаревич,"Похоже, что это очередной лохотрон. Отправил 1000 рублей и ни привет ни ответа.",F8
+https://www.softportal.com/response-549-reg-organizer-1.html,Ваня,"А с выходом 10, делающей всё тоже самое в автоматическом режиме лучше эту работу доверить самому хозяину, нежеле непонятно какой компашке....",F10
+https://www.softportal.com/response-549-reg-organizer-2.html,Онаним,"Странно, но прога нашла 9МБ мусора, почистила и сразу снова нашла 9 Мб мусора",F7
+https://www.softportal.com/response-549-reg-organizer-2.html,(ерж,"По-прежнему не сохраняются/не убираются галочки в настройках программы (к примеру ""Удаление файлов"") после повторного открытия, ни после перезапуска.",F12
+https://www.softportal.com/response-549-reg-organizer-2.html,Санчос,"360 тотал тут же выявил около 400 мб мусора,хотя за 5 мин.до этого Рег *нашёл и почистил* всего-навсего 25 мб.",F7
+https://www.softportal.com/response-549-reg-organizer-2.html,павел,при чистке удаляет необходимые для работы ряда программ файлы..,F1
+https://www.softportal.com/response-549-reg-organizer-2.html,Не преведи господь,"После чистки,сжатия реестра и очистки ненужных по мнению органайзера файлов.Не смог открыть не один документ офиса.",F2
+https://www.softportal.com/response-549-reg-organizer-2.html,Валерий,кроме того удалить штатно эту гпнгрену низзя-только вручную .,F15
+https://www.softportal.com/response-549-reg-organizer-2.html,Андрей,"Но чистку диска от мусора делает хреново. Находит несколько мелких файлов. Пишет порядок. При этом старая версия Хрома 240 MB остается.",F7
+https://www.softportal.com/response-549-reg-organizer-2.html,Kira,"Чистит реестр, убирает программы, которые не удалить обычным способом, ни CCleaner, ни Revo Uninstaller.",F9
+https://www.softportal.com/response-549-reg-organizer-2.html,www,"И прежде чем нажать кнопочку ""Сделать все круто"" нужно смотреть, что же будет удалено и очищено.",F16
+https://www.softportal.com/response-549-reg-organizer-3.html,meal,"Когда чистил диск, он стер какие-то файлы отвечающие за wifi,и теперь мой комп не видит ни одной бес. сети!",F1
+https://www.softportal.com/response-549-reg-organizer-3.html,Игорь,Всё происходит после дефрагментации.Аккуратнее с этой опцией!,F2
+https://www.softportal.com/response-549-reg-organizer-3.html,serg,Поставил отложенную загрузка для skype. С помощью reg organizer. Теперь не могу отключить.,F4
+https://www.softportal.com/response-549-reg-organizer-3.html,Alex,а именно дефрагментация реестра пропадают значки из трея,F2
+https://www.softportal.com/response-549-reg-organizer-3.html,Lemon75,"Если что у вас пошло не так, то можно восстановить изменения в самой проге.",F16
+https://www.softportal.com/response-549-reg-organizer-3.html,Сергей,Ну и удобный редактор реестра - отличная альтернатива штатному regedit.,F14
+https://www.softportal.com/response-549-reg-organizer-3.html,Игорь,"После первой же чистки реестра у второго пользователя компьютера, имеющего обычный доступ, сбивается представление папок.",F5
+https://www.softportal.com/response-549-reg-organizer-4.html,Антон,Пользовался этим ПО для полной деинсталляция софта (с полной чисткой реестра). Пришлось переустанавливать систему.,F1
+https://www.softportal.com/response-549-reg-organizer-4.html,3Dflame,"Но после нажатия на ""Экспорт"" в reg-файл одного ключа система ушла в безвыходный штопор.",F17
+https://www.softportal.com/response-549-reg-organizer-4.html,(ерж,"Новичкам не советую, работа с ней это как хотьба по минному полю, не знаешь где ""рванёт"".",F1
+https://www.softportal.com/response-549-reg-organizer-4.html,Вано,А вот для ускорения работы компа надо удалять ненужные проги и чистить автозагрузку.,F9
+https://www.softportal.com/response-549-reg-organizer-4.html,александр,просто смешно находит каждыи день по500-600ненужных папок разрабы там что изобрели электронное плацебо.,F7
+https://www.softportal.com/response-549-reg-organizer-4.html,Дмитрий.,Явная недоработка автора - чистит вообще всё!!!,F1
+https://ca.trustpilot.com/reviews/69ac1e2c445905161e067285,Trustpilot,Amazing App. Puts all startup apps in your control. Boot time is now so well organized and swift.,F9
+https://ca.trustpilot.com/reviews/698dfbfb17ea40a6ef69dc14,Trustpilot,"It runs quietly in the background, without using too much memory to cause any issues.",F11
+https://www.snapfiles.com/userreviews/102885/regorganizer.html,dsbluecoffee443,"Unlike other utilities that allow you to OPEN and CLOSE them ONLY WHEN NEEDED, Reg Organizer Process is RUNNING ALL THE TIME, EVENTUALLY TAKING UP MORE MEMORY ... to the point where it actually INTERFERED with windows.",F11
+https://www.snapfiles.com/userreviews/102885/regorganizer.html,dsbluecoffee443,"I had previously looked for some type of option to turn this ""off"" but didn't find any.",F11
+https://www.snapfiles.com/userreviews/102885/regorganizer.html,Nelson-Carvalho,"However, the software allows you to make a backup before carrying out any operation.",F16
+https://forums.malwarebytes.com/topic/262535-scan-finds-reg-organizer-items-as-pups,alexghilovsky,This is a second time when you totally removed all my files with Reg Organizer as a threat! Are you crazy? This is absolutely unacceptable!!!,F13
+https://forums.malwarebytes.com/topic/262535-scan-finds-reg-organizer-items-as-pups,AdvancedSetup,I have not scanned anything yet and the program already tells me I have problems.,F6
+https://www.softportal.com/response-549-reg-organizer-2.html,ответ на отзыв Dfe,"Практически откатил систему, хотя его об этом не просили...Снес все, что надо и не надо,хотя 10 лет до этого прекрасно справлялся со своей задачей.",F1
+https://www.softportal.com/response-549-reg-organizer-2.html,аноним,"Крайне не рекомендую устанавливать эту программу. После установки и чистки реестра произошел сбой системы, повредился основной SSD диск !",F1

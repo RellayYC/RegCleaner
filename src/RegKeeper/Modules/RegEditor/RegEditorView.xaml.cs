@@ -122,6 +122,16 @@ public partial class RegEditorView : UserControl
         }
     }
 
+    void CopyKey_Click(object s, RoutedEventArgs e)
+    {
+        if (Current is not { } path || !path.Contains('\\')) return;
+        if (Ui.Prompt("Копировать раздел", "Полный путь копии:", path + " - копия") is not { Length: > 0 } input) return;
+        var to = Reg.Normalize(input.Trim().Trim('[', ']'));
+        if (to.StartsWith(Reg.Normalize(path) + "\\", StringComparison.OrdinalIgnoreCase)) { Ui.Info("Копия не может лежать внутри самого раздела."); return; }
+        if (Reg.Exists(to)) { Ui.Info("Раздел уже существует: " + to); return; }
+        if (Change("Редактор: копия раздела", tx => tx.CopyKey(path, to))) Reload(to);
+    }
+
     void DeleteKey_Click(object s, RoutedEventArgs e)
     {
         if (Current is not { } path || !path.Contains('\\')) return;
@@ -136,13 +146,13 @@ public partial class RegEditorView : UserControl
         if (Tree.SelectedItem is TreeViewItem { Parent: TreeViewItem p }) p.IsSelected = true;
     }
 
-    void Export_Click(object s, RoutedEventArgs e)
+    // a whole hive takes minutes to export: off the UI thread, so the window stays alive
+    async void Export_Click(object s, RoutedEventArgs e)
     {
         if (Current is not { } path) return;
         var dlg = new SaveFileDialog { Filter = "Файлы реестра (*.reg)|*.reg", FileName = Reg.Leaf(path) + ".reg" };
         if (dlg.ShowDialog() != true) return;
-        try { RegFile.Save(dlg.FileName, RegFile.Export(new[] { path })); }
-        catch (Exception ex) { Ui.Error(ex); }
+        await Ui.Busy(this, () => Task.Run(() => RegFile.Save(dlg.FileName, RegFile.Export(new[] { path }))));
     }
 
     void Import_Click(object s, RoutedEventArgs e)
@@ -152,7 +162,19 @@ public partial class RegEditorView : UserControl
         List<RegOp> ops;
         try { ops = RegFile.Parse(File.ReadAllText(dlg.FileName)); }
         catch (Exception ex) { Ui.Error(ex); return; }
-        if (!Ui.Confirm($"Применить {ops.Count} операций из {Path.GetFileName(dlg.FileName)}? Откат - в Центре отмены.")) return;
+        // preview: every operation of the file, untick what must not be applied
+        var rows = ops.Select(o => new Leftover
+        {
+            Kind = o.Kind switch { RegOpKind.CreateKey => "Создать ключ", RegOpKind.DeleteKey => "Удалить ключ", RegOpKind.SetValue => "Значение", _ => "Удалить значение" },
+            Path = o.Kind switch
+            {
+                RegOpKind.SetValue => $"{o.Key}  :  {(o.Value!.Name == "" ? "(По умолчанию)" : o.Value.Name)} = {o.Value.Display()}",
+                RegOpKind.DeleteValue => $"{o.Key}  :  {o.ValueName}",
+                _ => o.Key
+            }
+        }).ToList();
+        if (!ChecklistWindow.Ask("Импорт " + Path.GetFileName(dlg.FileName), "Что будет изменено в реестре. Откат - в Центре отмены.", rows, "Применить отмеченное")) return;
+        ops = ops.Where((_, i) => rows[i].Checked).ToList();
         if (Change("Импорт " + Path.GetFileName(dlg.FileName), tx => RegFile.Apply(ops, tx)) && ops.Count > 0) Reload(ops[0].Key);
     }
 

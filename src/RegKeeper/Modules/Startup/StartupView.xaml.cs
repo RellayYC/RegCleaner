@@ -55,6 +55,24 @@ public partial class StartupView : UserControl
         ApplyFilter();
     }
 
+    async void Delay_Click(object s, RoutedEventArgs e)
+    {
+        var items = Selected.Where(i => i.Kind is StartupKind.Registry or StartupKind.Folder && i.Approved != null && i.Enabled).ToList();
+        if (items.Count == 0) { Ui.Info("Выберите включённые записи реестра или файлы папки автозагрузки."); return; }
+        if (Ui.Prompt("Отложенный запуск", "Задержка после входа в Windows, секунд:", "60") is not { } text) return;
+        if (!int.TryParse(text, out var sec) || sec is < 1 or > 3600) { Ui.Info("Нужно число от 1 до 3600."); return; }
+        var errors = new List<string>();
+        using (var tx = UndoTx.Begin($"Отложено на {sec} с: " + string.Join(", ", items.Select(i => i.Name))))
+        {
+            foreach (var i in items)
+                try { Autoruns.Delay(i, TimeSpan.FromSeconds(sec), tx); }
+                catch (Exception ex) { errors.Add(i.Name + ": " + ex.Message); }
+            errors.AddRange(tx.Errors);
+        }
+        if (errors.Count > 0) Ui.Info("Не удалось:\n" + string.Join("\n", errors));
+        await Reload();
+    }
+
     async void Delete_Click(object s, RoutedEventArgs e)
     {
         var items = Selected;

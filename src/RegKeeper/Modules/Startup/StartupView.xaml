@@ -11,6 +11,7 @@
             </DockPanel>
             <WrapPanel Margin="0,0,0,10">
                 <Button Content="Вкл / выкл" Style="{StaticResource Primary}" Click="Toggle_Click"/>
+                <Button Content="Отложить" Click="Delay_Click" ToolTip="Запускать через заданное время после входа в Windows (задачей планировщика)"/>
                 <Button Content="Удалить" Style="{StaticResource DangerBtn}" Click="Delete_Click"/>
                 <Button Content="Добавить" Click="Add_Click"/>
                 <Button Content="Папка файла" Click="Folder_Click"/>

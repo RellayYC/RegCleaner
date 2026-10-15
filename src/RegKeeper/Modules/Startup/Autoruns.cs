@@ -197,6 +197,47 @@ public static class Autoruns
         if (item.Approved != null) tx.DeleteValue(item.Approved, item.ApprovedName);
     }
 
+    /// <summary>
+    /// Delayed start: the Run/folder entry is switched off and a logon task with a delay runs the same thing. The task
+    /// is an ordinary entry in this list (toggle, delete), and undo removes it and switches the entry back on.
+    /// </summary>
+    // ponytail: the task fires for the current user only, even for an all-users entry; per-user tasks if anyone asks
+    public static string Delay(StartupItem item, TimeSpan delay, UndoTx tx)
+    {
+        if (item.Kind is not (StartupKind.Registry or StartupKind.Folder) || item.Approved == null)
+            throw new InvalidOperationException("Отложить можно только запись реестра Run или файл из папки автозагрузки.");
+        var (exe, args) = item.Kind == StartupKind.Folder ? ("explorer.exe", $"\"{item.Location}\"") : SplitCommand(item.Command);
+        var user = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+        var td = TS.TaskService.Instance.NewTask();
+        td.RegistrationInfo.Description = "RegKeeper: отложенный запуск " + item.Name;
+        td.Principal.UserId = user;
+        td.Principal.LogonType = TS.TaskLogonType.InteractiveToken;
+        td.Triggers.Add(new TS.LogonTrigger { UserId = user, Delay = delay });
+        td.Actions.Add(new TS.ExecAction(exe, args == "" ? null : args));
+        td.Settings.ExecutionTimeLimit = TimeSpan.Zero; // the default 72 h limit would kill a tray app
+        td.Settings.DisallowStartIfOnBatteries = false;
+        td.Settings.StopIfGoingOnBatteries = false;
+        var name = "RegKeeper - отложенно - " + string.Concat(item.Name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
+        SetEnabled(item, false, tx);
+        TS.TaskService.Instance.RootFolder.RegisterTaskDefinition(name, td);
+        tx.CreatedTask(@"\" + name);
+        return @"\" + name;
+    }
+
+    /// <summary>Command line → program and its arguments; handles quotes and unquoted paths with spaces.</summary>
+    public static (string Exe, string Args) SplitCommand(string cmd)
+    {
+        var s = Environment.ExpandEnvironmentVariables(cmd.Trim());
+        if (s.StartsWith('"'))
+        {
+            var end = s.IndexOf('"', 1);
+            return end < 0 ? (s[1..], "") : (s[1..end], s[(end + 1)..].Trim());
+        }
+        if (Sys.ExtractPath(s) is { } p && s.StartsWith(p, StringComparison.OrdinalIgnoreCase)) return (p, s[p.Length..].Trim());
+        var cut = s.IndexOf(' '); // rundll32 and friends: ExtractPath names the dll, the program is the first word
+        return cut < 0 ? (s, "") : (s[..cut], s[(cut + 1)..].Trim());
+    }
+
     public static void Add(string name, string command, bool allUsers, UndoTx tx) =>
         tx.SetValue(RunKeys[allUsers ? 2 : 0].Key, RawValue.String(name, command));
 }
