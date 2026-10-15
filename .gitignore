@@ -485,3 +485,6 @@ $RECYCLE.BIN/
 
 .claude-terminal
 .claude/
+.unlazy/
+.unlazy-hook-state.json
+artifacts/

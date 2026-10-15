@@ -1,0 +1,251 @@
+[
+  {
+    "category": "Проводник", "name": "Показывать расширения файлов", "restart": "explorer",
+    "description": "Отображает .exe, .txt и т.д. в именах файлов - защищает от подделок вроде «фото.jpg.exe».",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "HideFileExt", "on": 0, "off": 1 }]
+  },
+  {
+    "category": "Проводник", "name": "Показывать скрытые файлы и папки", "restart": "explorer",
+    "description": "Показывает файлы с атрибутом «скрытый», например AppData.",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "Hidden", "on": 1, "off": 2 }]
+  },
+  {
+    "category": "Проводник", "name": "Показывать защищённые системные файлы", "restart": "explorer",
+    "description": "Показывает файлы с атрибутами «системный» и «скрытый» (desktop.ini, pagefile.sys). Не удаляйте их.",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "ShowSuperHidden", "on": 1, "off": 0 }]
+  },
+  {
+    "category": "Проводник", "name": "Открывать «Этот компьютер» вместо «Главной»", "restart": "explorer",
+    "description": "Новое окно Проводника сразу показывает диски.",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "LaunchTo", "on": 1, "off": null }]
+  },
+  {
+    "category": "Проводник", "name": "Полный путь в заголовке окна", "restart": "explorer",
+    "description": "Заголовок окна Проводника показывает полный путь к папке.",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CabinetState", "name": "FullPath", "on": 1, "off": 0 }]
+  },
+  {
+    "category": "Проводник", "name": "Не показывать недавние файлы и частые папки", "restart": "explorer",
+    "description": "Скрывает историю открытых файлов и частых папок на «Главной» и в панели быстрого доступа.",
+    "values": [
+      { "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer", "name": "ShowRecent", "on": 0, "off": null },
+      { "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer", "name": "ShowFrequent", "on": 0, "off": null }
+    ]
+  },
+  {
+    "category": "Проводник", "name": "Классическое контекстное меню (Windows 11)", "restart": "explorer",
+    "description": "Возвращает полное меню по правому клику без пункта «Показать дополнительные параметры».",
+    "values": [{
+      "key": "HKEY_CURRENT_USER\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32", "name": "", "type": "sz", "on": "", "off": null,
+      "offDeleteKey": "HKEY_CURRENT_USER\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}"
+    }]
+  },
+  {
+    "category": "Проводник", "name": "Отключить автозапуск носителей",
+    "description": "Ничего не запускается и не открывается само при подключении флешки или диска.",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\AutoplayHandlers", "name": "DisableAutoplay", "on": 1, "off": 0 }]
+  },
+  {
+    "category": "Проводник", "name": "Отключить встряхивание окон (Aero Shake)", "restart": "explorer",
+    "description": "Встряхивание окна за заголовок больше не сворачивает остальные окна.",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "DisallowShaking", "on": 1, "off": null }]
+  },
+  {
+    "category": "Панель задач", "name": "Выравнивание панели задач по левому краю", "restart": "explorer",
+    "description": "Кнопка «Пуск» и значки - слева, как в Windows 10.",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "TaskbarAl", "on": 0, "off": null }]
+  },
+  {
+    "category": "Панель задач", "name": "Скрыть кнопку «Представление задач»", "restart": "explorer",
+    "description": "Убирает кнопку виртуальных рабочих столов с панели задач (Win+Tab работает).",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "ShowTaskViewButton", "on": 0, "off": 1 }]
+  },
+  {
+    "category": "Панель задач", "name": "Скрыть поиск на панели задач", "restart": "explorer",
+    "description": "Убирает поле или значок поиска (поиск остаётся в меню «Пуск»).",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Search", "name": "SearchboxTaskbarMode", "on": 0, "off": null }]
+  },
+  {
+    "category": "Панель задач", "name": "Секунды в часах на панели задач", "restart": "explorer",
+    "description": "Часы показывают секунды. Немного увеличивает расход энергии.",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "ShowSecondsInSystemClock", "on": 1, "off": null }]
+  },
+  {
+    "category": "Панель задач", "name": "«Завершить задачу» в меню значка на панели задач", "restart": "explorer",
+    "description": "Пункт для принудительного закрытия зависшей программы прямо с панели задач (Windows 11 23H2+).",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\\TaskbarDeveloperSettings", "name": "TaskbarEndTask", "on": 1, "off": null }]
+  },
+  {
+    "category": "Поиск и ИИ", "name": "Отключить веб-поиск Bing в меню «Пуск»", "restart": "explorer",
+    "description": "Поиск в «Пуске» ищет только на компьютере, запросы не уходят в Bing.",
+    "values": [
+      { "key": "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\Explorer", "name": "DisableSearchBoxSuggestions", "on": 1, "off": null },
+      { "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Search", "name": "BingSearchEnabled", "on": 0, "off": null }
+    ]
+  },
+  {
+    "category": "Поиск и ИИ", "name": "Отключить Copilot", "restart": "explorer",
+    "description": "Политика отключения Windows Copilot и скрытие его кнопки.",
+    "values": [
+      { "key": "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\WindowsCopilot", "name": "TurnOffWindowsCopilot", "on": 1, "off": null },
+      { "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", "name": "ShowCopilotButton", "on": 0, "off": null }
+    ]
+  },
+  {
+    "category": "Поиск и ИИ", "name": "Отключить снимки Recall", "restart": "logoff",
+    "description": "Запрещает Windows Recall сохранять снимки экрана (Copilot+ PC).",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\WindowsAI", "name": "DisableAIDataAnalysis", "on": 1, "off": null }]
+  },
+  {
+    "category": "Конфиденциальность", "name": "Минимальная телеметрия",
+    "description": "Политика AllowTelemetry = 0: в редакциях Home/Pro действует как «только обязательные данные».",
+    "values": [{ "key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection", "name": "AllowTelemetry", "on": 0, "off": null }]
+  },
+  {
+    "category": "Конфиденциальность", "name": "Отключить рекламный идентификатор",
+    "description": "Приложения не получают идентификатор для персонализированной рекламы.",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo", "name": "Enabled", "on": 0, "off": 1 }]
+  },
+  {
+    "category": "Конфиденциальность", "name": "Отключить персонализированные советы по диагностическим данным",
+    "description": "Microsoft не использует диагностические данные для персональных подсказок и рекламы.",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Privacy", "name": "TailoredExperiencesWithDiagnosticDataEnabled", "on": 0, "off": 1 }]
+  },
+  {
+    "category": "Конфиденциальность", "name": "Отключить журнал действий", "restart": "logoff",
+    "description": "Windows не собирает и не отправляет историю действий (Timeline).",
+    "values": [
+      { "key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\System", "name": "PublishUserActivities", "on": 0, "off": null },
+      { "key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\System", "name": "UploadUserActivities", "on": 0, "off": null }
+    ]
+  },
+  {
+    "category": "Конфиденциальность", "name": "Отключить отчёты об ошибках Windows",
+    "description": "Сведения о сбоях программ не отправляются в Microsoft.",
+    "values": [{ "key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting", "name": "Disabled", "on": 1, "off": null }]
+  },
+  {
+    "category": "Реклама и подсказки", "name": "Без рекомендаций приложений в меню «Пуск»",
+    "description": "Убирает рекламные предложения приложений в «Пуске».",
+    "values": [
+      { "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SystemPaneSuggestionsEnabled", "on": 0, "off": 1 },
+      { "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-338388Enabled", "on": 0, "off": 1 }
+    ]
+  },
+  {
+    "category": "Реклама и подсказки", "name": "Без советов и предложений Windows",
+    "description": "Отключает уведомления «Советы и рекомендации при использовании Windows».",
+    "values": [
+      { "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-338389Enabled", "on": 0, "off": 1 },
+      { "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SoftLandingEnabled", "on": 0, "off": 1 }
+    ]
+  },
+  {
+    "category": "Реклама и подсказки", "name": "Без фактов и рекламы на экране блокировки",
+    "description": "Экран блокировки показывает только картинку, без надписей и предложений.",
+    "values": [
+      { "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "RotatingLockScreenOverlayEnabled", "on": 0, "off": 1 },
+      { "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SubscribedContent-338387Enabled", "on": 0, "off": 1 }
+    ]
+  },
+  {
+    "category": "Реклама и подсказки", "name": "Запретить тихую установку предлагаемых приложений",
+    "description": "Windows не устанавливает сама «рекомендованные» приложения из Store.",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager", "name": "SilentInstalledAppsEnabled", "on": 0, "off": 1 }]
+  },
+  {
+    "category": "Реклама и подсказки", "name": "Не создавать ярлык Edge на рабочем столе при обновлении",
+    "description": "Политика Edge Update: обновления браузера не возвращают ярлык на рабочий стол.",
+    "values": [{ "key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\EdgeUpdate", "name": "CreateDesktopShortcutDefault", "on": 0, "off": null }]
+  },
+  {
+    "category": "Оформление", "name": "Тёмная тема Windows и приложений",
+    "description": "Тёмное оформление системы и приложений, которые следуют теме Windows.",
+    "values": [
+      { "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "name": "AppsUseLightTheme", "on": 0, "off": 1 },
+      { "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "name": "SystemUsesLightTheme", "on": 0, "off": 1 }
+    ]
+  },
+  {
+    "category": "Оформление", "name": "Отключить прозрачность",
+    "description": "Непрозрачные панель задач, «Пуск» и окна - чуть быстрее на слабом железе.",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", "name": "EnableTransparency", "on": 0, "off": 1 }]
+  },
+  {
+    "category": "Оформление", "name": "Отключить экран блокировки", "restart": "reboot",
+    "description": "Сразу экран входа без картинки блокировки. Действует в редакциях Pro и выше.",
+    "values": [{ "key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\Personalization", "name": "NoLockScreen", "on": 1, "off": null }]
+  },
+  {
+    "category": "Скорость", "name": "Быстрое появление подменю", "restart": "logoff",
+    "description": "Задержка раскрытия подменю 100 мс вместо 400 мс.",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Control Panel\\Desktop", "name": "MenuShowDelay", "type": "sz", "on": "100", "off": "400" }]
+  },
+  {
+    "category": "Скорость", "name": "Автоматически закрывать зависшие программы при выключении", "restart": "logoff",
+    "description": "Windows не ждёт подтверждения закрытия зависших программ. Несохранённые данные в них будут потеряны.",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Control Panel\\Desktop", "name": "AutoEndTasks", "type": "sz", "on": "1", "off": null }]
+  },
+  {
+    "category": "Скорость", "name": "Без задержки запуска программ автозагрузки", "restart": "logoff",
+    "description": "Программы автозагрузки стартуют сразу после входа, без паузы в несколько секунд.",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Serialize", "name": "StartupDelayInMSec", "on": 0, "off": null }]
+  },
+  {
+    "category": "Скорость", "name": "Отключить быстрый запуск", "restart": "reboot",
+    "description": "Полное выключение вместо гибридного: меньше проблем с драйверами, двойной загрузкой и обновлениями.",
+    "values": [{ "key": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power", "name": "HiberbootEnabled", "on": 0, "off": 1 }]
+  },
+  {
+    "category": "Скорость", "name": "Отключить запись игр в фоне (Game DVR)",
+    "description": "Отключает фоновую запись игрового процесса Xbox Game Bar.",
+    "values": [
+      { "key": "HKEY_CURRENT_USER\\System\\GameConfigStore", "name": "GameDVR_Enabled", "on": 0, "off": 1 },
+      { "key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR", "name": "AllowGameDVR", "on": 0, "off": null }
+    ]
+  },
+  {
+    "category": "Ввод", "name": "Отключить ускорение мыши", "restart": "logoff",
+    "description": "Указатель двигается пропорционально движению мыши («Повышенная точность» выключена).",
+    "values": [
+      { "key": "HKEY_CURRENT_USER\\Control Panel\\Mouse", "name": "MouseSpeed", "type": "sz", "on": "0", "off": "1" },
+      { "key": "HKEY_CURRENT_USER\\Control Panel\\Mouse", "name": "MouseThreshold1", "type": "sz", "on": "0", "off": "6" },
+      { "key": "HKEY_CURRENT_USER\\Control Panel\\Mouse", "name": "MouseThreshold2", "type": "sz", "on": "0", "off": "10" }
+    ]
+  },
+  {
+    "category": "Ввод", "name": "Отключить залипание клавиш по 5 нажатиям Shift", "restart": "logoff",
+    "description": "Пятикратное нажатие Shift больше не включает залипание клавиш.",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Control Panel\\Accessibility\\StickyKeys", "name": "Flags", "type": "sz", "on": "506", "off": "510" }]
+  },
+  {
+    "category": "Ввод", "name": "Num Lock включён при входе", "restart": "logoff",
+    "description": "Цифровая клавиатура включена сразу после входа в систему.",
+    "values": [{ "key": "HKEY_CURRENT_USER\\Control Panel\\Keyboard", "name": "InitialKeyboardIndicators", "type": "sz", "on": "2", "off": "0" }]
+  },
+  {
+    "category": "Обновления", "name": "Не перезагружать автоматически, пока пользователь в системе",
+    "description": "Windows Update не перезагружает компьютер сам, если кто-то вошёл в систему.",
+    "values": [{ "key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU", "name": "NoAutoRebootWithLoggedOnUsers", "on": 1, "off": null }]
+  },
+  {
+    "category": "Обновления", "name": "Не устанавливать драйверы через Windows Update",
+    "description": "Драйверы не приходят вместе с обновлениями качества - полезно, если вы ставите их вручную.",
+    "values": [{ "key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate", "name": "ExcludeWUDriversInQualityUpdate", "on": 1, "off": null }]
+  },
+  {
+    "category": "Обновления", "name": "Не раздавать обновления другим компьютерам",
+    "description": "Оптимизация доставки качает обновления только с серверов Microsoft, без P2P.",
+    "values": [{ "key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\DeliveryOptimization", "name": "DODownloadMode", "on": 0, "off": null }]
+  },
+  {
+    "category": "Система", "name": "Длинные пути (более 260 символов)", "restart": "reboot",
+    "description": "Разрешает программам, которые это поддерживают, работать с путями длиннее 260 символов.",
+    "values": [{ "key": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\FileSystem", "name": "LongPathsEnabled", "on": 1, "off": 0 }]
+  },
+  {
+    "category": "Система", "name": "Подробные сообщения при загрузке и входе", "restart": "reboot",
+    "description": "Вместо «Подождите» Windows пишет, что именно сейчас делает - удобно искать, что тормозит.",
+    "values": [{ "key": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System", "name": "VerboseStatus", "on": 1, "off": null }]
+  }
+]

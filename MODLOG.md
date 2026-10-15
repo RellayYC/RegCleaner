@@ -33,3 +33,8 @@
 - A trace saves only the diff, with the old state for modified/removed entries. Rollback deletes what was added (registry via UndoTx, files to the Recycle Bin), restores changed/removed values, and reports modified/removed files as not restorable.
 - Default roots: HKCU\Software, HKLM\SOFTWARE, Program Files (x64/x86), ProgramData, AppData Roaming/Local. Temp and our own data folder are skipped.
 - Real system: 1.59M entries, 24 MB, taken in ~40 s, ~10 s per read pass. A self-diff gives 0 changes, so the order is stable.
+
+## Tweaks
+- Свой каталог `Data/tweaks.json` (43 твика, 10 категорий), только публичные ключи HKCU/HKLM, без твиков, снижающих защиту.
+- Состояние «вкл» = все значения совпадают с on-состоянием; off = значение, удаление значения или удаление предка (`offDeleteKey`).
+- Применение одним UndoTx «Твики: +a, -b», после него - перезапуск Проводника / выход / перезагрузка по максимальному требованию.
