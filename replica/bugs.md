@@ -134,4 +134,4 @@ Severity: S4
 Доказательство: g18k, artifacts/g18/k-security.png.
 Исправление: сообщение «Раздел не найден или нет доступа: ... Открыт ближайший: ...» (g18m); автотест в
 EditorNavigatesToNewSibling.
-Status: open
+Status: fixed in 75d4095
