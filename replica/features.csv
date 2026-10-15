@@ -77,3 +77,4 @@ id,area,feature,priority,original,clone,ref,notes
 76,Настройки,Язык интерфейса,should,yes,yes,G25,"русский и английский (Data/en.json), выбор в Настройках"
 77,Настройки,Настройки сохраняются между запусками,should,no,yes,F12,
 78,Настройки,"Без инсталлятора и служб, интеграции снимаются в Настройках, расположение данных в README",should,no,yes,F15,README
+79,Снимки и трассы,"Снимок и трасса отменяются по Esc, окно не виснет",should,no,yes,F18,тест Busy_EscCancelsWithoutError

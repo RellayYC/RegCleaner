@@ -50,3 +50,10 @@ https://forums.malwarebytes.com/topic/262535-scan-finds-reg-organizer-items-as-p
 https://forums.malwarebytes.com/topic/262535-scan-finds-reg-organizer-items-as-pups,AdvancedSetup,I have not scanned anything yet and the program already tells me I have problems.,F6
 https://www.softportal.com/response-549-reg-organizer-2.html,ответ на отзыв Dfe,"Практически откатил систему, хотя его об этом не просили...Снес все, что надо и не надо,хотя 10 лет до этого прекрасно справлялся со своей задачей.",F1
 https://www.softportal.com/response-549-reg-organizer-2.html,аноним,"Крайне не рекомендую устанавливать эту программу. После установки и чистки реестра произошел сбой системы, повредился основной SSD диск !",F1
+https://forum.chemtable.com/viewtopic.php?t=4473,Dobrus,"Hello, I have a problem with the Reg Organizer application, version 8.91 as well as 9.11 (giveaway versions) crashes when trying to monitor installations and take a registry snapshot.",F18
+https://forum.chemtable.com/viewtopic.php?t=4473,Dobrus,"On a fresh system everything was fine, but after installing several applications the program hangs at the snapshot creation screen.",F18
+https://ru-board.club/computers/soft/4766-33.html,Veselozhopy,"7.20 поставил, почистил реестр, дефрагментировал и теперь курсор глючит не по-детски",F2
+https://ru-board.club/computers/soft/4766-33.html,Oleg_Salnikov,"Вообще странно, что не предусмотрено такого, чтобы удалять эти записи прямо из Reg Organizer-а.",F19
+https://ru-board.club/computers/soft/4766-33.html,Oleg_Salnikov,"Мне кажется, что логичнее было бы иметь такую возможность из Органайзера.",F19
+https://ru-board.club/computers/soft/4766-33.html,Double M Doc,"после применения инструмента ""Чистка дисков"" файлы полностью удаляются, а не помещаются в Корзину. Соответственно, в ""Центре отмены изменений"" прошедшая чистка не фиксируется.",F16
+https://ru-board.club/computers/soft/4766-33.html,maxvlas,"Только не продуманно они сделали это,лазить постоянно удалять ListsHistory.bin,могли бы сочетанием клавиш сделать удаление",F20
