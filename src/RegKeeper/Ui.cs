@@ -7,14 +7,27 @@ namespace RegKeeper;
 /// <summary>Small UI helpers shared by modules.</summary>
 public static class Ui
 {
-    public static bool Confirm(string text, string title = "RegKeeper") =>
-        MessageBox.Show(text, title, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+    /// <summary>Set by headless runs (smoke tests): messages go here instead of a MessageBox and Confirm answers no.</summary>
+    public static Action<string>? Headless;
 
-    public static void Info(string text) => MessageBox.Show(text, "RegKeeper", MessageBoxButton.OK, MessageBoxImage.Information);
+    public static bool Confirm(string text, string title = "RegKeeper")
+    {
+        if (Headless != null) { Headless("confirm: " + text); return false; }
+        return MessageBox.Show(text, title, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+    }
 
-    public static void Error(Exception e) =>
-        MessageBox.Show(e is AggregateException a ? a.InnerException?.Message ?? a.Message : e.Message,
-            "RegKeeper", MessageBoxButton.OK, MessageBoxImage.Error);
+    public static void Info(string text)
+    {
+        if (Headless != null) Headless("info: " + text);
+        else MessageBox.Show(text, "RegKeeper", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    public static void Error(Exception e)
+    {
+        var text = e is AggregateException a ? a.InnerException?.Message ?? a.Message : e.Message;
+        if (Headless != null) Headless("error: " + e);
+        else MessageBox.Show(text, "RegKeeper", MessageBoxButton.OK, MessageBoxImage.Error);
+    }
 
     /// <summary>Runs work off the UI thread with a wait cursor and the given control disabled; errors are shown.</summary>
     public static async Task Busy(FrameworkElement owner, Func<Task> work)
@@ -52,6 +65,7 @@ public static class Ui
         };
         ok.Click += (_, _) => w.DialogResult = true;
         box.Loaded += (_, _) => { box.Focus(); box.SelectAll(); };
+        Theme.TitleBar(w);
         return w.ShowDialog() == true ? box.Text : null;
     }
 }

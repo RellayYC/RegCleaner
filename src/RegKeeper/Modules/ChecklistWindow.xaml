@@ -1,7 +1,7 @@
 <Window x:Class="RegKeeper.Modules.ChecklistWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Height="520" Width="900" WindowStartupLocation="CenterOwner" Background="White">
+        Height="520" Width="900" Style="{StaticResource {x:Type Window}}" WindowStartupLocation="CenterOwner">
     <DockPanel Margin="16">
         <TextBlock x:Name="Header" DockPanel.Dock="Top" Style="{StaticResource Hint}" Margin="0,0,0,10"/>
         <DockPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">

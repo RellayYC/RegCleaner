@@ -13,6 +13,9 @@ public partial class App : Application
             Ui.Error(ex.Exception);
             ex.Handled = true;
         };
-        new MainWindow(e.Args).Show();
+        Theme.Apply(Theme.Saved);
+        var w = new MainWindow(e.Args);
+        Theme.TitleBar(w);
+        w.Show();
     }
 }

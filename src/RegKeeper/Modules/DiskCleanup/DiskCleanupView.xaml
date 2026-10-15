@@ -28,7 +28,7 @@
                 <DataGridTextColumn Header="Размер" Binding="{Binding SizeText}" SortMemberPath="Size" IsReadOnly="True" Width="90"/>
                 <DataGridTextColumn Header="Предупреждение" Binding="{Binding Warning}" IsReadOnly="True" Width="2*">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock"><Setter Property="Foreground" Value="{StaticResource Danger}"/></Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource DangerText}"/>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
             </DataGrid.Columns>

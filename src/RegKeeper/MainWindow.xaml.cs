@@ -4,8 +4,12 @@ using RegKeeper.Modules;
 
 namespace RegKeeper;
 
-public sealed record NavItem(string Title, string Glyph, Type View)
+// a class, not a record: Selector hashes its items, and value equality over the mutable Instance broke selection
+public sealed class NavItem(string title, string glyph, Type view)
 {
+    public string Title { get; } = title;
+    public string Glyph { get; } = glyph;
+    public Type View { get; } = view;
     public UserControl? Instance { get; set; }
 }
 

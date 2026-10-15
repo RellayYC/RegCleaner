@@ -5,6 +5,13 @@
         <StackPanel MaxWidth="720" HorizontalAlignment="Left">
             <TextBlock Text="Настройки" Style="{StaticResource Title}"/>
 
+            <TextBlock Text="Оформление" FontWeight="SemiBold" Margin="0,18,0,6"/>
+            <StackPanel Orientation="Horizontal">
+                <RadioButton x:Name="ThemeSystem" Content="Как в Windows" Tag="System" Checked="Theme_Checked"/>
+                <RadioButton x:Name="ThemeLight" Content="Светлая" Tag="Light" Checked="Theme_Checked"/>
+                <RadioButton x:Name="ThemeDark" Content="Тёмная" Tag="Dark" Checked="Theme_Checked"/>
+            </StackPanel>
+
             <TextBlock Text="Интеграция с Windows" FontWeight="SemiBold" Margin="0,18,0,6"/>
             <CheckBox x:Name="ShellVerb" Content="Пункт «Удалить с RegKeeper» в контекстном меню exe-файлов и ярлыков" Click="ShellVerb_Click"/>
             <TextBlock Style="{StaticResource Hint}" Margin="22,2,0,10" Text="В Windows 11 пункт находится в «Показать дополнительные параметры». Только для текущего пользователя."/>

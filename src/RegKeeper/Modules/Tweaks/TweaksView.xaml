@@ -15,7 +15,7 @@
                 </WrapPanel>
             </DockPanel>
         </StackPanel>
-        <DataGrid x:Name="Grid" MouseDoubleClick="Open_Click">
+        <DataGrid x:Name="Grid" MouseDoubleClick="Open_Click" RowHeight="NaN" MinRowHeight="28">
             <DataGrid.GroupStyle>
                 <GroupStyle>
                     <GroupStyle.HeaderTemplate>

@@ -167,7 +167,7 @@ const checks = {
     // [foreground, background, minimum]: 4.5 body text, 3 for large text and non-text UI
     const pairs = [['Text', 'Bg', 4.5], ['Text', 'Pane', 4.5], ['Text', 'Surface', 4.5], ['Muted', 'Bg', 4.5], ['Muted', 'Pane', 4.5],
       ['OnAccent', 'Accent', 4.5], ['OnAccent', 'AccentHover', 4.5], ['OnAccent', 'Danger', 4.5], ['Accent', 'Bg', 3], ['Border', 'Bg', 1.3],
-      ['Text', 'Selection', 4.5]];
+      ['Text', 'Selection', 4.5], ['Text', 'Alt', 4.5], ['Text', 'Hover', 4.5], ['DangerText', 'Bg', 4.5], ['DangerText', 'Surface', 4.5], ['Muted', 'Surface', 4.5]];
     let n = 0;
     for (const theme of ['Light', 'Dark']) {
       const x = read(join(src, 'Themes', theme + '.xaml'));

@@ -29,7 +29,7 @@
                 <DataGridTextColumn Header="Команда" Binding="{Binding Command}" Width="3*"/>
                 <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="110">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock"><Setter Property="Foreground" Value="{StaticResource Danger}"/></Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource DangerText}"/>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
             </DataGrid.Columns>

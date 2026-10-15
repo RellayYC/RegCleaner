@@ -11,6 +11,7 @@ public partial class ChecklistWindow : Window
     public ChecklistWindow(string title, string header, List<Leftover> items, string okText = "Удалить отмеченное")
     {
         InitializeComponent();
+        Theme.TitleBar(this);
         Owner = Application.Current.MainWindow;
         Title = title;
         Header.Text = header;
