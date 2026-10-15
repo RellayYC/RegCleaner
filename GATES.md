@@ -115,8 +115,8 @@ Scope: every module real and tested, the clone measured against Reg Organizer an
   EXPECT: PUBLISH OK
   EVIDENCE: automatic-evidence=v1; definition-sha256=0a3f9af5e990e8874d096ef33ba3551873c6c8f5b42c4e6f864c419280bd78c0; exit=0; EXPECT=matched; output-sha256=0ced6a1d64f8e44f95d0397e919d6603e93264f848537c4af44e92d476a6cf9a; output-bytes=11; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
 
-- [ ] G23: distribution model, license and price are chosen by the user
-  EVIDENCE: pending
+- [x] G23: distribution model, license and price are chosen by the user
+  EVIDENCE: 2026-10-15 user: "Mit ... пока не публикуме" - MIT, free, open source; LICENSE added, README says so. Publishing deferred by the user (G24).
 
 - [ ] G24: the release is published (GitHub Release / winget) after the user's go-ahead
   EVIDENCE: pending

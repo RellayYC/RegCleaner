@@ -57,4 +57,4 @@ dotnet publish src/RegKeeper/RegKeeper.csproj -c Release -r win-x64 --self-conta
 
 ## Лицензия
 
-См. [LICENSE](LICENSE). База `winapp2.ini` скачивается из её репозитория и распространяется под CC BY-SA.
+MIT, бесплатно, см. [LICENSE](LICENSE). База `winapp2.ini` скачивается из её репозитория и распространяется под CC BY-SA.
