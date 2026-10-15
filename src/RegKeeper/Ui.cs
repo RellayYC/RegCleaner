@@ -43,6 +43,37 @@ public static class Ui
         }
     }
 
+    /// <summary>Busy that Esc cancels (the window title says so); a cancelled run is not an error.</summary>
+    public static async Task Busy(FrameworkElement owner, Func<CancellationToken, Task> work)
+    {
+        using var cts = new CancellationTokenSource();
+        var w = Window.GetWindow(owner);
+        KeyEventHandler esc = (_, e) => { if (e.Key == Key.Escape) cts.Cancel(); };
+        var title = w?.Title;
+        if (w != null)
+        {
+            w.PreviewKeyDown += esc;
+            w.Title = title + " - Esc: отмена";
+        }
+        try
+        {
+            await Busy(owner, async () =>
+            {
+                if (w != null) Keyboard.Focus(w); // the focused control is disabled now; keys must still reach the window
+                try { await work(cts.Token); }
+                catch (OperationCanceledException) when (cts.IsCancellationRequested) { }
+            });
+        }
+        finally
+        {
+            if (w != null)
+            {
+                w.PreviewKeyDown -= esc;
+                w.Title = title;
+            }
+        }
+    }
+
     /// <summary>Text prompt; multiline for REG_MULTI_SZ and the like.</summary>
     public static string? Prompt(string title, string label, string initial = "", bool multiline = false)
     {

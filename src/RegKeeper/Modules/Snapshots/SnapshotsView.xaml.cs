@@ -54,7 +54,7 @@ public partial class SnapshotsView : UserControl
     {
         if (Ui.Prompt("Снимок", "Название снимка:", "Снимок " + DateTime.Now.ToString("dd.MM.yyyy HH:mm")) is not { } note) return;
         var roots = RootList();
-        await Ui.Busy(this, () => Task.Run(() => Snapshot.Take(Path.Combine(AppPaths.Snapshots, Stamp() + ".rksnap"), note, roots)));
+        await Ui.Busy(this, ct => Task.Run(() => Snapshot.Take(Path.Combine(AppPaths.Snapshots, Stamp() + ".rksnap"), note, roots, ct)));
         Load();
     }
 
@@ -79,19 +79,19 @@ public partial class SnapshotsView : UserControl
         try
         {
             var ok = false;
-            await Ui.Busy(this, async () =>
+            await Ui.Busy(this, async ct =>
             {
-                await Task.Run(() => Snapshot.Take(before, "before", roots));
+                await Task.Run(() => Snapshot.Take(before, "before", roots, ct));
                 Process.Start(new ProcessStartInfo(dlg.FileName) { UseShellExecute = true });
                 ok = true;
             });
             if (!ok || !Ui.Confirm("Установка запущена. Пройдите её до конца (и закройте программу, если она запустилась), затем нажмите «Да».\n\n«Нет» - отменить отслеживание.", "Отслеживание установки")) return;
-            await Ui.Busy(this, async () =>
+            await Ui.Busy(this, async ct =>
             {
                 var file = Path.Combine(AppPaths.Traces, Stamp() + ".rktrace");
                 var changes = await Task.Run(() =>
                 {
-                    Snapshot.Take(after, "after", roots);
+                    Snapshot.Take(after, "after", roots, ct);
                     var list = Snapshot.Diff(Snapshot.Read(before), Snapshot.Read(after)).ToList();
                     Snapshot.SaveChanges(file, note, list);
                     return list;

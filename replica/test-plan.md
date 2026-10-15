@@ -14,7 +14,8 @@
   [A LongPath_SnapshotSeesTheFile, LongPath_RecycleRemovesTheFolder].
 - Отмена посреди операции: прерванная транзакция видна в Центре отмены со своим составом и откатывается
   [A Undo_InterruptedTransaction_ListsItsItems]; прерванный снимок не оставляет файла
-  [A Snapshot_Cancelled_LeavesNoFile].
+  [A Snapshot_Cancelled_LeavesNoFile]; Esc отменяет снимок, трассу и анализ очистки диска, ошибка не
+  показывается [A Busy_EscCancelsWithoutError], [Р] Esc посреди снимка полной системы.
 - Повторный откат: запись удаляется после отката, второй откат падает с ошибкой и ничего не меняет
   [A Undo_RestoringTwice_FailsCleanly].
 - Нехватка места: бэкап пишется в undo.reg до изменения; если запись не удалась, изменение не выполняется

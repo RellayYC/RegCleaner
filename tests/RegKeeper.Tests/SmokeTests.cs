@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.ExceptionServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -62,6 +63,44 @@ public class SmokeTests
         finally
         {
             Ui.Headless = null;
+            Dispatcher.CurrentDispatcher.InvokeShutdown();
+        }
+    });
+
+    [Fact]
+    public void Busy_EscCancelsWithoutError() => Sta(() =>
+    {
+        // continuations must come back to this thread, as they do in the app
+        SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext());
+        var problems = new List<string>();
+        Ui.Headless = problems.Add;
+        var owner = new Button();
+        var win = new Window { Title = "T", Content = owner, Left = -20000, ShowInTaskbar = false };
+        win.Show();
+        var done = false;
+        string? busyTitle = null;
+        _ = Run();
+        async Task Run()
+        {
+            await Ui.Busy(owner, async ct => { busyTitle = win.Title; await Task.Delay(-1, ct); });
+            done = true;
+        }
+        Pump();
+        var target = (IInputElement?)Keyboard.FocusedElement ?? win;
+        target.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(win), 0, Key.Escape) { RoutedEvent = Keyboard.PreviewKeyDownEvent });
+        Pump();
+        try
+        {
+            Assert.True(done, "Esc did not cancel");
+            Assert.Contains("Esc", busyTitle);
+            Assert.Equal("T", win.Title);
+            Assert.True(owner.IsEnabled);
+            Assert.Empty(problems);
+        }
+        finally
+        {
+            Ui.Headless = null;
+            win.Close();
             Dispatcher.CurrentDispatcher.InvokeShutdown();
         }
     });

@@ -45,10 +45,11 @@ public partial class DiskCleanupView : UserControl
         Grid.CommitEdit();
         Winapp2.SaveChecked(_all);
         var rules = _all.Where(r => r.Checked).ToList();
-        await Ui.Busy(this, () => Task.Run(() =>
+        // Esc stops starting new rules; rules already being walked finish, the rest stay unanalyzed
+        await Ui.Busy(this, ct => Task.Run(() =>
         {
             var ignore = Winapp2.LoadIgnore();
-            Parallel.ForEach(rules, r => Winapp2.Analyze(r, ignore));
+            Parallel.ForEach(rules, new ParallelOptions { CancellationToken = ct }, r => Winapp2.Analyze(r, ignore));
         }));
         Grid.Items.Refresh();
         UpdateStatus();
