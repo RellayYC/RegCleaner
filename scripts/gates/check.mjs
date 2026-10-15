@@ -261,7 +261,7 @@ const checks = {
         } else if (f.endsWith('.xaml')) for (const k of xamlTexts(read(f))) add(k, rel);
       }
       for (const t of JSON.parse(read(join(src, 'Data', 'tweaks.json')))) for (const k of [t.category, t.name, t.description]) if (hasCyr(k)) add(k, 'tweaks.json');
-      for (const k of ['Приложения', 'Интернет', 'Мультимедиа', 'Утилиты', 'Браузеры', 'Файл', 'Папка', 'Ключ реестра', 'Значение реестра']) add(k, 'data values shown through L.T');
+      for (const k of ['Приложения', 'Интернет', 'Мультимедиа', 'Утилиты', 'Браузеры', 'Файл', 'Папка', 'Ключ реестра', 'Значение реестра', 'Все пользователи', 'Все пользователи, 32-бит', 'Текущий пользователь']) add(k, 'data values shown through L.T');
       if (bare.length) fail(`${bare.length} Cyrillic literals outside L.T:\n` + bare.join('\n'));
       const missing = [...keys.keys()].filter((k) => !(k in en));
       if (mode === 'list') { console.log(JSON.stringify(Object.fromEntries(missing.map((k) => [k, ''])), null, 1)); return; }

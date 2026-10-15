@@ -18,8 +18,8 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Раздел" Binding="{Binding Key}" Width="2*"/>
                 <DataGridTextColumn Header="Файл" Binding="{Binding File}" Width="2*"/>
-                <DataGridTextColumn Header="Размер" Binding="{Binding SizeText}" SortMemberPath="Size" Width="90"/>
-                <DataGridTextColumn Header="После сжатия" Binding="{Binding CompactedText}" SortMemberPath="CompactedSize" Width="110"/>
+                <DataGridTextColumn Header="Размер" Binding="{Binding SizeText}" SortMemberPath="Size" Width="110"/>
+                <DataGridTextColumn Header="После сжатия" Binding="{Binding CompactedText}" SortMemberPath="CompactedSize" Width="130"/>
                 <DataGridTextColumn Header="Выигрыш" Binding="{Binding GainText}" SortMemberPath="Gain" Width="130"/>
             </DataGrid.Columns>
         </DataGrid>

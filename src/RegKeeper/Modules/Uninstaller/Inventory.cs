@@ -52,9 +52,9 @@ public static class Inventory
 
     static readonly (string Root, string Scope)[] Roots =
     {
-        ($@"HKEY_LOCAL_MACHINE\SOFTWARE\{UninstallSub}", L.T("Все пользователи")),
-        ($@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\{UninstallSub}", L.T("Все пользователи, 32-бит")),
-        ($@"HKEY_CURRENT_USER\Software\{UninstallSub}", L.T("Текущий пользователь")),
+        ($@"HKEY_LOCAL_MACHINE\SOFTWARE\{UninstallSub}", "Все пользователи"), // i18n: keep - translated where used
+        ($@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\{UninstallSub}", "Все пользователи, 32-бит"), // i18n: keep - translated where used
+        ($@"HKEY_CURRENT_USER\Software\{UninstallSub}", "Текущий пользователь"), // i18n: keep - translated where used
     };
 
     public static List<InstalledApp> Load()
@@ -89,7 +89,7 @@ public static class Inventory
                     InstallDate = DateTime.TryParseExact(Reg.GetString(k, "InstallDate"), "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var d) ? d : null,
                     KeyPath = path,
                     IsMsi = isMsi,
-                    Scope = scope,
+                    Scope = L.T(scope),
                 });
             }
         }
