@@ -17,6 +17,10 @@ public sealed class CleanRule
     public bool Checked { get; set; }
     public bool DefaultOn { get; set; }
     public bool RecycleBin { get; set; }
+    /// <summary>Our extension: delete past ACLs (Windows.old belongs to TrustedInstaller) and drop junctions as links.</summary>
+    public bool Force { get; set; }
+    /// <summary>Our extension: superseded Windows Update components, cleaned by DISM.</summary>
+    public bool ComponentStore { get; set; }
     public List<string> Detect { get; } = new();
     public List<string> DetectFile { get; } = new();
     public List<FileKey> Files { get; } = new();
@@ -77,6 +81,16 @@ public static partial class Winapp2
         [Корзина]
         Section=Windows
         RecycleBin=1
+        [Предыдущая версия Windows (Windows.old)]
+        Section=Windows
+        Warning=вернуться к прошлой версии Windows будет нельзя
+        Force=1
+        DetectFile=%SystemDrive%\Windows.old
+        FileKey1=%SystemDrive%\Windows.old|*|REMOVESELF
+        [Устаревшие компоненты обновлений]
+        Section=Windows
+        Warning=установленные обновления нельзя будет удалить, DISM работает несколько минут
+        ComponentStore=1
         """;
 
     static readonly string Local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -139,6 +153,8 @@ public static partial class Winapp2
                 case "langsecref" when r.Category == "": r.Category = LangSec.GetValueOrDefault(val, "Браузеры"); break;
                 case "default": r.DefaultOn = val == "1"; break;
                 case "recyclebin": r.RecycleBin = val == "1"; break;
+                case "force": r.Force = val == "1"; break;
+                case "componentstore": r.ComponentStore = val == "1"; break;
             }
         }
         foreach (var x in rules.Where(x => x.Category == "")) x.Category = "Прочее";
@@ -183,7 +199,7 @@ public static partial class Winapp2
 
     /// <summary>No detection keys = always applies; otherwise any Detect key or DetectFile path must exist.</summary>
     public static bool Applies(CleanRule r) =>
-        r.RecycleBin || r.Detect.Count + r.DetectFile.Count == 0
+        r.RecycleBin || r.ComponentStore || r.Detect.Count + r.DetectFile.Count == 0
         || r.Detect.Any(d => Reg.Exists(Reg.Normalize(d)))
         || r.DetectFile.Any(d => ExpandVars(d).Any(p => Glob(p, true).Any()));
 
@@ -267,6 +283,12 @@ public static partial class Winapp2
             (r.Size, r.Count) = (info.i64Size, info.i64NumItems);
             return;
         }
+        if (r.ComponentStore)
+        {
+            try { (r.Size, r.Count) = ParseComponentStore(Dism("/AnalyzeComponentStore")); }
+            catch (IOException) { (r.Size, r.Count) = (0, 0); }
+            return;
+        }
 
         var excl = ExcludeRegexes(r);
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -316,6 +338,15 @@ public static partial class Winapp2
                 if (r.Count > 0 && SHEmptyRecycleBin(IntPtr.Zero, null, SHERB_NOCONFIRMATION | SHERB_NOPROGRESSUI | SHERB_NOSOUND) == 0) freed += r.Size;
                 continue;
             }
+            if (r.ComponentStore)
+            {
+                var drive = new DriveInfo(Path.GetPathRoot(Environment.SystemDirectory)!);
+                var before = drive.AvailableFreeSpace;
+                try { Dism("/StartComponentCleanup"); } catch (IOException) { failed++; }
+                freed += Math.Max(0, drive.AvailableFreeSpace - before);
+                r.Analyzed = false;
+                continue;
+            }
             foreach (var l in r.Found.Where(l => l.Checked))
             {
                 try
@@ -324,11 +355,10 @@ public static partial class Winapp2
                     {
                         case "Файл" when Protect.IsProtectedPath(l.Path): failed++; break;
                         case "Файл":
-                            File.SetAttributes(l.Path, FileAttributes.Normal);
-                            File.Delete(l.Path);
+                            Remove(l.Path, r.Force);
                             freed += l.Size;
                             break;
-                        case "Папка": DeleteEmptyTree(l.Path); break;
+                        case "Папка": DeleteEmptyTree(l.Path, r.Force); break;
                         case "Ключ реестра": tx.DeleteKey(l.Path); break;
                         case "Значение реестра": tx.DeleteValue(l.Path, l.ValueName!); break;
                     }
@@ -342,11 +372,61 @@ public static partial class Winapp2
     }
 
     /// <summary>Removes empty folders bottom-up; anything still holding a file (locked, excluded, unticked) stays.</summary>
-    static void DeleteEmptyTree(string dir)
+    static void DeleteEmptyTree(string dir, bool force)
     {
         if (!Directory.Exists(dir)) return;
-        foreach (var sub in Directory.EnumerateDirectories(dir, "*", Shallow)) DeleteEmptyTree(sub);
-        if (!Protect.IsProtectedPath(dir) && !Directory.EnumerateFileSystemEntries(dir).Any()) Directory.Delete(dir);
+        foreach (var sub in Directory.EnumerateDirectories(dir, "*", Shallow)) DeleteEmptyTree(sub, force);
+        // Shallow skips junctions, so their targets are never walked; Force rules drop the links themselves
+        if (force)
+            foreach (var link in new DirectoryInfo(dir).EnumerateDirectories().Where(d => d.Attributes.HasFlag(FileAttributes.ReparsePoint)))
+                Remove(link.FullName, true);
+        if (!Protect.IsProtectedPath(dir) && !Directory.EnumerateFileSystemEntries(dir).Any()) Remove(dir, force);
+    }
+
+    /// <summary>A file, an empty folder or a junction (only the link goes); Force retries past ACLs.</summary>
+    static void Remove(string path, bool force)
+    {
+        try
+        {
+            if (Directory.Exists(path)) Directory.Delete(path);
+            else { File.SetAttributes(path, FileAttributes.Normal); File.Delete(path); }
+        }
+        catch (UnauthorizedAccessException) when (force) { ForceDelete(path); }
+    }
+
+    /// <summary>Backup semantics + SeRestorePrivilege grant DELETE whatever the ACL says (admin only).</summary>
+    static void ForceDelete(string path)
+    {
+        Compaction.EnablePrivilege("SeRestorePrivilege");
+        using var h = CreateFileW(path, DELETE, 7, IntPtr.Zero, 3, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, IntPtr.Zero);
+        var flags = FILE_DISPOSITION_DELETE | FILE_DISPOSITION_POSIX_SEMANTICS | FILE_DISPOSITION_IGNORE_READONLY_ATTRIBUTE;
+        if (h.IsInvalid || !SetFileInformationByHandle(h, FileDispositionInfoEx, ref flags, 4))
+            throw new UnauthorizedAccessException($"{path}: {new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message}");
+    }
+
+    /// <summary>dism.exe /Online /Cleanup-Image with a fixed operation; English output so it can be parsed.</summary>
+    static string Dism(string op)
+    {
+        var psi = new System.Diagnostics.ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "dism.exe"))
+            { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
+        foreach (var a in new[] { "/English", "/Online", "/Cleanup-Image", op }) psi.ArgumentList.Add(a);
+        using var p = System.Diagnostics.Process.Start(psi)!;
+        var output = p.StandardOutput.ReadToEnd();
+        p.WaitForExit();
+        return p.ExitCode == 0 ? output : throw new IOException($"DISM {op}: код {p.ExitCode}\n{output.Trim()}");
+    }
+
+    /// <summary>AnalyzeComponentStore report: "Backups and Disabled Features" is what cleanup can reclaim.</summary>
+    public static (long Size, long Count) ParseComponentStore(string text)
+    {
+        static string? Field(string text, string name) => Regex.Match(text, "^\\s*" + name + "\\s*:\\s*(.+?)\\s*$", RegexOptions.Multiline) is { Success: true } m ? m.Groups[1].Value : null;
+        long size = 0;
+        if (Field(text, "Backups and Disabled Features") is { } s && Regex.Match(s, @"^([\d.]+)\s*(bytes|KB|MB|GB|TB)$", RegexOptions.IgnoreCase) is { Success: true } m)
+            size = (long)(double.Parse(m.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture)
+                          * Math.Pow(1024, Array.IndexOf(new[] { "BYTES", "KB", "MB", "GB", "TB" }, m.Groups[2].Value.ToUpperInvariant())));
+        long.TryParse(Field(text, "Number of Reclaimable Packages"), out var packages);
+        var recommended = Field(text, "Component Store Cleanup Recommended") == "Yes";
+        return (size, recommended ? Math.Max(packages, 1) : packages);
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -358,6 +438,15 @@ public static partial class Winapp2
     }
 
     const uint SHERB_NOCONFIRMATION = 1, SHERB_NOPROGRESSUI = 2, SHERB_NOSOUND = 4;
+    const uint DELETE = 0x10000, FILE_FLAG_BACKUP_SEMANTICS = 0x02000000, FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000;
+    const int FileDispositionInfoEx = 21;
+    const int FILE_DISPOSITION_DELETE = 1, FILE_DISPOSITION_POSIX_SEMANTICS = 2, FILE_DISPOSITION_IGNORE_READONLY_ATTRIBUTE = 0x10;
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern Microsoft.Win32.SafeHandles.SafeFileHandle CreateFileW(string name, uint access, uint share, IntPtr security, uint disposition, uint flags, IntPtr template);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern bool SetFileInformationByHandle(Microsoft.Win32.SafeHandles.SafeFileHandle h, int infoClass, ref int info, int size);
 
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
     static extern int SHQueryRecycleBin(string? root, ref SHQUERYRBINFO info);

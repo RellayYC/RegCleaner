@@ -50,6 +50,50 @@ public class Winapp2Tests : IDisposable
     }
 
     [Fact]
+    public void ForceRule_RemovesWholeFolder_DropsJunctionsWithoutTouchingTargets()
+    {
+        Touch(@"Outside\precious.txt");
+        Touch(@"Old\Windows\a.dll");
+        Touch(@"Old\Users\ro.txt");
+        File.SetAttributes(Path.Combine(_base, @"Old\Users\ro.txt"), FileAttributes.ReadOnly);
+        var mklink = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("cmd.exe",
+            new[] { "/c", "mklink", "/J", Path.Combine(_base, @"Old\Users\Link"), Path.Combine(_base, "Outside") }) { CreateNoWindow = true })!;
+        mklink.WaitForExit();
+        Assert.Equal(0, mklink.ExitCode);
+        var rule = Winapp2.Parse($"""
+            [Old]
+            Force=1
+            FileKey1={_base}\Old|*|REMOVESELF
+            """).Single();
+
+        Winapp2.Analyze(rule, Array.Empty<string>());
+        Assert.Equal(2, rule.Count); // the junction's target is not walked
+        using (var tx = RegKeeper.Core.UndoTx.Begin("test cleanup")) Assert.Equal(0, Winapp2.Clean(new[] { rule }, tx).Failed);
+        Assert.False(Directory.Exists(Path.Combine(_base, "Old")));
+        Assert.True(File.Exists(Path.Combine(_base, @"Outside\precious.txt")));
+    }
+
+    [Fact]
+    public void ComponentStoreReport_Parses()
+    {
+        const string report = """
+            Windows Explorer Reported Size of Component Store : 7.66 GB
+
+            Actual Size of Component Store : 7.43 GB
+
+                Shared with Windows : 5.68 GB
+                Backups and Disabled Features : 1.5 GB
+                Cache and Temporary Data :  156.33 MB
+
+            Number of Reclaimable Packages : 3
+            Component Store Cleanup Recommended : Yes
+            """;
+        Assert.Equal(((long)(1.5 * (1L << 30)), 3L), Winapp2.ParseComponentStore(report));
+        Assert.Equal((0L, 1L), Winapp2.ParseComponentStore("Number of Reclaimable Packages : 0\nComponent Store Cleanup Recommended : Yes"));
+        Assert.Equal((0L, 0L), Winapp2.ParseComponentStore("Error: 740"));
+    }
+
+    [Fact]
     public void ExpandVars_ProgramFilesMeansBoth() =>
         Assert.Equal(2, Winapp2.ExpandVars(@"%ProgramFiles%\X").Count());
 

@@ -60,6 +60,11 @@
 - [A] Встроенные пункты и правила winapp2 анализируются, исключения и `RemoveSelf` соблюдаются
   [Analyze_Clean_RespectsPatternsExcludesAndRemoveSelf, ExpandVars_ProgramFilesMeansBoth].
 - [A] Весь upstream winapp2.ini разбирается без ошибок [UpstreamFile_ParsesFully].
+- [A] Windows.old (`Force=1`): папка уходит целиком, read-only файлы тоже, junction удаляется как ссылка, её цель
+  не трогается [ForceRule_RemovesWholeFolder_DropsJunctionsWithoutTouchingTargets]. Отчёт DISM разбирается
+  [ComponentStoreReport_Parses].
+- [Р] От админа: Windows.old с файлами TrustedInstaller удаляется (обход ACL через SeRestorePrivilege);
+  «Устаревшие компоненты обновлений» - анализ показывает объём, очистка через DISM сообщает освобождённое.
 - [Р] Без базы winapp2 подсказка в строке состояния, «Обновить winapp2.ini» скачивает и перечитывает.
 - [Р] «Подробно»: снятая галочка у файла - файл остаётся.
 - [Р] Занятый файл (открыт в другой программе): очистка не падает, он попадает в «пропущено».

@@ -133,7 +133,7 @@ public static class Compaction
         if (err != 0) throw new IOException($"{what}: {new System.ComponentModel.Win32Exception(err).Message}");
     }
 
-    static void EnablePrivilege(string name)
+    internal static void EnablePrivilege(string name)
     {
         if (!OpenProcessToken(System.Diagnostics.Process.GetCurrentProcess().Handle, TokenAdjustPrivileges | TokenQuery, out var token))
             throw new System.ComponentModel.Win32Exception();
