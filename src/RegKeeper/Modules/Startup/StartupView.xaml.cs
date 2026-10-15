@@ -33,7 +33,8 @@ public partial class StartupView : UserControl
     }
 
     void Search_TextChanged(object s, TextChangedEventArgs e) => ApplyFilter();
-    void Filter_Click(object s, RoutedEventArgs e) => ApplyFilter();
+    // Checked/Unchecked, not Click: UI Automation toggles do not raise Click; IsChecked="True" fires it while the XAML is parsed
+    void Filter_Changed(object s, RoutedEventArgs e) { if (IsInitialized) ApplyFilter(); }
 
     List<StartupItem> Selected => Grid.SelectedItems.Cast<StartupItem>().ToList();
 

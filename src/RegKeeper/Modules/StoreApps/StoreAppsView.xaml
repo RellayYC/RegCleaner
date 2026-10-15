@@ -12,7 +12,7 @@
                     <Button Content="Удалить" Style="{StaticResource DangerBtn}" Click="Remove_Click"/>
                     <Button Content="Папка" Click="Folder_Click"/>
                     <Button Content="Обновить" Click="Refresh_Click"/>
-                    <CheckBox x:Name="ShowSystem" Content="Показать системные" VerticalAlignment="Center" Margin="8,0" Click="Search_TextChanged"/>
+                    <CheckBox x:Name="ShowSystem" Content="Показать системные" VerticalAlignment="Center" Margin="8,0" Checked="Filter_Changed" Unchecked="Filter_Changed"/>
                 </WrapPanel>
             </DockPanel>
         </StackPanel>

@@ -13,9 +13,9 @@
             </StackPanel>
 
             <TextBlock Text="Интеграция с Windows" FontWeight="SemiBold" Margin="0,18,0,6"/>
-            <CheckBox x:Name="ShellVerb" Content="Пункт «Удалить с RegKeeper» в контекстном меню exe-файлов и ярлыков" Click="ShellVerb_Click"/>
+            <CheckBox x:Name="ShellVerb" Content="Пункт «Удалить с RegKeeper» в контекстном меню exe-файлов и ярлыков" Checked="ShellVerb_Changed" Unchecked="ShellVerb_Changed"/>
             <TextBlock Style="{StaticResource Hint}" Margin="22,2,0,10" Text="В Windows 11 пункт находится в «Показать дополнительные параметры». Только для текущего пользователя."/>
-            <CheckBox x:Name="Watcher" Content="Следить за автозагрузкой и предупреждать о новых программах" Click="Watcher_Click"/>
+            <CheckBox x:Name="Watcher" Content="Следить за автозагрузкой и предупреждать о новых программах" Checked="Watcher_Changed" Unchecked="Watcher_Changed"/>
             <TextBlock Style="{StaticResource Hint}" Margin="22,2,0,10" Text="Маленькая программа в трее (RegKeeper.Watcher) запускается при входе в систему и проверяет ключи Run и папки автозагрузки."/>
 
             <TextBlock Text="Данные" FontWeight="SemiBold" Margin="0,18,0,6"/>

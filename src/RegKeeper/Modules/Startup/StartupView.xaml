@@ -17,8 +17,8 @@
                 <Button Content="Папка файла" Click="Folder_Click"/>
                 <Button Content="Перейти к записи" Click="Goto_Click"/>
                 <Button Content="Обновить" Click="Refresh_Click"/>
-                <CheckBox x:Name="ShowServices" Content="Службы" IsChecked="True" VerticalAlignment="Center" Margin="8,0" Click="Filter_Click"/>
-                <CheckBox x:Name="ShowTasks" Content="Задачи" IsChecked="True" VerticalAlignment="Center" Click="Filter_Click"/>
+                <CheckBox x:Name="ShowServices" Content="Службы" IsChecked="True" VerticalAlignment="Center" Margin="8,0" Checked="Filter_Changed" Unchecked="Filter_Changed"/>
+                <CheckBox x:Name="ShowTasks" Content="Задачи" IsChecked="True" VerticalAlignment="Center" Checked="Filter_Changed" Unchecked="Filter_Changed"/>
             </WrapPanel>
         </StackPanel>
         <DataGrid x:Name="Grid" IsReadOnly="True" SelectionMode="Extended" MouseDoubleClick="Toggle_Click">

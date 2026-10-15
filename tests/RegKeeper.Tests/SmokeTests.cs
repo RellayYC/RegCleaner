@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.Runtime.ExceptionServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Automation.Peers;
+using System.Windows.Automation.Provider;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -53,6 +55,7 @@ public class SmokeTests
                 while (views.Any(v => !v.IsEnabled) && sw.Elapsed < TimeSpan.FromSeconds(120)) { Thread.Sleep(50); Pump(); }
                 Assert.True(views.All(v => v.IsEnabled), "still loading: " + string.Join(", ", views.Where(v => !v.IsEnabled).Select(v => v.GetType().Name)));
                 if (theme == Theme.Light) EditorNavigatesToNewSibling(views.OfType<RegEditorView>().Single());
+                if (theme == Theme.Light) FilterFollowsAutomationToggle(views.OfType<StartupView>().Single());
                 if (Environment.GetEnvironmentVariable("RK_SHOTS") is { Length: > 0 } dir)
                     for (var i = 0; i < views.Count; i++) { nav.SelectedIndex = i; Pump(); Shot(win, Path.Combine(dir, $"{theme}-{i:00}-{views[i].GetType().Name}.png")); }
                 Assert.True(problems.Count == 0, $"{theme}:\n" + string.Join("\n", problems));
@@ -83,6 +86,18 @@ public class SmokeTests
             Assert.Equal(parent + @"\B", ((TreeViewItem)((TreeView)ed.FindName("Tree")).SelectedItem).Tag);
         }
         finally { Registry.CurrentUser.DeleteSubKeyTree(@"Software\RegKeeperTest", false); }
+    }
+
+    /// <summary>B12: a filter checkbox toggled through UI Automation (screen readers, scripts) must refilter the list.</summary>
+    static void FilterFollowsAutomationToggle(StartupView view)
+    {
+        var services = (CheckBox)view.FindName("ShowServices");
+        var grid = (DataGrid)view.FindName("Grid");
+        Assert.Contains(grid.Items.Cast<StartupItem>(), i => i.Kind == StartupKind.Service);
+        ((IToggleProvider)new CheckBoxAutomationPeer(services)).Toggle();
+        Pump();
+        try { Assert.DoesNotContain(grid.Items.Cast<StartupItem>(), i => i.Kind == StartupKind.Service); }
+        finally { ((IToggleProvider)new CheckBoxAutomationPeer(services)).Toggle(); Pump(); }
     }
 
     [Fact]

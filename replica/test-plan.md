@@ -41,7 +41,8 @@
   скрипта [Load_DoesNotThrow, Parse_SingleObjectAndFiltering, Load_RealSystem_And_RemovalKeepsNameOutOfScript].
 - [A] Названия из ссылок `ms-resource:` разрешаются, сырых ссылок в списке нет (B7)
   [Load_RealSystem_And_RemovalKeepsNameOutOfScript].
-- [Р] «Показать системные» добавляет пакеты, у системных кнопка «Удалить» недоступна.
+- [Р] «Показать системные» добавляет пакеты, удаление системного пакета отклоняется сообщением.
+- [A] Фильтры отвечают на переключение через UI Automation (B12) [EveryView_OpensInBothThemes → FilterFollowsAutomationToggle].
 - [Р] Пакет, который не удаляется: ошибка PowerShell показывается пользователю.
 
 ## Автозагрузка

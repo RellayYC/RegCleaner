@@ -30,15 +30,18 @@ public partial class SettingsView : UserControl
         Theme.Apply(Theme.Saved);
     }
 
-    void ShellVerb_Click(object s, RoutedEventArgs e)
+    // Checked/Unchecked (UI Automation toggles raise no Click); also fired by the constructor and the reverts below
+    void ShellVerb_Changed(object s, RoutedEventArgs e)
     {
+        if (ShellVerb.IsChecked == Integration.ShellVerb) return;
         try { Integration.SetShellVerb(ShellVerb.IsChecked == true); }
         catch (Exception ex) { Ui.Error(ex); }
         ShellVerb.IsChecked = Integration.ShellVerb;
     }
 
-    void Watcher_Click(object s, RoutedEventArgs e)
+    void Watcher_Changed(object s, RoutedEventArgs e)
     {
+        if (Watcher.IsChecked == Integration.WatcherAutostart) return;
         try
         {
             Integration.SetWatcherAutostart(Watcher.IsChecked == true);

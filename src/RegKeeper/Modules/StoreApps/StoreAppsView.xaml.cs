@@ -39,6 +39,8 @@ public partial class StoreAppsView : UserControl
     }
 
     void Search_TextChanged(object s, RoutedEventArgs e) => ApplyFilter();
+    // Checked/Unchecked, not Click: UI Automation toggles do not raise Click
+    void Filter_Changed(object s, RoutedEventArgs e) { if (IsInitialized) ApplyFilter(); }
 
     async void Remove_Click(object s, RoutedEventArgs e)
     {
