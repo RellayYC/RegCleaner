@@ -62,12 +62,12 @@ Scope: every module real and tested, the clone measured against Reg Organizer an
 - [x] G11: recon map and feature matrix cover every module
   CHECK: node scripts/gates/check.mjs recon
   EXPECT: RECON OK
-  EVIDENCE: automatic-evidence=v1; definition-sha256=f5976f4dd7cb400106e23ad29d89f09142ece869e5ae89f473f248ce6ea29ceb; exit=0; EXPECT=matched; output-sha256=ff126a94449edb6f3d83e56b7eec1ad44a3eff8fdf8be322c464272af6878deb; output-bytes=30; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
+  EVIDENCE: automatic-evidence=v1; definition-sha256=f5976f4dd7cb400106e23ad29d89f09142ece869e5ae89f473f248ce6ea29ceb; exit=0; EXPECT=matched; output-sha256=fe45120c2ca6cf0718235cfd109402e8035a6aa6db2c0db3674fda0796062daa; output-bytes=30; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
 
 - [x] G12: real, linked user reviews are collected and every complaint theme is either in the feature matrix or rejected with a reason
   CHECK: node scripts/gates/check.mjs reviews 15
   EXPECT: REVIEWS OK
-  EVIDENCE: automatic-evidence=v1; definition-sha256=9ae476c52cff373b43906f4e011d28165c834c05a08be6c4bf0b8377d5873ae8; exit=0; EXPECT=matched; output-sha256=dc61a0d170391d5efcd74b2b30288ecdd8af84443e5d9e8c38c72ee8c14db318; output-bytes=34; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
+  EVIDENCE: automatic-evidence=v1; definition-sha256=9ae476c52cff373b43906f4e011d28165c834c05a08be6c4bf0b8377d5873ae8; exit=0; EXPECT=matched; output-sha256=9a6eca714e0e7fb2ca22ba3d341f207a423b877d1884b9efc92c02dee82770e3; output-bytes=34; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
 
 - [x] G13: five sampled review quotes appear word for word on their linked pages
   EVIDENCE: 2026-10-15 re-fetched the linked pages and compared verbatim: otvet.mail.ru/question/174402556 (ivan_russkii_161), softportal ...-2.html (Онаним, Kira, www, Санчос, Валерий, Андрей), softportal ...-4.html (3Dflame, Вано, Дмитрий.), forums.malwarebytes.com/topic/262535 (alexghilovsky - author fixed from "автор темы", AdvancedSetup), snapfiles 102885 (dsbluecoffee443, Nelson-Carvalho); all match.
@@ -75,7 +75,7 @@ Scope: every module real and tested, the clone measured against Reg Organizer an
 - [x] G14: parity with the original: all must features, at least 90% of should, every must from feedback done
   CHECK: node scripts/gates/check.mjs parity 0.9
   EXPECT: PARITY OK
-  EVIDENCE: automatic-evidence=v1; definition-sha256=e26bf00ca952d558aa4eb34885afe6a417c75d3fadf2c277be44698200bfcc74; exit=0; EXPECT=matched; output-sha256=8f9f23d65b95d46a1b23929db5017b2b6ba2c19dbba9c90640d8a2094d35f575; output-bytes=46; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
+  EVIDENCE: automatic-evidence=v1; definition-sha256=e26bf00ca952d558aa4eb34885afe6a417c75d3fadf2c277be44698200bfcc74; exit=0; EXPECT=matched; output-sha256=8f652e9f0bd7a0c1c77eebbff02dce2b637ebb10a94d830b3650e1357e8515a5; output-bytes=46; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
 
 - [x] G15: both themes pass WCAG contrast
   CHECK: node scripts/gates/check.mjs contrast
@@ -98,17 +98,17 @@ Scope: every module real and tested, the clone measured against Reg Organizer an
 - [x] G19: nothing of the original's name ships
   CHECK: node scripts/gates/check.mjs sweep
   EXPECT: SWEEP CLEAN
-  EVIDENCE: automatic-evidence=v1; definition-sha256=2d2dbf917fe686087fd77d3e5e806d7f312c1f76a868ca0ae86d18ecf3a39209; exit=0; EXPECT=matched; output-sha256=b547debec249fe4c3162a8c8144bec6cab1e796ad20e1678749cf0daf779a08f; output-bytes=21; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
+  EVIDENCE: automatic-evidence=v1; definition-sha256=2d2dbf917fe686087fd77d3e5e806d7f312c1f76a868ca0ae86d18ecf3a39209; exit=0; EXPECT=matched; output-sha256=44c24049b5814b750a04bb582c07b88a8ae8b53a587be6585e17f88ff1023b71; output-bytes=21; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
 
 - [x] G20: own multi-size icon is in the exe and the window
   CHECK: node scripts/gates/check.mjs icon
   EXPECT: ICON OK
   EVIDENCE: automatic-evidence=v1; definition-sha256=e7c7ebfff021e45ebf31afaee3aaadacea8585fca059a14336b5ec540f0f661c; exit=0; EXPECT=matched; output-sha256=4218e5b7785524f5f1a9ba4b24d7aff3c501ea8e530a25931fe4aabcdb6324da; output-bytes=16; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
 
-- [ ] G21: README covers features, install, safety and license
+- [x] G21: README covers features, install, safety and license
   CHECK: node scripts/gates/check.mjs readme
   EXPECT: README OK
-  EVIDENCE: pending
+  EVIDENCE: automatic-evidence=v1; definition-sha256=0d3f2000a0cdadbf22eed0128327954f0f7ea35fdf458d49740d2b073575c67c; exit=0; EXPECT=matched; output-sha256=212cb11d8437dcca9fd2cc64aa15432174713d6e3247185af20009cbf5e0028d; output-bytes=10; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
 
 - [x] G22: self-contained single-file release exes build
   CHECK: node scripts/gates/check.mjs publish
@@ -121,7 +121,7 @@ Scope: every module real and tested, the clone measured against Reg Organizer an
 - [ ] G24: the release is published (GitHub Release / winget) after the user's go-ahead
   EVIDENCE: pending
 
-- [ ] G25: the interface is translated to English: every Russian literal goes through L.T and has a translation
+- [x] G25: the interface is translated to English: every Russian literal goes through L.T and has a translation
   CHECK: node scripts/gates/check.mjs i18n
   EXPECT: I18N OK
-  EVIDENCE: pending
+  EVIDENCE: automatic-evidence=v1; definition-sha256=3482cfb1454bcaf70451a755b07f55b71b4c907063b3ec25cfa306ed9a158f9c; exit=0; EXPECT=matched; output-sha256=94ceb1451253696dc300eb8211e2fdacc1e01666d2d1d71976fc124f8b98ea06; output-bytes=17; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
