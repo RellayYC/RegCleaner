@@ -15,6 +15,7 @@
     <PackageReference Include="TaskScheduler" Version="2.11.0" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.1" />
     <PackageReference Include="System.Management" Version="8.0.0" />
+    <InternalsVisibleTo Include="RegKeeper.Tests" />
   </ItemGroup>
 
   <ItemGroup>

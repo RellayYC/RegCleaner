@@ -61,6 +61,20 @@ const checks = {
     console.log(`TESTS GREEN passed=${m[2]}`);
   },
 
+  /** Log of scripts/gates/admin-run.cmd: high integrity, admin tests passed, nothing failed, newer than the tests. */
+  admin() {
+    const log = join(root, 'artifacts', 'admin', 'run.txt');
+    const text = read(log);
+    if (!text.includes('S-1-16-12288')) fail('run was not elevated (no high integrity level)');
+    for (const t of ['ForceRule_DeletesTrustedInstallerFiles_AsAdmin', 'ComponentStore_RealReportParses_AsAdmin'])
+      if (!new RegExp(`Passed\\s+\\S*${t}`).test(text)) fail(t + ' did not pass');
+    const m = text.match(/Passed:\s+(\d+)/);
+    if (!text.includes('Test Run Successful.') || !m || /Failed:\s+[1-9]/.test(text)) fail('elevated suite did not succeed');
+    const newest = Math.max(...walk(join(root, 'tests')).concat(walk(src)).filter((p) => p.endsWith('.cs')).map((p) => statSync(p).mtimeMs));
+    if (statSync(log).mtimeMs < newest) fail('log is older than the code, rerun scripts/gates/admin-run.cmd elevated');
+    console.log(`ADMIN OK passed=${m[1]}`);
+  },
+
   /** Tweak catalog: enough entries, every one complete and well-typed. */
   tweaks(min = '30') {
     const list = JSON.parse(read(join(src, 'Data', 'tweaks.json')));

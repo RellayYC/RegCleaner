@@ -63,8 +63,10 @@
 - [A] Windows.old (`Force=1`): папка уходит целиком, read-only файлы тоже, junction удаляется как ссылка, её цель
   не трогается [ForceRule_RemovesWholeFolder_DropsJunctionsWithoutTouchingTargets]. Отчёт DISM разбирается
   [ComponentStoreReport_Parses].
-- [Р] От админа: Windows.old с файлами TrustedInstaller удаляется (обход ACL через SeRestorePrivilege);
-  «Устаревшие компоненты обновлений» - анализ показывает объём, очистка через DISM сообщает освобождённое.
+- [A, от админа] Файлы с владельцем TrustedInstaller и правами только на чтение у Администраторов (как в Windows.old)
+  удаляются правилом Force [ForceRule_DeletesTrustedInstallerFiles_AsAdmin]; настоящий отчёт DISM этой машины
+  разбирается [ComponentStore_RealReportParses_AsAdmin]. Прогон: `scripts/gates/admin-run.cmd` от админа (G26).
+- [Р] От админа: очистка через DISM сообщает освобождённое (необратимо: обновления потом не удалить).
 - [Р] Без базы winapp2 подсказка в строке состояния, «Обновить winapp2.ini» скачивает и перечитывает.
 - [Р] «Подробно»: снятая галочка у файла - файл остаётся.
 - [Р] Занятый файл (открыт в другой программе): очистка не падает, он попадает в «пропущено».

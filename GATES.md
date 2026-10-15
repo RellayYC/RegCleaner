@@ -12,7 +12,7 @@ Scope: every module real and tested, the clone measured against Reg Organizer an
 - [x] G1: the whole solution builds and every test passes
   CHECK: node scripts/gates/check.mjs tests "" 40
   EXPECT: TESTS GREEN
-  EVIDENCE: automatic-evidence=v1; definition-sha256=0295a0e1c514fc54b85067c076fc5e17b7950766dd878ea9d3cb940bc25a031e; exit=0; EXPECT=matched; output-sha256=fe99798753b9227265087795b693a3350bf5b9bad5ca0c1fe4c41950fcf0767c; output-bytes=22; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
+  EVIDENCE: automatic-evidence=v1; definition-sha256=0295a0e1c514fc54b85067c076fc5e17b7950766dd878ea9d3cb940bc25a031e; exit=0; EXPECT=matched; output-sha256=703e2652f8f5fd5484dcccaf77841ca3f7efa66f59d433ed5b5c542fd71af477; output-bytes=22; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
 
 - [x] G2: the tweak catalog is complete and well-formed
   CHECK: node scripts/gates/check.mjs tweaks 30
@@ -125,3 +125,7 @@ Scope: every module real and tested, the clone measured against Reg Organizer an
   CHECK: node scripts/gates/check.mjs i18n
   EXPECT: I18N OK
   EVIDENCE: automatic-evidence=v1; definition-sha256=3482cfb1454bcaf70451a755b07f55b71b4c907063b3ec25cfa306ed9a158f9c; exit=0; EXPECT=matched; output-sha256=94ceb1451253696dc300eb8211e2fdacc1e01666d2d1d71976fc124f8b98ea06; output-bytes=17; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
+- [x] G26: admin paths verified elevated: Force cleanup deletes TrustedInstaller-owned files, the real DISM report parses, whole suite green as admin
+  CHECK: node scripts/gates/check.mjs admin
+  EXPECT: ADMIN OK
+  EVIDENCE: automatic-evidence=v1; definition-sha256=4132752470f9b7fe3d627c57181189d45bc6c6dce55643f32f31978840127cbf; exit=0; EXPECT=matched; output-sha256=b6fe76ad2731f9499edf04664ef399b7e95a16d28aa516f8adab67dd3ad1a26c; output-bytes=19; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries

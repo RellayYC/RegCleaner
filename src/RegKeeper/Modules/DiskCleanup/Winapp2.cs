@@ -406,7 +406,7 @@ public static partial class Winapp2
     }
 
     /// <summary>dism.exe /Online /Cleanup-Image with a fixed operation; English output so it can be parsed.</summary>
-    static string Dism(string op)
+    internal static string Dism(string op)
     {
         var psi = new System.Diagnostics.ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "dism.exe"))
             { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };

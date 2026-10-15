@@ -73,6 +73,62 @@ public class Winapp2Tests : IDisposable
         Assert.True(File.Exists(Path.Combine(_base, @"Outside\precious.txt")));
     }
 
+    /// <summary>Admin only (passes vacuously otherwise): files owned by TrustedInstaller with read-only access for
+    /// Administrators, as in a real Windows.old, go away under a Force rule. Run elevated: gate G26.</summary>
+    [Fact]
+    public void ForceRule_DeletesTrustedInstallerFiles_AsAdmin()
+    {
+        if (!Compaction.IsAdmin) return;
+        var old = Path.Combine(_base, "Old");
+        Touch(@"Old\Windows\System32\a.dll");
+        try
+        {
+            foreach (var p in new[] { @"Windows\System32\a.dll", @"Windows\System32", "Windows", "" }.Select(r => Path.Combine(old, r)))
+            {
+                Icacls(p, "/setowner", "*" + TrustedInstaller);
+                Icacls(p, "/inheritance:r", "/grant:r", $"*{TrustedInstaller}:F", "*S-1-5-32-544:RX", "*S-1-5-32-545:RX");
+            }
+            Assert.Throws<UnauthorizedAccessException>(() => File.Delete(Path.Combine(old, @"Windows\System32\a.dll"))); // the ACL really bites
+            var rule = Winapp2.Parse($"""
+                [Old]
+                Force=1
+                FileKey1={old}|*|REMOVESELF
+                """).Single();
+            Winapp2.Analyze(rule, Array.Empty<string>());
+            Assert.Equal(1, rule.Count);
+            using (var tx = RegKeeper.Core.UndoTx.Begin("test cleanup")) Assert.Equal(0, Winapp2.Clean(new[] { rule }, tx).Failed);
+            Assert.False(Directory.Exists(old));
+        }
+        finally
+        {
+            if (Directory.Exists(old)) { Icacls(old, "/setowner", "*S-1-5-32-544", "/t", "/c"); Icacls(old, "/reset", "/t", "/c"); }
+        }
+    }
+
+    const string TrustedInstaller = "S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464";
+
+    static void Icacls(string path, params string[] args)
+    {
+        var psi = new System.Diagnostics.ProcessStartInfo("icacls.exe") { CreateNoWindow = true, UseShellExecute = false };
+        psi.ArgumentList.Add(path);
+        foreach (var a in args) psi.ArgumentList.Add(a);
+        using var p = System.Diagnostics.Process.Start(psi)!;
+        p.WaitForExit();
+        Assert.True(p.ExitCode == 0, $"icacls {path} {string.Join(' ', args)}: {p.ExitCode}");
+    }
+
+    /// <summary>Admin only: the real DISM report on this machine parses (a format change would read as 0 silently).</summary>
+    [Fact]
+    public void ComponentStore_RealReportParses_AsAdmin()
+    {
+        if (!Compaction.IsAdmin) return;
+        var report = Winapp2.Dism("/AnalyzeComponentStore");
+        Assert.Matches(@"Backups and Disabled Features\s*:\s*[\d.]+\s*(bytes|KB|MB|GB|TB)", report);
+        Assert.Matches(@"Component Store Cleanup Recommended\s*:\s*(Yes|No)", report);
+        var (size, _) = Winapp2.ParseComponentStore(report);
+        Assert.True(size > 0 || report.Contains(": 0 bytes"), report);
+    }
+
     [Fact]
     public void ComponentStoreReport_Parses()
     {
