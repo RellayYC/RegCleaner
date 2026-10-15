@@ -1,0 +1,27 @@
+<UserControl x:Class="RegKeeper.Modules.CompactionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top">
+            <TextBlock Text="Сжатие реестра" Style="{StaticResource Title}"/>
+            <TextBlock Style="{StaticResource Hint}" Text="Файлы реестра со временем фрагментируются. Анализ записывает сжатые копии разделов и показывает выигрыш. Сжатие создаёт точку восстановления, а замена происходит при следующей перезагрузке. Старые файлы остаются резервной копией в папке сжатия."/>
+            <DockPanel Margin="0,14,0,10">
+                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
+                <WrapPanel>
+                    <Button x:Name="AnalyzeBtn" Content="Анализ" Style="{StaticResource Primary}" Click="Analyze_Click"/>
+                    <Button x:Name="CompactBtn" Content="Сжать" Style="{StaticResource DangerBtn}" Click="Compact_Click" IsEnabled="False"/>
+                    <Button Content="Папка сжатия" Click="Folder_Click"/>
+                </WrapPanel>
+            </DockPanel>
+        </StackPanel>
+        <DataGrid x:Name="Grid" IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Раздел" Binding="{Binding Key}" Width="2*"/>
+                <DataGridTextColumn Header="Файл" Binding="{Binding File}" Width="2*"/>
+                <DataGridTextColumn Header="Размер" Binding="{Binding SizeText}" SortMemberPath="Size" Width="90"/>
+                <DataGridTextColumn Header="После сжатия" Binding="{Binding CompactedText}" SortMemberPath="CompactedSize" Width="110"/>
+                <DataGridTextColumn Header="Выигрыш" Binding="{Binding GainText}" SortMemberPath="Gain" Width="130"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</UserControl>

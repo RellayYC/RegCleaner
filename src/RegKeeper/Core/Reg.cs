@@ -131,7 +131,8 @@ public static class Reg
 
     public static string? GetString(RegistryKey k, string name)
     {
-        try { return k.GetValue(name, null, RegistryValueOptions.DoNotExpandEnvironmentNames)?.ToString(); }
+        // some REG_SZ (hivelist...) carry extra trailing NULs that .NET keeps
+        try { return k.GetValue(name, null, RegistryValueOptions.DoNotExpandEnvironmentNames)?.ToString()?.TrimEnd('\0'); }
         catch { return null; }
     }
 
