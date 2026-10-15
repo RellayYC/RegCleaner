@@ -63,7 +63,7 @@ Severity: S3
 `Resources/`) и разрешается SHLoadIndirectString: «Phone Link», «Microsoft To Do», «Windows Calculator».
 Доказательство: `Load_RealSystem_And_RemovalKeepsNameOutOfScript` проверяет, что ни одно название не начинается
 с «ms-resource:» (без исправления падает), скриншот `artifacts/g18/b7-store.png`.
-Status: fixed in HEAD
+Status: fixed in 2576eea
 
 ### B8 Поля поиска без подписи
 Severity: S4
@@ -72,7 +72,7 @@ Severity: S4
 Исправление: общий шаблон TextBox показывает ToolTip серым текстом, пока поле пустое; у встроенных полей
 появился отступ до соседней кнопки.
 Доказательство: скриншоты `artifacts/g18/b8-uninst.png`, `b7-store.png`.
-Status: fixed in HEAD
+Status: fixed in 2576eea
 
 ### B9 Редактор: после «Копировать» выделен родитель, «Удалить» предлагает удалить его
 Severity: S2
@@ -84,7 +84,7 @@ Severity: S2
 Исправление: если раздела нет среди загруженных детей, но он есть в реестре, узел перечитывается один раз.
 Доказательство: `EveryView_OpensInBothThemes` → `EditorNavigatesToNewSibling` (без исправления: Expected
 `...\B`, Actual `...\RegKeeperTest`); UIA-сценарий G18: подтверждение удаления показывает `...\G18Copy`.
-Status: fixed in HEAD
+Status: fixed in 2576eea
 
 ### B10 Тесты оставляли записи в настоящем Центре отмены
 Severity: S3
@@ -94,7 +94,7 @@ Severity: S3
 до первого обращения. Старые записи перенесены в `%TEMP%\RegKeeperOldTestUndo`.
 Доказательство: `Tests_DoNotWriteToTheRealUndoCenter`; число записей в настоящем Undo до и после полного
 прогона одинаковое (13 = 13).
-Status: fixed in HEAD
+Status: fixed in 2576eea
 
 ### B11 Сообщения об ошибках на английском и без причины
 Severity: S4
@@ -104,4 +104,4 @@ Severity: S4
 HttpClient через 100 с с английским текстом.
 Исправление: «Неверное регулярное выражение:» перед текстом .NET; подсказка «Не найден ...\RegKeeper.Watcher.exe»
 на сером флажке; таймаут скачивания 5 минут и русское сообщение о сети.
-Status: fixed in HEAD
+Status: fixed in 2576eea
