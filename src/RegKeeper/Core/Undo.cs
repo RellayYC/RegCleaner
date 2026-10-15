@@ -93,6 +93,7 @@ public sealed class UndoTx : IDisposable
     public void DeleteValue(string key, string name)
     {
         key = Reg.Normalize(key);
+        if (Protect.IsProtectedValue(key)) { Errors.Add($"{Reg.Short(key)} → {name}: защищённый системный раздел, не удалено"); return; }
         using var k = Reg.Open(key, true);
         if (k == null || Reg.Read(k, name) is not { } old) return;
         Block($"[{key}]\r\n{RegFile.FormatValue(old)}\r\n", $"Удалено значение {Reg.Short(key)} → {DisplayName(name)}");
@@ -103,6 +104,7 @@ public sealed class UndoTx : IDisposable
     public void DeleteKey(string key)
     {
         key = Reg.Normalize(key);
+        if (Protect.IsProtectedKey(key)) { Errors.Add($"{Reg.Short(key)}: защищённый системный раздел, не удалён"); return; }
         if (!Reg.Exists(key)) return;
         var sb = new StringBuilder();
         RegFile.AppendKey(sb, key, true);

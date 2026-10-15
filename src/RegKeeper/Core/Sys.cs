@@ -98,9 +98,10 @@ public static partial class Sys
         catch { return 0; }
     }
 
-    /// <summary>Moves files/folders to the Recycle Bin (silent). Returns false if the shell refused.</summary>
+    /// <summary>Moves files/folders to the Recycle Bin (silent). Returns false if the shell refused or a path is protected.</summary>
     public static bool Recycle(params string[] paths)
     {
+        if (paths.Any(Protect.IsProtectedPath)) return false;
         paths = paths.Where(p => File.Exists(p) || Directory.Exists(p)).ToArray();
         if (paths.Length == 0) return true;
         var op = new SHFILEOPSTRUCT

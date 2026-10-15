@@ -318,6 +318,7 @@ public static partial class Winapp2
                 {
                     switch (l.Kind)
                     {
+                        case "Файл" when Protect.IsProtectedPath(l.Path): failed++; break;
                         case "Файл":
                             File.SetAttributes(l.Path, FileAttributes.Normal);
                             File.Delete(l.Path);
@@ -341,7 +342,7 @@ public static partial class Winapp2
     {
         if (!Directory.Exists(dir)) return;
         foreach (var sub in Directory.EnumerateDirectories(dir, "*", Shallow)) DeleteEmptyTree(sub);
-        if (!Directory.EnumerateFileSystemEntries(dir).Any()) Directory.Delete(dir);
+        if (!Protect.IsProtectedPath(dir) && !Directory.EnumerateFileSystemEntries(dir).Any()) Directory.Delete(dir);
     }
 
     [StructLayout(LayoutKind.Sequential)]

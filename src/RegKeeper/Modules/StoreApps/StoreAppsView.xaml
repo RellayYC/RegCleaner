@@ -1,0 +1,29 @@
+<UserControl x:Class="RegKeeper.Modules.StoreAppsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top">
+            <TextBlock Text="Приложения Windows" Style="{StaticResource Title}"/>
+            <TextBlock Style="{StaticResource Hint}" Text="Приложения из Microsoft Store и встроенные UWP-приложения текущего пользователя. Фреймворки и системные пакеты скрыты и не удаляются. Удалённое приложение можно вернуть только переустановкой из Store."/>
+            <DockPanel Margin="0,14,0,10">
+                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
+                <WrapPanel>
+                    <TextBox x:Name="Search" Width="260" TextChanged="Search_TextChanged" ToolTip="Поиск по названию, пакету и издателю"/>
+                    <Button Content="Удалить" Style="{StaticResource DangerBtn}" Click="Remove_Click"/>
+                    <Button Content="Папка" Click="Folder_Click"/>
+                    <Button Content="Обновить" Click="Refresh_Click"/>
+                    <CheckBox x:Name="ShowSystem" Content="Показать системные" VerticalAlignment="Center" Margin="8,0" Click="Search_TextChanged"/>
+                </WrapPanel>
+            </DockPanel>
+        </StackPanel>
+        <DataGrid x:Name="Grid" IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Название" Binding="{Binding Title}" Width="2*"/>
+                <DataGridTextColumn Header="Пакет" Binding="{Binding Name}" Width="2*"/>
+                <DataGridTextColumn Header="Издатель" Binding="{Binding PublisherName}" Width="*"/>
+                <DataGridTextColumn Header="Версия" Binding="{Binding Version}" Width="110"/>
+                <DataGridTextColumn Header="Размер" Binding="{Binding SizeText}" SortMemberPath="SizeBytes" Width="90"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</UserControl>

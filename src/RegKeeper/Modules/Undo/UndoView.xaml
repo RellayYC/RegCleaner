@@ -1,0 +1,28 @@
+<UserControl x:Class="RegKeeper.Modules.UndoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top">
+            <TextBlock Text="Центр отмены" Style="{StaticResource Title}"/>
+            <TextBlock Style="{StaticResource Hint}" Text="Каждое изменение реестра и задач планировщика сохраняется здесь до применения. Отмена возвращает всё как было и убирает запись. Файлы и папки удаляются в корзину, восстанавливайте их оттуда."/>
+            <DockPanel Margin="0,14,0,10">
+                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
+                <WrapPanel>
+                    <Button Content="Отменить изменения" Style="{StaticResource Primary}" Click="Restore_Click"/>
+                    <Button Content="Удалить запись" Click="Delete_Click"/>
+                    <Button Content="Удалить старше 30 дней" Click="DeleteOld_Click"/>
+                    <Button Content="Открыть .reg" Click="OpenReg_Click" ToolTip="Резервная копия в формате regedit"/>
+                    <Button Content="Обновить" Click="Refresh_Click"/>
+                </WrapPanel>
+            </DockPanel>
+        </StackPanel>
+        <ListBox x:Name="Items" DockPanel.Dock="Bottom" Height="170" Margin="0,10,0,0" ItemsSource="{Binding SelectedItem.Items, ElementName=Grid}"/>
+        <DataGrid x:Name="Grid" IsReadOnly="True" MouseDoubleClick="Restore_Click">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Когда" Binding="{Binding Date, StringFormat=dd.MM.yyyy HH:mm:ss}" SortMemberPath="Date" Width="150"/>
+                <DataGridTextColumn Header="Операция" Binding="{Binding Title}" Width="*"/>
+                <DataGridTextColumn Header="Изменений" Binding="{Binding Count}" Width="90"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</UserControl>

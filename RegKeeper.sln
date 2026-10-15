@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{EC44E273
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegKeeper.Tests", "tests\RegKeeper.Tests\RegKeeper.Tests.csproj", "{0FFE37DC-354D-4A19-9B9C-8873EAF01223}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegKeeper.Watcher", "src\RegKeeper.Watcher\RegKeeper.Watcher.csproj", "{1B3D702C-BC03-464A-8E5D-018819FC7349}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,9 +30,14 @@ Global
 		{0FFE37DC-354D-4A19-9B9C-8873EAF01223}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0FFE37DC-354D-4A19-9B9C-8873EAF01223}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0FFE37DC-354D-4A19-9B9C-8873EAF01223}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B3D702C-BC03-464A-8E5D-018819FC7349}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B3D702C-BC03-464A-8E5D-018819FC7349}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B3D702C-BC03-464A-8E5D-018819FC7349}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B3D702C-BC03-464A-8E5D-018819FC7349}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0ABB22B3-EE0A-4CFC-94B8-BAFECE6E37D0} = {6C4626A8-1E8F-4282-8F85-58FA8F29C797}
 		{0FFE37DC-354D-4A19-9B9C-8873EAF01223} = {EC44E273-5BDE-4DEA-96CA-7E23EFD27F12}
+		{1B3D702C-BC03-464A-8E5D-018819FC7349} = {6C4626A8-1E8F-4282-8F85-58FA8F29C797}
 	EndGlobalSection
 EndGlobal

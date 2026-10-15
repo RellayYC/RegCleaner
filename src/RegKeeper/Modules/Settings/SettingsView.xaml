@@ -1,0 +1,24 @@
+<UserControl x:Class="RegKeeper.Modules.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel MaxWidth="720" HorizontalAlignment="Left">
+            <TextBlock Text="Настройки" Style="{StaticResource Title}"/>
+
+            <TextBlock Text="Интеграция с Windows" FontWeight="SemiBold" Margin="0,18,0,6"/>
+            <CheckBox x:Name="ShellVerb" Content="Пункт «Удалить с RegKeeper» в контекстном меню exe-файлов и ярлыков" Click="ShellVerb_Click"/>
+            <TextBlock Style="{StaticResource Hint}" Margin="22,2,0,10" Text="В Windows 11 пункт находится в «Показать дополнительные параметры». Только для текущего пользователя."/>
+            <CheckBox x:Name="Watcher" Content="Следить за автозагрузкой и предупреждать о новых программах" Click="Watcher_Click"/>
+            <TextBlock Style="{StaticResource Hint}" Margin="22,2,0,10" Text="Маленькая программа в трее (RegKeeper.Watcher) запускается при входе в систему и проверяет ключи Run и папки автозагрузки."/>
+
+            <TextBlock Text="Данные" FontWeight="SemiBold" Margin="0,18,0,6"/>
+            <TextBlock x:Name="DataInfo" Style="{StaticResource Hint}" TextWrapping="Wrap"/>
+            <WrapPanel Margin="0,8,0,0">
+                <Button Content="Открыть папку данных" Click="Data_Click"/>
+            </WrapPanel>
+
+            <TextBlock Text="О программе" FontWeight="SemiBold" Margin="0,18,0,6"/>
+            <TextBlock x:Name="About" Style="{StaticResource Hint}" TextWrapping="Wrap"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

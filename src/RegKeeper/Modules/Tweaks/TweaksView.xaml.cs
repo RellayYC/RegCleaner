@@ -47,7 +47,7 @@ public partial class TweaksView : UserControl
         var changed = _all.Where(t => t.Wanted != t.IsOn).ToList();
         if (changed.Count == 0) { Ui.Info("Нечего применять: отметки совпадают с текущим состоянием."); return; }
         if (!Ui.Confirm("Применить:\n" + string.Join("\n", changed.Select(t => (t.Wanted ? "+ " : "- ") + t.Name)))) return;
-        (string? Restart, List<string> Errors) r = default;
+        (string? Restart, List<string> Errors) r = (null, new());
         await Ui.Busy(this, () => Task.Run(() => r = Tweaks.ApplyChanged(changed)));
         ApplyFilter();
         if (r.Errors.Count > 0) Ui.Info("Не удалось:\n" + string.Join("\n", r.Errors));
