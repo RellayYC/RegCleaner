@@ -68,7 +68,11 @@ public partial class RegEditorView : UserControl
             Fill(node);
             node.IsExpanded = true;
             // a key created since this node was loaded (copy target, another program): re-read once before giving up
-            if ((Child(node, part) ?? (Reg.Exists(node.Tag + "\\" + part) ? Refill(node, part) : null)) is not { } next) break;
+            if ((Child(node, part) ?? (Reg.Exists(node.Tag + "\\" + part) ? Refill(node, part) : null)) is not { } next)
+            {
+                Ui.Info($"Раздел не найден или нет доступа:\n{full}\n\nОткрыт ближайший: {node.Tag}");
+                break;
+            }
             node = next;
         }
         node.IsSelected = true;
