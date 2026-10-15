@@ -115,4 +115,4 @@ Severity: S3
 Исправление: Checked/Unchecked вместо Click; в Настройках выход, если состояние уже совпадает с реестром
 (конструктор и откат после ошибки ничего не перерегистрируют). Автотест FilterFollowsAutomationToggle
 падал до исправления.
-Status: open
+Status: fixed in 5e540a0
