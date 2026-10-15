@@ -8,6 +8,7 @@
     <UseWPF>true</UseWPF>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationIcon>Assets\RegKeeper.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +19,7 @@
 
   <ItemGroup>
     <None Update="Data\**" CopyToOutputDirectory="PreserveNewest" />
+    <Resource Include="Assets\RegKeeper.ico" />
   </ItemGroup>
 
 </Project>
