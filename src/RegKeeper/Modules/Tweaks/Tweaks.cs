@@ -25,23 +25,23 @@ public sealed class TweakValue
             "qword" => RawValue.FromQword(Name, e.GetUInt64()),
             "sz" => RawValue.String(Name, e.GetString()!),
             "expand" => RawValue.String(Name, e.GetString()!, RawValue.ExpandSz),
-            _ => throw new InvalidDataException($"Неизвестный тип {Type} у {Key} → {Name}"),
+            _ => throw new InvalidDataException(L.T($"Неизвестный тип {Type} у {Key} → {Name}")),
         };
     }
 }
 
 public sealed class Tweak
 {
-    public string Category { get; init; } = "";
-    public string Name { get; init; } = "";
-    public string Description { get; init; } = "";
+    public string Category { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Description { get; set; } = "";
     /// <summary>null, "explorer", "logoff" or "reboot".</summary>
     public string? Restart { get; init; }
     public List<TweakValue> Values { get; init; } = new();
 
     public bool IsOn { get; private set; }
     public bool Wanted { get; set; }
-    public string RestartText => Restart switch { "explorer" => "перезапуск Проводника", "logoff" => "выход из системы", "reboot" => "перезагрузка", _ => "" };
+    public string RestartText => Restart switch { "explorer" => L.T("перезапуск Проводника"), "logoff" => L.T("выход из системы"), "reboot" => L.T("перезагрузка"), _ => "" };
 
     public void Refresh() => Wanted = IsOn = Values.All(v => v.Raw(true) is { } raw ? raw.SameAs(Reg.Read(v.Key, v.Name)) : Reg.Read(v.Key, v.Name) == null);
 
@@ -63,7 +63,7 @@ public static class Tweaks
     public static List<Tweak> Load(string? path = null)
     {
         var list = JsonSerializer.Deserialize<List<Tweak>>(File.ReadAllText(path ?? FilePath), Json)!;
-        list.ForEach(t => t.Refresh());
+        list.ForEach(t => { (t.Category, t.Name, t.Description) = (L.T(t.Category), L.T(t.Name), L.T(t.Description)); t.Refresh(); });
         return list;
     }
 
@@ -72,7 +72,7 @@ public static class Tweaks
     {
         var changed = tweaks.Where(t => t.Wanted != t.IsOn).ToList();
         if (changed.Count == 0) return (null, new());
-        using var tx = UndoTx.Begin("Твики: " + string.Join(", ", changed.Select(t => (t.Wanted ? "+" : "-") + t.Name)));
+        using var tx = UndoTx.Begin(L.T("Твики: ") + string.Join(", ", changed.Select(t => (t.Wanted ? "+" : "-") + t.Name)));
         foreach (var t in changed)
         {
             try { t.Apply(t.Wanted, tx); }

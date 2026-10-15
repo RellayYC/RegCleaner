@@ -6,7 +6,12 @@ static class TestData
 {
     // runs before any test touches AppPaths: undo records, snapshots and traces of tests go to %TEMP%
     [ModuleInitializer]
-    internal static void Init() => Environment.SetEnvironmentVariable("RK_DATA", Path.Combine(Path.GetTempPath(), "RegKeeperTestData"));
+    // and the interface is Russian whatever the machine language or saved choice: tests assert Russian text
+    internal static void Init()
+    {
+        Environment.SetEnvironmentVariable("RK_DATA", Path.Combine(Path.GetTempPath(), "RegKeeperTestData"));
+        Environment.SetEnvironmentVariable("RK_LANG", "ru");
+    }
 }
 
 public class TestDataTests

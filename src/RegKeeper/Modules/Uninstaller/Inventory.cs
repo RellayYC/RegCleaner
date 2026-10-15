@@ -52,9 +52,9 @@ public static class Inventory
 
     static readonly (string Root, string Scope)[] Roots =
     {
-        ($@"HKEY_LOCAL_MACHINE\SOFTWARE\{UninstallSub}", "Все пользователи"),
-        ($@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\{UninstallSub}", "Все пользователи, 32-бит"),
-        ($@"HKEY_CURRENT_USER\Software\{UninstallSub}", "Текущий пользователь"),
+        ($@"HKEY_LOCAL_MACHINE\SOFTWARE\{UninstallSub}", L.T("Все пользователи")),
+        ($@"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\{UninstallSub}", L.T("Все пользователи, 32-бит")),
+        ($@"HKEY_CURRENT_USER\Software\{UninstallSub}", L.T("Текущий пользователь")),
     };
 
     public static List<InstalledApp> Load()
@@ -102,7 +102,7 @@ public static class Inventory
         if (app.IsMsi && app.ProductCode.StartsWith('{'))
             return Process.Start(new ProcessStartInfo("msiexec.exe", $"/x {app.ProductCode}" + (quiet ? " /qb" : "")) { UseShellExecute = true });
         var cmd = quiet && app.QuietUninstallString != "" ? app.QuietUninstallString : app.UninstallString;
-        var exe = Sys.ExtractPath(cmd) ?? throw new InvalidOperationException("Пустая строка удаления");
+        var exe = Sys.ExtractPath(cmd) ?? throw new InvalidOperationException(L.T("Пустая строка удаления"));
         var trimmed = cmd.Trim();
         var args = trimmed.StartsWith('"') ? trimmed[(trimmed.IndexOf('"', 1) + 1)..]
             : trimmed.Length > exe.Length && trimmed.StartsWith(exe, StringComparison.OrdinalIgnoreCase) ? trimmed[exe.Length..] : "";

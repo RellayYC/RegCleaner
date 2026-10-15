@@ -10,8 +10,8 @@ public enum SnapKind : byte { Key, Value, Dir, File }
 public sealed record SnapEntry(SnapKind Kind, string Path, string? Name = null, uint Type = 0, byte[]? Data = null, long Size = 0, long Time = 0)
 {
     public bool IsRegistry => Kind <= SnapKind.Value;
-    public string Display => Name == null ? Path : $"{Path} → {(Name == "" ? "(По умолчанию)" : Name)}";
-    public string KindText => Kind switch { SnapKind.Key => "Раздел", SnapKind.Value => "Значение", SnapKind.Dir => "Папка", _ => "Файл" };
+    public string Display => Name == null ? Path : $"{Path} → {(Name == "" ? L.T("(По умолчанию)") : Name)}";
+    public string KindText => Kind switch { SnapKind.Key => L.T("Раздел"), SnapKind.Value => L.T("Значение"), SnapKind.Dir => L.T("Папка"), _ => L.T("Файл") };
 }
 
 public enum ChangeKind : byte { Added, Removed, Modified }
@@ -20,7 +20,7 @@ public enum ChangeKind : byte { Added, Removed, Modified }
 public sealed record SnapChange(ChangeKind Kind, SnapEntry Entry)
 {
     public bool Checked { get; set; } = true;
-    public string KindText => Kind switch { ChangeKind.Added => "Добавлено", ChangeKind.Removed => "Удалено", _ => "Изменено" } + ": " + Entry.KindText.ToLowerInvariant();
+    public string KindText => Kind switch { ChangeKind.Added => L.T("Добавлено"), ChangeKind.Removed => L.T("Удалено"), _ => L.T("Изменено") } + ": " + Entry.KindText.ToLowerInvariant();
     public string Display => Entry.Display;
 }
 
@@ -186,7 +186,7 @@ public static class Snapshot
     static BinaryReader Reader(string file, out SnapInfo info)
     {
         var r = new BinaryReader(new GZipStream(File.OpenRead(file), CompressionMode.Decompress), Encoding.UTF8);
-        if (r.ReadString() != Magic) { r.Dispose(); throw new InvalidDataException("Не снимок RegKeeper: " + file); }
+        if (r.ReadString() != Magic) { r.Dispose(); throw new InvalidDataException(L.T("Не снимок RegKeeper: ") + file); }
         var note = r.ReadString();
         var date = new DateTime(r.ReadInt64());
         var roots = new string[r.ReadInt32()];
@@ -279,11 +279,11 @@ public static class Snapshot
         }
         if (files.Count > 0)
         {
-            if (Sys.Recycle(files.ToArray())) files.ForEach(f => tx.Note("В корзину: " + f));
-            else tx.Errors.Add("Не удалось отправить в корзину часть файлов");
+            if (Sys.Recycle(files.ToArray())) files.ForEach(f => tx.Note(L.T("В корзину: ") + f));
+            else tx.Errors.Add(L.T("Не удалось отправить в корзину часть файлов"));
         }
         foreach (var c in list.Where(c => c.Kind != ChangeKind.Added && !c.Entry.IsRegistry && c.Entry.Kind == SnapKind.File))
-            tx.Errors.Add($"Файл не восстановить ({(c.Kind == ChangeKind.Removed ? "удалён" : "изменён")}): {c.Entry.Path}");
+            tx.Errors.Add(L.T($"Файл не восстановить ({(c.Kind == ChangeKind.Removed ? L.T("удалён") : L.T("изменён"))}): {c.Entry.Path}"));
     }
 
     static string Parent(string path) => path.LastIndexOf('\\') is var i and > 0 ? path[..i] : "";

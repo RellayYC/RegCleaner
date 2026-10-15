@@ -9,8 +9,8 @@ public enum HitKind { Key, Name, Data }
 public sealed record SearchHit(HitKind Kind, string Key, string? ValueName, string Text)
 {
     public bool Checked { get; set; }
-    public string KindText => Kind switch { HitKind.Key => "Раздел", HitKind.Name => "Имя", _ => "Данные" };
-    public string Display => ValueName == null ? Reg.Short(Key) : $"{Reg.Short(Key)} → {(ValueName == "" ? "(По умолчанию)" : ValueName)}";
+    public string KindText => Kind switch { HitKind.Key => L.T("Раздел"), HitKind.Name => L.T("Имя"), _ => L.T("Данные") };
+    public string Display => ValueName == null ? Reg.Short(Key) : $"{Reg.Short(Key)} → {(ValueName == "" ? L.T("(По умолчанию)") : ValueName)}";
 }
 
 public sealed record SearchOptions(string Pattern, bool Keys = true, bool Names = true, bool Data = true,
@@ -101,7 +101,7 @@ public sealed class RegSearch
                     case HitKind.Name:
                         var name = rx.Replace(h.ValueName!, repl);
                         if (name == h.ValueName || Reg.Read(h.Key, h.ValueName!) is not { } old) break;
-                        if (Reg.Read(h.Key, name) != null) { tx.Errors.Add($"{Reg.Short(h.Key)} → {name}: уже существует"); break; }
+                        if (Reg.Read(h.Key, name) != null) { tx.Errors.Add(L.T($"{Reg.Short(h.Key)} → {name}: уже существует")); break; }
                         tx.SetValue(h.Key, old with { Name = name });
                         tx.DeleteValue(h.Key, h.ValueName!);
                         break;

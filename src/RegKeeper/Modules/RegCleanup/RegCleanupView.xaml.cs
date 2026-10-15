@@ -8,7 +8,11 @@ public partial class RegCleanupView : UserControl
 {
     List<RegIssue> _all = new();
 
-    public RegCleanupView() => InitializeComponent();
+    public RegCleanupView()
+    {
+        InitializeComponent();
+        L.Apply(this);
+    }
 
     async Task Scan() => await Ui.Busy(this, async () =>
     {
@@ -23,7 +27,7 @@ public partial class RegCleanupView : UserControl
                                                    || i.Key.Contains(q, StringComparison.OrdinalIgnoreCase)
                                                    || i.Problem.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
         Grid.ItemsSource = list;
-        Status.Text = $"Проблем: {_all.Count}" + (list.Count != _all.Count ? $"   Показано: {list.Count}" : "");
+        Status.Text = L.T($"Проблем: {_all.Count}") + (list.Count != _all.Count ? L.T($"   Показано: {list.Count}") : "");
     }
 
     void Search_TextChanged(object s, TextChangedEventArgs e) => ApplyFilter();
@@ -34,10 +38,10 @@ public partial class RegCleanupView : UserControl
     {
         Grid.CommitEdit();
         var items = _all.Where(i => i.Checked).ToList();
-        if (items.Count == 0 || !Ui.Confirm($"Исправить {items.Count} записей? Резервная копия попадёт в Центр отмены.")) return;
+        if (items.Count == 0 || !Ui.Confirm(L.T($"Исправить {items.Count} записей? Резервная копия попадёт в Центр отмены."))) return;
         List<string> errors = new();
         await Ui.Busy(this, async () => errors = await Task.Run(() => RegScanner.Fix(items)));
-        if (errors.Count > 0) Ui.Info("Не удалось:\n" + string.Join("\n", errors.Take(20)));
+        if (errors.Count > 0) Ui.Info(L.T("Не удалось:\n") + string.Join("\n", errors.Take(20)));
         await Scan();
     }
 

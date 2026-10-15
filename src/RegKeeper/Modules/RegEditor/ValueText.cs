@@ -33,6 +33,6 @@ public static class ValueText
         var v = t.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
             ? ulong.Parse(t[2..], NumberStyles.HexNumber)
             : ulong.Parse(t);
-        return v <= max ? v : throw new OverflowException("Слишком большое число");
+        return v <= max ? v : throw new OverflowException(L.T("Слишком большое число"));
     }
 }

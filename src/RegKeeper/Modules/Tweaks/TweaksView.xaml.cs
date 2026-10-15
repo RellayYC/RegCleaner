@@ -13,6 +13,7 @@ public partial class TweaksView : UserControl
     public TweaksView()
     {
         InitializeComponent();
+        L.Apply(this);
         Load();
     }
 
@@ -30,7 +31,7 @@ public partial class TweaksView : UserControl
         var view = new ListCollectionView(list);
         view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(Tweak.Category)));
         Grid.ItemsSource = view;
-        Status.Text = $"Включено: {_all.Count(t => t.IsOn)} из {_all.Count}";
+        Status.Text = L.T($"Включено: {_all.Count(t => t.IsOn)} из {_all.Count}");
     }
 
     void Search_TextChanged(object s, TextChangedEventArgs e) => ApplyFilter();
@@ -45,21 +46,21 @@ public partial class TweaksView : UserControl
     {
         Grid.CommitEdit();
         var changed = _all.Where(t => t.Wanted != t.IsOn).ToList();
-        if (changed.Count == 0) { Ui.Info("Нечего применять: отметки совпадают с текущим состоянием."); return; }
-        if (!Ui.Confirm("Применить:\n" + string.Join("\n", changed.Select(t => (t.Wanted ? "+ " : "- ") + t.Name)))) return;
+        if (changed.Count == 0) { Ui.Info(L.T("Нечего применять: отметки совпадают с текущим состоянием.")); return; }
+        if (!Ui.Confirm(L.T("Применить:\n") + string.Join("\n", changed.Select(t => (t.Wanted ? "+ " : "- ") + t.Name)))) return;
         (string? Restart, List<string> Errors) r = (null, new());
         await Ui.Busy(this, () => Task.Run(() => r = Tweaks.ApplyChanged(changed)));
         ApplyFilter();
-        if (r.Errors.Count > 0) Ui.Info("Не удалось:\n" + string.Join("\n", r.Errors));
+        if (r.Errors.Count > 0) Ui.Info(L.T("Не удалось:\n") + string.Join("\n", r.Errors));
         switch (r.Restart)
         {
-            case "explorer" when Ui.Confirm("Перезапустить Проводник, чтобы изменения вступили в силу?"):
+            case "explorer" when Ui.Confirm(L.T("Перезапустить Проводник, чтобы изменения вступили в силу?")):
                 Tweaks.RestartExplorer();
                 break;
             case "logoff":
-                Ui.Info("Изменения вступят в силу после выхода из системы и повторного входа.");
+                Ui.Info(L.T("Изменения вступят в силу после выхода из системы и повторного входа."));
                 break;
-            case "reboot" when Ui.Confirm("Изменения вступят в силу после перезагрузки. Перезагрузить сейчас?"):
+            case "reboot" when Ui.Confirm(L.T("Изменения вступят в силу после перезагрузки. Перезагрузить сейчас?")):
                 Process.Start(new ProcessStartInfo("shutdown", "/r /t 0") { CreateNoWindow = true });
                 break;
         }

@@ -8,19 +8,20 @@ public partial class ChecklistWindow : Window
 {
     readonly List<Leftover> _items;
 
-    public ChecklistWindow(string title, string header, List<Leftover> items, string okText = "Удалить отмеченное")
+    public ChecklistWindow(string title, string header, List<Leftover> items, string? okText = null)
     {
         InitializeComponent();
+        L.Apply(this);
         Theme.TitleBar(this);
         Owner = Application.Current.MainWindow;
         Title = title;
         Header.Text = header;
-        OkButton.Content = okText;
+        OkButton.Content = okText ?? L.T("Удалить отмеченное");
         _items = items;
         Grid.ItemsSource = items;
     }
 
-    public static bool Ask(string title, string header, List<Leftover> items, string okText = "Удалить отмеченное") =>
+    public static bool Ask(string title, string header, List<Leftover> items, string? okText = null) =>
         new ChecklistWindow(title, header, items, okText).ShowDialog() == true;
 
     void All_Click(object s, RoutedEventArgs e) => SetAll(true);

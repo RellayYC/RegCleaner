@@ -22,7 +22,7 @@ public static class Integration
             if (!on) { Reg.DeleteTree(key); continue; }
             using (var k = Reg.Create(key))
             {
-                Reg.Write(k, RawValue.String("", "Удалить с RegKeeper"));
+                Reg.Write(k, RawValue.String("", L.T("Удалить с RegKeeper")));
                 Reg.Write(k, RawValue.String("Icon", AppExe));
             }
             using var c = Reg.Create(key + @"\command");

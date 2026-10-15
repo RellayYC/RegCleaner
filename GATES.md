@@ -120,3 +120,8 @@ Scope: every module real and tested, the clone measured against Reg Organizer an
 
 - [ ] G24: the release is published (GitHub Release / winget) after the user's go-ahead
   EVIDENCE: pending
+
+- [ ] G25: the interface is translated to English: every Russian literal goes through L.T and has a translation
+  CHECK: node scripts/gates/check.mjs i18n
+  EXPECT: I18N OK
+  EVIDENCE: pending

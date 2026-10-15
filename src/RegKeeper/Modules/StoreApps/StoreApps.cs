@@ -79,7 +79,7 @@ public static class StoreApps
     /// <summary>Removes the package for the current user. Returns null on success, else the PowerShell error text.</summary>
     public static string? Remove(StoreApp app)
     {
-        if (app.IsSystem) return "Системный пакет или фреймворк, удаление запрещено.";
+        if (app.IsSystem) return L.T("Системный пакет или фреймворк, удаление запрещено.");
         var (code, _, error) = Run(RemoveScript, app.PackageFullName);
         return code == 0 ? null : error.Trim();
     }

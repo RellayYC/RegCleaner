@@ -10,7 +10,7 @@ public sealed class RegIssue
     /// <summary>Null = the whole key is the problem.</summary>
     public string? ValueName { get; init; }
     public string Problem { get; init; } = "";
-    public string Display => ValueName == null ? Reg.Short(Key) : $"{Reg.Short(Key)} → {(ValueName == "" ? "(По умолчанию)" : ValueName)}";
+    public string Display => ValueName == null ? Reg.Short(Key) : $"{Reg.Short(Key)} → {(ValueName == "" ? L.T("(По умолчанию)") : ValueName)}";
     public string Id => ValueName == null ? Key : Key + "|" + ValueName;
 }
 
@@ -50,7 +50,7 @@ public static class RegScanner
                 if (cmd == null || cmd.Contains("msiexec", StringComparison.OrdinalIgnoreCase) || !Sys.IsMissing(cmd)) continue;
                 var loc = Reg.GetString(key, "InstallLocation");
                 if (!string.IsNullOrWhiteSpace(loc) && !Sys.IsMissing(loc)) continue; // app still on disk, only its uninstaller is gone
-                yield return new RegIssue { Category = "Деинсталляция", Key = key, Problem = "Нет деинсталлятора: " + Sys.ExtractPath(cmd) };
+                yield return new RegIssue { Category = L.T("Деинсталляция"), Key = key, Problem = L.T("Нет деинсталлятора: ") + Sys.ExtractPath(cmd) };
             }
         }
     }
@@ -62,7 +62,7 @@ public static class RegScanner
             var baseKey = root + @"\App Paths";
             foreach (var sub in Reg.SubKeys(baseKey))
                 if (Reg.GetString(baseKey + "\\" + sub, "") is { } path && Sys.IsMissing(path))
-                    yield return new RegIssue { Category = "Пути приложений", Key = baseKey + "\\" + sub, Problem = "Нет файла: " + Sys.ExtractPath(path) };
+                    yield return new RegIssue { Category = L.T("Пути приложений"), Key = baseKey + "\\" + sub, Problem = L.T("Нет файла: ") + Sys.ExtractPath(path) };
         }
     }
 
@@ -74,32 +74,32 @@ public static class RegScanner
         {
             var path = toPath?.Invoke(name) ?? name;
             if (path != "" && Sys.IsMissing(path))
-                yield return new RegIssue { Category = category, Key = key, ValueName = name, Problem = "Нет файла: " + path };
+                yield return new RegIssue { Category = category, Key = key, ValueName = name, Problem = L.T("Нет файла: ") + path };
         }
     }
 
     static IEnumerable<RegIssue> SharedDlls() =>
-        ValuesNamedByPath(Hklm + Cv + @"\SharedDLLs", "Общие библиотеки")
-            .Concat(ValuesNamedByPath(Hklm + Wow + @"\SharedDLLs", "Общие библиотеки"));
+        ValuesNamedByPath(Hklm + Cv + @"\SharedDLLs", L.T("Общие библиотеки"))
+            .Concat(ValuesNamedByPath(Hklm + Wow + @"\SharedDLLs", L.T("Общие библиотеки")));
 
     static IEnumerable<RegIssue> InstallerFolders() =>
-        ValuesNamedByPath(Hklm + Cv + @"\Installer\Folders", "Папки установщика");
+        ValuesNamedByPath(Hklm + Cv + @"\Installer\Folders", L.T("Папки установщика"));
 
     /// <summary>MUICache value names are "C:\path\app.exe.FriendlyAppName" / ".ApplicationCompany".</summary>
     static IEnumerable<RegIssue> MuiCache() =>
-        ValuesNamedByPath(Hkcu + @"Software\Classes\Local Settings\Software\Microsoft\Windows\Shell\MuiCache", "Кэш имён программ",
+        ValuesNamedByPath(Hkcu + @"Software\Classes\Local Settings\Software\Microsoft\Windows\Shell\MuiCache", L.T("Кэш имён программ"),
             n => n.StartsWith("LangID") ? "" : n.EndsWith(".FriendlyAppName") || n.EndsWith(".ApplicationCompany") ? n[..n.LastIndexOf('.')] : n);
 
     static IEnumerable<RegIssue> Run() =>
         Autoruns.RunAndFolders().Where(i => i.Kind == StartupKind.Registry && Sys.IsMissing(i.Command))
-            .Select(i => new RegIssue { Category = "Автозагрузка", Key = i.Location, ValueName = i.Name, Problem = "Нет файла: " + Sys.ExtractPath(i.Command) });
+            .Select(i => new RegIssue { Category = L.T("Автозагрузка"), Key = i.Location, ValueName = i.Name, Problem = L.T("Нет файла: ") + Sys.ExtractPath(i.Command) });
 
     static IEnumerable<RegIssue> Applications()
     {
         var baseKey = Hkcu + @"Software\Classes\Applications";
         foreach (var app in Reg.SubKeys(baseKey))
             if (Reg.GetString($@"{baseKey}\{app}\shell\open\command", "") is { } cmd && Sys.IsMissing(cmd))
-                yield return new RegIssue { Category = "Открыть с помощью", Key = baseKey + "\\" + app, Problem = "Нет файла: " + Sys.ExtractPath(cmd) };
+                yield return new RegIssue { Category = L.T("Открыть с помощью"), Key = baseKey + "\\" + app, Problem = L.T("Нет файла: ") + Sys.ExtractPath(cmd) };
     }
 
     /// <summary>Rule data is "v2.31|Action=Allow|...|App=C:\x.exe|...".</summary>
@@ -112,7 +112,7 @@ public static class RegScanner
         {
             var app = Reg.GetString(k, name)?.Split('|').FirstOrDefault(p => p.StartsWith("App=", StringComparison.OrdinalIgnoreCase))?[4..];
             if (name.StartsWith('{') && app != null && Sys.IsMissing(app)) // non-GUID names are built-in Windows rules
-                yield return new RegIssue { Category = "Правила брандмауэра", Key = key, ValueName = name, Problem = "Нет программы: " + app };
+                yield return new RegIssue { Category = L.T("Правила брандмауэра"), Key = key, ValueName = name, Problem = L.T("Нет программы: ") + app };
         }
     }
 
@@ -128,7 +128,7 @@ public static class RegScanner
             foreach (var server in new[] { "InprocServer32", "LocalServer32" })
                 if (Reg.GetString($@"{clsidRoot}\{clsid}\{server}", "") is { } path && MissingNonSystem(path) && !(wow && !MissingNonSystem(As32(path))))
                 {
-                    yield return new RegIssue { Category = "COM-объекты", Key = clsidRoot + "\\" + clsid, Problem = $"{server}: нет файла {Sys.ExtractPath(path)}" };
+                    yield return new RegIssue { Category = L.T("COM-объекты"), Key = clsidRoot + "\\" + clsid, Problem = L.T($"{server}: нет файла {Sys.ExtractPath(path)}") };
                     break;
                 }
     }
@@ -145,7 +145,7 @@ public static class RegScanner
                         .SelectMany(l => Reg.SubKeys($@"{verKey}\{l}").Select(p => Reg.GetString($@"{verKey}\{l}\{p}", "")))
                         .Where(p => !string.IsNullOrEmpty(p)).ToList();
                     if (files.Count > 0 && files.All(MissingNonSystem))
-                        yield return new RegIssue { Category = "Библиотеки типов", Key = verKey, Problem = "Нет файла: " + Sys.ExtractPath(files[0]) };
+                        yield return new RegIssue { Category = L.T("Библиотеки типов"), Key = verKey, Problem = L.T("Нет файла: ") + Sys.ExtractPath(files[0]) };
                 }
     }
 
@@ -162,7 +162,7 @@ public static class RegScanner
 
     public static List<string> Fix(IEnumerable<RegIssue> issues)
     {
-        using var tx = UndoTx.Begin("Чистка реестра");
+        using var tx = UndoTx.Begin(L.T("Чистка реестра"));
         foreach (var i in issues)
             if (i.ValueName == null) tx.DeleteKey(i.Key);
             else tx.DeleteValue(i.Key, i.ValueName);

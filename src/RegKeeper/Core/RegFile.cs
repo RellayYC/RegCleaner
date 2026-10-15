@@ -117,9 +117,9 @@ public static class RegFile
     static (string Name, string Data) ParseName(string line)
     {
         if (line.StartsWith("@=")) return ("", line[2..]);
-        if (!line.StartsWith('"')) throw new FormatException("Ожидалось имя значения: " + line);
+        if (!line.StartsWith('"')) throw new FormatException(L.T("Ожидалось имя значения: ") + line);
         var (name, end) = ReadQuoted(line, 0);
-        if (end >= line.Length || line[end] != '=') throw new FormatException("Ожидалось '=': " + line);
+        if (end >= line.Length || line[end] != '=') throw new FormatException(L.T("Ожидалось '=': ") + line);
         return (name, line[(end + 1)..]);
     }
 
@@ -134,7 +134,7 @@ public static class RegFile
             else if (s[i] == '"') return (sb.ToString(), i + 1);
             else sb.Append(s[i]);
         }
-        throw new FormatException("Незакрытая строка: " + s);
+        throw new FormatException(L.T("Незакрытая строка: ") + s);
     }
 
     static RawValue ParseData(string name, string rest)
@@ -151,7 +151,7 @@ public static class RegFile
             type = uint.Parse(rest[4..close], NumberStyles.HexNumber);
             hex = rest[(close + 2)..];
         }
-        else throw new FormatException("Неизвестный формат данных: " + rest);
+        else throw new FormatException(L.T("Неизвестный формат данных: ") + rest);
         var bytes = hex.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(b => byte.Parse(b, NumberStyles.HexNumber)).ToArray();
         return new RawValue(name, type, bytes);

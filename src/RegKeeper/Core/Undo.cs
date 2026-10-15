@@ -74,20 +74,20 @@ public sealed class UndoTx : IDisposable
     {
         key = Reg.Normalize(key);
         if (MissingAncestor(key) is not { } top) return;
-        Block($"[-{top}]\r\n", "Создан ключ " + Reg.Short(key));
+        Block($"[-{top}]\r\n", L.T("Создан ключ ") + Reg.Short(key));
         Reg.Create(key).Dispose();
     }
 
     public void SetValue(string key, RawValue v)
     {
         key = Reg.Normalize(key);
-        if (MissingAncestor(key) is { } top) Block($"[-{top}]\r\n", "Создан ключ " + Reg.Short(key));
+        if (MissingAncestor(key) is { } top) Block($"[-{top}]\r\n", L.T("Создан ключ ") + Reg.Short(key));
         else
         {
             var old = Reg.Read(key, v.Name);
             if (v.SameAs(old)) return;
             var restore = old == null ? RegFile.FormatName(v.Name) + "=-" : RegFile.FormatValue(old);
-            Block($"[{key}]\r\n{restore}\r\n", $"Значение {Reg.Short(key)} → {DisplayName(v.Name)}");
+            Block($"[{key}]\r\n{restore}\r\n", L.T($"Значение {Reg.Short(key)} → {DisplayName(v.Name)}"));
         }
         using var k = Reg.Create(key);
         Reg.Write(k, v);
@@ -96,10 +96,10 @@ public sealed class UndoTx : IDisposable
     public void DeleteValue(string key, string name)
     {
         key = Reg.Normalize(key);
-        if (Protect.IsProtectedValue(key)) { Errors.Add($"{Reg.Short(key)} → {name}: защищённый системный раздел, не удалено"); return; }
+        if (Protect.IsProtectedValue(key)) { Errors.Add(L.T($"{Reg.Short(key)} → {name}: защищённый системный раздел, не удалено")); return; }
         using var k = Reg.Open(key, true);
         if (k == null || Reg.Read(k, name) is not { } old) return;
-        Block($"[{key}]\r\n{RegFile.FormatValue(old)}\r\n", $"Удалено значение {Reg.Short(key)} → {DisplayName(name)}");
+        Block($"[{key}]\r\n{RegFile.FormatValue(old)}\r\n", L.T($"Удалено значение {Reg.Short(key)} → {DisplayName(name)}"));
         try { k.DeleteValue(name); }
         catch (Exception e) { Errors.Add($"{Reg.Short(key)} → {name}: {e.Message}"); }
     }
@@ -107,11 +107,11 @@ public sealed class UndoTx : IDisposable
     public void DeleteKey(string key)
     {
         key = Reg.Normalize(key);
-        if (Protect.IsProtectedKey(key)) { Errors.Add($"{Reg.Short(key)}: защищённый системный раздел, не удалён"); return; }
+        if (Protect.IsProtectedKey(key)) { Errors.Add(L.T($"{Reg.Short(key)}: защищённый системный раздел, не удалён")); return; }
         if (!Reg.Exists(key)) return;
         var sb = new StringBuilder();
         RegFile.AppendKey(sb, key, true);
-        Block(sb.ToString().TrimStart() + "\r\n", "Удалён ключ " + Reg.Short(key));
+        Block(sb.ToString().TrimStart() + "\r\n", L.T("Удалён ключ ") + Reg.Short(key));
         try { Reg.DeleteTree(key); }
         catch (Exception e) { Errors.Add($"{Reg.Short(key)}: {e.Message}"); }
     }
@@ -121,7 +121,7 @@ public sealed class UndoTx : IDisposable
     {
         from = Reg.Normalize(from);
         to = Reg.Normalize(to);
-        using var src = Reg.Open(from) ?? throw new IOException("Ключ не найден: " + from);
+        using var src = Reg.Open(from) ?? throw new IOException(L.T("Ключ не найден: ") + from);
         CreateKey(to);
         foreach (var v in Reg.Values(src)) SetValue(to, v);
         foreach (var sub in Reg.SubKeys(src)) CopyKey(from + "\\" + sub, to + "\\" + sub);
@@ -130,7 +130,7 @@ public sealed class UndoTx : IDisposable
     public void RenameKey(string from, string newLeaf)
     {
         var to = Reg.Combine(Reg.Parent(Reg.Normalize(from)), newLeaf);
-        if (Reg.Exists(to)) throw new IOException("Ключ уже существует: " + to);
+        if (Reg.Exists(to)) throw new IOException(L.T("Ключ уже существует: ") + to);
         CopyKey(from, to);
         DeleteKey(from);
     }
@@ -140,14 +140,14 @@ public sealed class UndoTx : IDisposable
     {
         File.WriteAllText(Path.Combine(_dir, $"task_{_tasks++}.xml"), xml);
         File.AppendAllLines(Path.Combine(_dir, "tasks.txt"), new[] { path });
-        Item("Задача " + path);
+        Item(L.T("Задача ") + path);
     }
 
     /// <summary>Records a task this transaction registered, so restore deletes it.</summary>
     public void CreatedTask(string path)
     {
         File.AppendAllLines(Path.Combine(_dir, "created_tasks.txt"), new[] { path });
-        Item("Создана задача " + path);
+        Item(L.T("Создана задача ") + path);
     }
 
     /// <summary>Free-form entry for non-registry actions that are not undoable (shown in the log only).</summary>
@@ -161,7 +161,7 @@ public sealed class UndoTx : IDisposable
         File.AppendAllLines(Path.Combine(_dir, ItemsFile), new[] { what });
     }
 
-    static string DisplayName(string n) => n == "" ? "(По умолчанию)" : n;
+    static string DisplayName(string n) => n == "" ? L.T("(По умолчанию)") : n;
 
     void SaveInfo() =>
         File.WriteAllText(Path.Combine(_dir, "info.json"), JsonSerializer.Serialize(_info with { Count = _info.Items.Count }));

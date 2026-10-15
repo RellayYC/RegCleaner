@@ -11,6 +11,7 @@ public partial class StoreAppsView : UserControl
     public StoreAppsView()
     {
         InitializeComponent();
+        L.Apply(this);
         Loaded += async (_, _) => { if (_all.Count == 0) await Reload(); };
     }
 
@@ -35,7 +36,7 @@ public partial class StoreAppsView : UserControl
         var list = _all.Where(a => (ShowSystem.IsChecked == true || !a.IsSystem)
                                    && (q == "" || (a.Title + " " + a.Name + " " + a.PublisherName).Contains(q, StringComparison.OrdinalIgnoreCase))).ToList();
         Grid.ItemsSource = list;
-        Status.Text = $"Приложений: {list.Count}   Размер: {Sys.Size(list.Sum(a => a.SizeBytes))}";
+        Status.Text = L.T($"Приложений: {list.Count}   Размер: {Sys.Size(list.Sum(a => a.SizeBytes))}");
     }
 
     void Search_TextChanged(object s, RoutedEventArgs e) => ApplyFilter();
@@ -46,15 +47,15 @@ public partial class StoreAppsView : UserControl
     {
         var apps = Grid.SelectedItems.Cast<StoreApp>().ToList();
         if (apps.Count == 0) return;
-        if (apps.FirstOrDefault(a => a.IsSystem) is { } sys) { Ui.Info($"«{sys.Title}» - системный пакет, его удалять нельзя."); return; }
-        if (!Ui.Confirm("Удалить приложения?\n" + string.Join("\n", apps.Select(a => a.Title)) + "\n\nВернуть их можно только из Microsoft Store.")) return;
+        if (apps.FirstOrDefault(a => a.IsSystem) is { } sys) { Ui.Info(L.T($"«{sys.Title}» - системный пакет, его удалять нельзя.")); return; }
+        if (!Ui.Confirm(L.T("Удалить приложения?\n") + string.Join("\n", apps.Select(a => a.Title)) + L.T("\n\nВернуть их можно только из Microsoft Store."))) return;
         var errors = new List<string>();
         await Ui.Busy(this, () => Task.Run(() =>
         {
             foreach (var a in apps)
                 if (StoreApps.Remove(a) is { } err) errors.Add($"{a.Title}: {err}");
         }));
-        if (errors.Count > 0) Ui.Info("Не удалось:\n" + string.Join("\n", errors));
+        if (errors.Count > 0) Ui.Info(L.T("Не удалось:\n") + string.Join("\n", errors));
         await Reload();
     }
 

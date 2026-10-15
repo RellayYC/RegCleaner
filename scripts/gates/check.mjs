@@ -237,6 +237,43 @@ const checks = {
     console.log('README OK');
   },
 
+  /**
+   * English interface: every Cyrillic C# literal goes through L.T (or its line says "i18n: keep"), and every key -
+   * from code, XAML, tweaks.json and the built-in cleanup rules - has a Cyrillic-free entry in Data/en.json.
+   * `list` prints the missing keys as JSON instead of failing on the first.
+   */
+  i18n(mode) {
+    const lit = read(join(root, 'scripts', 'gates', 'i18n.mjs')) && import('./i18n.mjs');
+    return lit.then(({ literals, hasCyr, wrapped, kept, xamlTexts }) => {
+      const en = JSON.parse(read(join(src, 'Data', 'en.json')));
+      const keys = new Map(), bare = [];
+      const add = (k, where) => { if (!keys.has(k)) keys.set(k, where); };
+      for (const f of walk(join(root, 'src'))) {
+        const rel = relative(root, f);
+        if (f.endsWith('.cs')) {
+          const text = read(f);
+          for (const t of literals(text)) {
+            if (!hasCyr(t.key)) continue;
+            if (t.raw) { for (const m of t.key.matchAll(/^\s*(?:\[(.+?)\]|Warning=(.+))\s*$/gm)) add(m[1] ?? m[2], rel); continue; }
+            if (wrapped(text, t)) add(t.key, rel);
+            else if (!kept(text, t)) bare.push(`${rel}:${text.slice(0, t.start).split('\n').length} ${JSON.stringify(t.key)}`);
+          }
+        } else if (f.endsWith('.xaml')) for (const k of xamlTexts(read(f))) add(k, rel);
+      }
+      for (const t of JSON.parse(read(join(src, 'Data', 'tweaks.json')))) for (const k of [t.category, t.name, t.description]) if (hasCyr(k)) add(k, 'tweaks.json');
+      for (const k of ['Приложения', 'Интернет', 'Мультимедиа', 'Утилиты', 'Браузеры', 'Файл', 'Папка', 'Ключ реестра', 'Значение реестра']) add(k, 'data values shown through L.T');
+      if (bare.length) fail(`${bare.length} Cyrillic literals outside L.T:\n` + bare.join('\n'));
+      const missing = [...keys.keys()].filter((k) => !(k in en));
+      if (mode === 'list') { console.log(JSON.stringify(Object.fromEntries(missing.map((k) => [k, ''])), null, 1)); return; }
+      if (missing.length) fail(`${missing.length} keys without English, e.g.\n` + missing.slice(0, 10).map((k) => `${JSON.stringify(k)} (${keys.get(k)})`).join('\n'));
+      const cyr = Object.entries(en).filter(([, v]) => hasCyr(v) && v !== 'Русский');
+      if (cyr.length) fail('English entries with Cyrillic: ' + cyr.slice(0, 5).map(([k]) => k).join(', '));
+      const holes = Object.entries(en).filter(([k, v]) => (k.match(/\{\d+\}/g) ?? []).sort().join() !== (v.match(/\{\d+\}/g) ?? []).sort().join());
+      if (holes.length) fail('placeholders differ: ' + holes.slice(0, 5).map(([k]) => k).join(' | '));
+      console.log(`I18N OK keys=${keys.size}`);
+    });
+  },
+
   /** Release build: self-contained single-file exes for the app and the watcher. */
   publish() {
     const out = join(root, 'artifacts', 'publish');

@@ -25,12 +25,12 @@ static class Program
         using var tray = new NotifyIcon
         {
             Icon = Icon.ExtractAssociatedIcon(Environment.ProcessPath!) ?? SystemIcons.Shield,
-            Text = "RegKeeper: контроль автозагрузки",
+            Text = L.T("RegKeeper: контроль автозагрузки"),
             Visible = true,
             ContextMenuStrip = new ContextMenuStrip(),
         };
-        tray.ContextMenuStrip.Items.Add("Открыть автозагрузку", null, (_, _) => OpenStartup());
-        tray.ContextMenuStrip.Items.Add("Выход", null, (_, _) => Application.Exit());
+        tray.ContextMenuStrip.Items.Add(L.T("Открыть автозагрузку"), null, (_, _) => OpenStartup());
+        tray.ContextMenuStrip.Items.Add(L.T("Выход"), null, (_, _) => Application.Exit());
         tray.DoubleClick += (_, _) => OpenStartup();
         tray.BalloonTipClicked += (_, _) => OpenStartup();
 
@@ -45,8 +45,8 @@ static class Program
             known = StartupWatch.Ids(current);
             Save(known);
             if (added.Count == 0) return;
-            tray.ShowBalloonTip(10000, "Новая программа в автозагрузке",
-                string.Join("\n", added.Select(a => $"{a.Name}: {a.Command}")) + "\nНажмите, чтобы проверить.", ToolTipIcon.Warning);
+            tray.ShowBalloonTip(10000, L.T("Новая программа в автозагрузке"),
+                string.Join("\n", added.Select(a => $"{a.Name}: {a.Command}")) + L.T("\nНажмите, чтобы проверить."), ToolTipIcon.Warning);
         };
         timer.Start();
         Application.Run();

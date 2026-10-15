@@ -9,16 +9,18 @@ public partial class SettingsView : UserControl
     public SettingsView()
     {
         InitializeComponent();
+        L.Apply(this);
         (Theme.Saved switch { Theme.Light => ThemeLight, Theme.Dark => ThemeDark, _ => ThemeSystem }).IsChecked = true;
+        (L.Saved switch { L.Ru => LangRu, L.En => LangEn, _ => LangAuto }).IsChecked = true;
         ShellVerb.IsChecked = Integration.ShellVerb;
         Watcher.IsChecked = Integration.WatcherAutostart;
         Watcher.IsEnabled = File.Exists(Integration.WatcherExe);
         if (!Watcher.IsEnabled)
         {
-            Watcher.ToolTip = "Не найден " + Integration.WatcherExe;
+            Watcher.ToolTip = L.T("Не найден ") + Integration.WatcherExe;
             ToolTipService.SetShowOnDisabled(Watcher, true);
         }
-        DataInfo.Text = $"{AppPaths.Data}\nЦентр отмены, снимки и трассы установок: {Sys.Size(Sys.DirSize(AppPaths.Data))}";
+        DataInfo.Text = L.T($"{AppPaths.Data}\nЦентр отмены, снимки и трассы установок: {Sys.Size(Sys.DirSize(AppPaths.Data))}");
         About.Text = $"RegKeeper {typeof(SettingsView).Assembly.GetName().Version?.ToString(3)}, .NET {Environment.Version}";
     }
 
@@ -28,6 +30,14 @@ public partial class SettingsView : UserControl
         if (mode == Theme.Saved) return; // the initial IsChecked from the constructor
         Theme.Saved = mode;
         Theme.Apply(Theme.Saved);
+    }
+
+    void Lang_Checked(object s, RoutedEventArgs e)
+    {
+        var mode = (string)((RadioButton)s).Tag;
+        if (mode == L.Saved) return;
+        L.Saved = mode;
+        if (IsLoaded) Ui.Info(L.T("Язык интерфейса сменится после перезапуска RegKeeper."));
     }
 
     // Checked/Unchecked (UI Automation toggles raise no Click); also fired by the constructor and the reverts below

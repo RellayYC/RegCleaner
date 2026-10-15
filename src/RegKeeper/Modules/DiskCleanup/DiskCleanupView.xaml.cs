@@ -12,6 +12,7 @@ public partial class DiskCleanupView : UserControl
     public DiskCleanupView()
     {
         InitializeComponent();
+        L.Apply(this);
         Loaded += async (_, _) => { if (_all.Count == 0) await Reload(); };
     }
 
@@ -19,7 +20,7 @@ public partial class DiskCleanupView : UserControl
     {
         _all = await Task.Run(Winapp2.Load);
         ApplyFilter();
-        if (!File.Exists(Winapp2.IniPath)) Status.Text += "   База winapp2.ini не загружена";
+        if (!File.Exists(Winapp2.IniPath)) Status.Text += L.T("   База winapp2.ini не загружена");
     });
 
     void ApplyFilter()
@@ -34,8 +35,8 @@ public partial class DiskCleanupView : UserControl
     void UpdateStatus()
     {
         var done = _all.Where(r => r.Analyzed && r.Checked).ToList();
-        Status.Text = $"Правил: {_visible.Count}   Отмечено: {_all.Count(r => r.Checked)}" +
-                      (done.Count > 0 ? $"   Найдено: {Sys.Size(done.Sum(r => r.Size))}" : "");
+        Status.Text = L.T($"Правил: {_visible.Count}   Отмечено: {_all.Count(r => r.Checked)}") +
+                      (done.Count > 0 ? L.T($"   Найдено: {Sys.Size(done.Sum(r => r.Size))}") : "");
     }
 
     void Search_TextChanged(object s, TextChangedEventArgs e) => ApplyFilter();
@@ -62,18 +63,18 @@ public partial class DiskCleanupView : UserControl
         Grid.CommitEdit();
         if (_all.Any(r => r.Checked && !r.Analyzed)) await Analyze();
         var rules = _all.Where(r => r.Checked && r.Analyzed && r.Count > 0).ToList();
-        if (rules.Count == 0) { Ui.Info("Нечего удалять."); return; }
+        if (rules.Count == 0) { Ui.Info(L.T("Нечего удалять.")); return; }
         var warn = rules.Where(r => r.Warning != null).Select(r => $"• {r.Name}: {r.Warning}").ToList();
-        if (!Ui.Confirm($"Удалить {rules.Sum(r => r.Count)} объектов ({Sys.Size(rules.Sum(r => r.Size))}) по {rules.Count} правилам?\n" +
-                        "Файлы удаляются без корзины." + (warn.Count > 0 ? "\n\nВнимание:\n" + string.Join("\n", warn) : ""))) return;
+        if (!Ui.Confirm(L.T($"Удалить {rules.Sum(r => r.Count)} объектов ({Sys.Size(rules.Sum(r => r.Size))}) по {rules.Count} правилам?\n") +
+                        L.T("Файлы удаляются без корзины.") + (warn.Count > 0 ? L.T("\n\nВнимание:\n") + string.Join("\n", warn) : ""))) return;
 
         (long Freed, int Failed) res = default;
         await Ui.Busy(this, () => Task.Run(() =>
         {
-            using var tx = UndoTx.Begin("Очистка диска: " + string.Join(", ", rules.Select(r => r.Name).Take(10)));
+            using var tx = UndoTx.Begin(L.T("Очистка диска: ") + string.Join(", ", rules.Select(r => r.Name).Take(10)));
             res = Winapp2.Clean(rules, tx);
         }));
-        Ui.Info($"Освобождено: {Sys.Size(res.Freed)}" + (res.Failed > 0 ? $"\nПропущено (заняты или нет доступа): {res.Failed}" : ""));
+        Ui.Info(L.T($"Освобождено: {Sys.Size(res.Freed)}") + (res.Failed > 0 ? L.T($"\nПропущено (заняты или нет доступа): {res.Failed}") : ""));
         Grid.Items.Refresh();
         UpdateStatus();
     }
@@ -81,8 +82,8 @@ public partial class DiskCleanupView : UserControl
     void Details_Click(object s, RoutedEventArgs e)
     {
         if (Grid.SelectedItem is not CleanRule r) return;
-        if (!r.Analyzed || r.Found.Count == 0) { Ui.Info(r.Analyzed ? "Ничего не найдено." : "Сначала выполните анализ."); return; }
-        ChecklistWindow.Ask(r.Name, "Снимите галочки с того, что нужно оставить. Папки удаляются, только если опустели.", r.Found, "Готово");
+        if (!r.Analyzed || r.Found.Count == 0) { Ui.Info(r.Analyzed ? L.T("Ничего не найдено.") : L.T("Сначала выполните анализ.")); return; }
+        ChecklistWindow.Ask(r.Name, L.T("Снимите галочки с того, что нужно оставить. Папки удаляются, только если опустели."), r.Found, L.T("Готово"));
         r.Size = r.Found.Where(l => l.Checked).Sum(l => l.Size);
         Grid.Items.Refresh();
         UpdateStatus();
@@ -103,14 +104,14 @@ public partial class DiskCleanupView : UserControl
         var count = 0;
         await Ui.Busy(this, async () => count = await Winapp2.Download());
         if (count == 0) return;
-        Ui.Info($"winapp2.ini обновлён, правил в базе: {count}.");
+        Ui.Info(L.T($"winapp2.ini обновлён, правил в базе: {count}."));
         await Reload();
     }
 
     void Ignore_Click(object s, RoutedEventArgs e)
     {
         if (!File.Exists(Winapp2.IgnorePath))
-            File.WriteAllText(Winapp2.IgnorePath, "; Пути (папки или файлы), которые очистка никогда не трогает. По одному на строку.\r\n");
+            File.WriteAllText(Winapp2.IgnorePath, L.T("; Пути (папки или файлы), которые очистка никогда не трогает. По одному на строку.\r\n"));
         Sys.Open(Winapp2.IgnorePath);
     }
 }

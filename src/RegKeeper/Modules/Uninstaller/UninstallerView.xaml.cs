@@ -14,6 +14,7 @@ public partial class UninstallerView : UserControl
     public UninstallerView()
     {
         InitializeComponent();
+        L.Apply(this);
         Loaded += async (_, _) => { if (_all.Count == 0) await Reload(); };
     }
 
@@ -38,7 +39,7 @@ public partial class UninstallerView : UserControl
         var list = q == "" ? _all : _all.Where(a => a.Name.Contains(q, StringComparison.OrdinalIgnoreCase)
                                                    || a.Publisher.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
         Grid.ItemsSource = list;
-        Status.Text = $"Программ: {list.Count}   Общий размер: {Sys.Size(list.Sum(a => a.SizeBytes))}";
+        Status.Text = L.T($"Программ: {list.Count}   Общий размер: {Sys.Size(list.Sum(a => a.SizeBytes))}");
     }
 
     void Search_TextChanged(object s, TextChangedEventArgs e) => ApplyFilter();
@@ -51,12 +52,12 @@ public partial class UninstallerView : UserControl
     async Task Uninstall(bool quiet)
     {
         if (Selected is not { } app) return;
-        if (!Ui.Confirm($"Удалить «{app.Name}»?")) return;
+        if (!Ui.Confirm(L.T($"Удалить «{app.Name}»?"))) return;
         if (!CloseRunning(app)) return;
 
         if (app.Broken)
         {
-            if (Ui.Confirm("Деинсталлятор программы не найден. Выполнить принудительное удаление (только следы)?"))
+            if (Ui.Confirm(L.T("Деинсталлятор программы не найден. Выполнить принудительное удаление (только следы)?")))
                 await ScanAndClean(app);
             return;
         }
@@ -68,7 +69,7 @@ public partial class UninstallerView : UserControl
         });
         // Inno/NSIS uninstallers re-launch themselves from %TEMP% and return at once; let the user tell us when done.
         if (Reg.Exists(app.KeyPath) &&
-            MessageBox.Show("Когда деинсталлятор закончит работу, нажмите OK, чтобы найти оставшиеся следы.", "RegKeeper",
+            MessageBox.Show(L.T("Когда деинсталлятор закончит работу, нажмите OK, чтобы найти оставшиеся следы."), "RegKeeper",
                 MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK)
             return;
         await ScanAndClean(app);
@@ -77,7 +78,7 @@ public partial class UninstallerView : UserControl
     async void Force_Click(object s, RoutedEventArgs e)
     {
         if (Selected is not { } app) return;
-        if (!Ui.Confirm($"Принудительно удалить «{app.Name}» без деинсталлятора?\nБудут найдены и удалены папки и ключи программы.")) return;
+        if (!Ui.Confirm(L.T($"Принудительно удалить «{app.Name}» без деинсталлятора?\nБудут найдены и удалены папки и ключи программы."))) return;
         if (!CloseRunning(app)) return;
         await ScanAndClean(app);
     }
@@ -86,12 +87,12 @@ public partial class UninstallerView : UserControl
     {
         List<Leftover> found = new();
         await Ui.Busy(this, async () => found = await Task.Run(() => Leftovers.Find(app, _all)));
-        if (found.Count == 0) Ui.Info("Следов программы не найдено.");
-        else if (ChecklistWindow.Ask("Оставшиеся следы: " + app.Name,
-                     "Найденные папки и ключи. Проверьте список: папки уйдут в корзину, ключи реестра можно вернуть в Центре отмены.", found))
+        if (found.Count == 0) Ui.Info(L.T("Следов программы не найдено."));
+        else if (ChecklistWindow.Ask(L.T("Оставшиеся следы: ") + app.Name,
+                     L.T("Найденные папки и ключи. Проверьте список: папки уйдут в корзину, ключи реестра можно вернуть в Центре отмены."), found))
         {
-            var (done, failed) = Leftovers.Remove(found, "Удаление: " + app.Name);
-            Ui.Info($"Удалено объектов: {done}" + (failed.Count > 0 ? "\nНе удалось:\n" + string.Join("\n", failed.Take(15)) : ""));
+            var (done, failed) = Leftovers.Remove(found, L.T("Удаление: ") + app.Name);
+            Ui.Info(L.T($"Удалено объектов: {done}") + (failed.Count > 0 ? L.T("\nНе удалось:\n") + string.Join("\n", failed.Take(15)) : ""));
         }
         await Reload();
     }
@@ -107,7 +108,7 @@ public partial class UninstallerView : UserControl
         }).ToList();
         if (running.Count == 0) return true;
         var names = string.Join(", ", running.Select(p => p.ProcessName).Distinct());
-        var r = MessageBox.Show($"Программа запущена ({names}). Закрыть её процессы?", "RegKeeper", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
+        var r = MessageBox.Show(L.T($"Программа запущена ({names}). Закрыть её процессы?"), "RegKeeper", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
         if (r == MessageBoxResult.Cancel) return false;
         if (r == MessageBoxResult.Yes)
             foreach (var p in running)
@@ -117,15 +118,15 @@ public partial class UninstallerView : UserControl
 
     async void RemoveEntry_Click(object s, RoutedEventArgs e)
     {
-        if (Selected is not { } app || !Ui.Confirm($"Убрать «{app.Name}» из списка установленных? Сама программа останется на диске.")) return;
-        using (var tx = UndoTx.Begin("Удалена запись: " + app.Name)) tx.DeleteKey(app.KeyPath);
+        if (Selected is not { } app || !Ui.Confirm(L.T($"Убрать «{app.Name}» из списка установленных? Сама программа останется на диске."))) return;
+        using (var tx = UndoTx.Begin(L.T("Удалена запись: ") + app.Name)) tx.DeleteKey(app.KeyPath);
         await Reload();
     }
 
     void Folder_Click(object s, RoutedEventArgs e)
     {
         if (Selected?.InstallDir is { } d && Directory.Exists(d)) Sys.Open(d);
-        else Ui.Info("Папка программы неизвестна или не существует.");
+        else Ui.Info(L.T("Папка программы неизвестна или не существует."));
     }
 
     void Key_Click(object s, RoutedEventArgs e)
@@ -138,7 +139,7 @@ public partial class UninstallerView : UserControl
         var dlg = new SaveFileDialog { Filter = "CSV|*.csv", FileName = "programs.csv" };
         if (dlg.ShowDialog() != true) return;
         static string Q(string v) => "\"" + v.Replace("\"", "\"\"") + "\"";
-        var lines = new[] { "Название;Издатель;Версия;Размер, байт;Установлено;Папка;Ключ" }
+        var lines = new[] { L.T("Название;Издатель;Версия;Размер, байт;Установлено;Папка;Ключ") }
             .Concat(_all.Select(a => string.Join(';', Q(a.Name), Q(a.Publisher), Q(a.Version), a.SizeBytes, a.DateText, Q(a.InstallDir ?? ""), Q(a.KeyPath))));
         File.WriteAllLines(dlg.FileName, lines, new UTF8Encoding(true));
     }

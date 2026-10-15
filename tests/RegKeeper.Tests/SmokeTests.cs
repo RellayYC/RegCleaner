@@ -16,7 +16,7 @@ namespace RegKeeper.Tests;
 
 public class SmokeTests
 {
-    /// <summary>Opens every module in both themes, lets their on-open loading finish; any dialog or exception fails.</summary>
+    /// <summary>Opens every module in both themes and in English, lets their on-open loading finish; any dialog or exception fails.</summary>
     [Fact]
     public void EveryView_OpensInBothThemes() => Sta(() =>
     {
@@ -30,9 +30,10 @@ public class SmokeTests
         var backgrounds = new List<Color>();
         try
         {
-            foreach (var theme in new[] { Theme.Light, Theme.Dark })
+            foreach (var (theme, lang) in new[] { (Theme.Light, L.Ru), (Theme.Dark, L.Ru), (Theme.Dark, L.En) })
             {
                 Theme.Apply(theme);
+                L.Current = lang;
                 var win = new MainWindow(Array.Empty<string>())
                     { WindowStartupLocation = WindowStartupLocation.Manual, Left = -20000, ShowActivated = false, ShowInTaskbar = false };
                 app.MainWindow = win;
@@ -54,12 +55,13 @@ public class SmokeTests
                 var sw = Stopwatch.StartNew();
                 while (views.Any(v => !v.IsEnabled) && sw.Elapsed < TimeSpan.FromSeconds(120)) { Thread.Sleep(50); Pump(); }
                 Assert.True(views.All(v => v.IsEnabled), "still loading: " + string.Join(", ", views.Where(v => !v.IsEnabled).Select(v => v.GetType().Name)));
+                if (lang == L.En && Russian(win, views) is { Count: > 0 } ru) Assert.Fail("untranslated:\n" + string.Join("\n", ru));
                 if (theme == Theme.Light) EditorNavigatesToNewSibling(views.OfType<RegEditorView>().Single());
                 if (theme == Theme.Light) FilterFollowsAutomationToggle(views.OfType<StartupView>().Single());
                 if (Environment.GetEnvironmentVariable("RK_SHOTS") is { Length: > 0 } dir)
-                    for (var i = 0; i < views.Count; i++) { nav.SelectedIndex = i; Pump(); Shot(win, Path.Combine(dir, $"{theme}-{i:00}-{views[i].GetType().Name}.png")); }
+                    for (var i = 0; i < views.Count; i++) { nav.SelectedIndex = i; Pump(); Shot(win, Path.Combine(dir, $"{lang}-{theme}-{i:00}-{views[i].GetType().Name}.png")); }
                 Assert.True(problems.Count == 0, $"{theme}:\n" + string.Join("\n", problems));
-                backgrounds.Add(((SolidColorBrush)win.Background).Color);
+                if (lang == L.Ru) backgrounds.Add(((SolidColorBrush)win.Background).Color);
                 Assert.Equal((Color)app.Resources["Bg"], backgrounds[^1]);
                 win.Close();
             }
@@ -68,9 +70,32 @@ public class SmokeTests
         finally
         {
             Ui.Headless = null;
+            L.Current = L.Ru;
             Dispatcher.CurrentDispatcher.InvokeShutdown();
         }
     });
+
+    /// <summary>Untranslated interface text: the literal text L.Apply translates, plus the nav titles. Row data is not checked.</summary>
+    static List<string> Russian(Window win, List<UserControl> views)
+    {
+        var found = new List<string>();
+        void Check(object? o, string where) { if (o is string s && s != "Русский" && s.Any(c => c is >= 'А' and <= 'я' or 'ё' or 'Ё')) found.Add($"{where}: {s}"); }
+        void Walk(object node)
+        {
+            if (node is Window w) Check(w.Title, "Title");
+            if (node is TextBlock t) Check(t.Text, "Text");
+            if (node is DataGrid g) foreach (var c in g.Columns) Check(c.Header, "Column");
+            if (node is HeaderedContentControl hc) Check(hc.Header, "Header");
+            if (node is HeaderedItemsControl hi) Check(hi.Header, "Header");
+            if (node is ContentControl cc) Check(cc.Content, node.GetType().Name);
+            if (node is FrameworkElement fe) { Check(fe.ToolTip, "ToolTip"); if (fe.ContextMenu != null) Walk(fe.ContextMenu); }
+            if (node is DependencyObject d) foreach (var child in LogicalTreeHelper.GetChildren(d)) Walk(child);
+        }
+        Walk(win);
+        views.ForEach(Walk);
+        foreach (NavItem n in ((ListBox)win.FindName("Nav")).Items) Check(n.Title, "Nav");
+        return found;
+    }
 
     /// <summary>B9: a key created after its parent was loaded (copy target) must get selected, not its parent.</summary>
     static void EditorNavigatesToNewSibling(RegEditorView ed)

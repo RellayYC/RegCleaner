@@ -58,13 +58,13 @@ public static class Reg
     {
         path = path.Trim().Trim('\\');
         if (path.StartsWith("Computer\\", StringComparison.OrdinalIgnoreCase)) path = path[9..];
-        if (path.StartsWith("Компьютер\\", StringComparison.OrdinalIgnoreCase)) path = path[10..];
+        if (path.StartsWith("Компьютер\\", StringComparison.OrdinalIgnoreCase)) path = path[10..]; // i18n: keep - regedit address of a Russian Windows
         var i = path.IndexOf('\\');
         var root = i < 0 ? path : path[..i];
         foreach (var h in Hives)
             if (root.Equals(h.Long, StringComparison.OrdinalIgnoreCase) || root.Equals(h.Short, StringComparison.OrdinalIgnoreCase))
                 return h.Long + (i < 0 ? "" : path[i..]);
-        throw new ArgumentException("Неизвестный корень реестра: " + root);
+        throw new ArgumentException(L.T("Неизвестный корень реестра: ") + root);
     }
 
     public static string Short(string path)
@@ -176,7 +176,7 @@ public static class Reg
     public static void DeleteTree(string path)
     {
         var (root, sub) = Split(path);
-        if (sub == "") throw new InvalidOperationException("Нельзя удалить корень реестра");
+        if (sub == "") throw new InvalidOperationException(L.T("Нельзя удалить корень реестра"));
         root.DeleteSubKeyTree(sub, false);
     }
 

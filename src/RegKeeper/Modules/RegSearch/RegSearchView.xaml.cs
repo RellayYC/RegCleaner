@@ -16,6 +16,7 @@ public partial class RegSearchView : UserControl
     public RegSearchView()
     {
         InitializeComponent();
+        L.Apply(this);
         Grid.ItemsSource = _hits;
         Roots.Text = string.Join("; ", RegSearch.DefaultRoots.Select(Reg.Short));
     }
@@ -33,7 +34,7 @@ public partial class RegSearchView : UserControl
         var o = Options();
         string[] roots;
         try { o.Build(); roots = Roots.Text.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(Reg.Normalize).ToArray(); }
-        catch (Exception ex) when (ex is ArgumentException) { Ui.Info((ex is System.Text.RegularExpressions.RegexParseException ? "Неверное регулярное выражение:\n" : "") + ex.Message); return; }
+        catch (Exception ex) when (ex is ArgumentException) { Ui.Info((ex is System.Text.RegularExpressions.RegexParseException ? L.T("Неверное регулярное выражение:\n") : "") + ex.Message); return; }
 
         _hits.Clear();
         _last = o;
@@ -43,10 +44,10 @@ public partial class RegSearchView : UserControl
         void Flush()
         {
             lock (buffer) { buffer.ForEach(_hits.Add); buffer.Clear(); }
-            Status.Text = $"Разделов: {search.Scanned:N0}   Найдено: {_hits.Count:N0}";
+            Status.Text = L.T($"Разделов: {search.Scanned:N0}   Найдено: {_hits.Count:N0}");
         }
         var timer = new DispatcherTimer(TimeSpan.FromMilliseconds(300), DispatcherPriority.Background, (_, _) => Flush(), Dispatcher);
-        SearchBtn.Content = "Стоп";
+        SearchBtn.Content = L.T("Стоп");
         var token = _cts.Token;
         var cancelled = false;
         try
@@ -62,8 +63,8 @@ public partial class RegSearchView : UserControl
         {
             timer.Stop();
             Flush();
-            if (cancelled) Status.Text += "   (остановлено)";
-            SearchBtn.Content = "Искать";
+            if (cancelled) Status.Text += L.T("   (остановлено)");
+            SearchBtn.Content = L.T("Искать");
             _cts.Dispose();
             _cts = null;
         }
@@ -79,15 +80,15 @@ public partial class RegSearchView : UserControl
     {
         var hits = Marked();
         if (_last == null || hits.Count == 0) return;
-        if (!Ui.Confirm($"Заменить «{_last.Pattern}» на «{Replacement.Text}» в {hits.Count} записях? Разделы переименовываются копированием. Откат - в Центре отмены.")) return;
-        Apply("Замена в реестре", tx => RegSearch.Replace(hits, _last, Replacement.Text, tx), hits);
+        if (!Ui.Confirm(L.T($"Заменить «{_last.Pattern}» на «{Replacement.Text}» в {hits.Count} записях? Разделы переименовываются копированием. Откат - в Центре отмены."))) return;
+        Apply(L.T("Замена в реестре"), tx => RegSearch.Replace(hits, _last, Replacement.Text, tx), hits);
     }
 
     void Delete_Click(object s, RoutedEventArgs e)
     {
         var hits = Marked();
-        if (hits.Count == 0 || !Ui.Confirm($"Удалить {hits.Count} найденных разделов/значений? Откат - в Центре отмены.")) return;
-        Apply("Удаление найденного", tx => RegSearch.Delete(hits, tx), hits);
+        if (hits.Count == 0 || !Ui.Confirm(L.T($"Удалить {hits.Count} найденных разделов/значений? Откат - в Центре отмены."))) return;
+        Apply(L.T("Удаление найденного"), tx => RegSearch.Delete(hits, tx), hits);
     }
 
     void Apply(string title, Action<UndoTx> work, List<SearchHit> done)
@@ -96,7 +97,7 @@ public partial class RegSearchView : UserControl
         {
             using var tx = UndoTx.Begin(title);
             work(tx);
-            if (tx.Errors.Count > 0) Ui.Info("Не удалось:\n" + string.Join("\n", tx.Errors.Take(20)));
+            if (tx.Errors.Count > 0) Ui.Info(L.T("Не удалось:\n") + string.Join("\n", tx.Errors.Take(20)));
         }
         catch (Exception ex) { Ui.Error(ex); }
         done.ForEach(h => _hits.Remove(h));

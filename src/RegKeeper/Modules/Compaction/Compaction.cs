@@ -15,7 +15,7 @@ public sealed class HiveInfo
     public long CompactedSize { get; set; }
 
     public long Gain => Compacted != null ? Math.Max(0, Size - CompactedSize) : 0;
-    public string SizeText => Size > 0 ? Sys.Size(Size) : "нет доступа";
+    public string SizeText => Size > 0 ? Sys.Size(Size) : L.T("нет доступа");
     public string CompactedText => Compacted != null ? Sys.Size(CompactedSize) : "";
     public string GainText => Compacted != null ? $"{Sys.Size(Gain)} ({100.0 * Gain / Math.Max(1, Size):0.#}%)" : "";
 }
@@ -61,7 +61,7 @@ public static class Compaction
     /// <summary>Saves compacted copies of the hives into a new folder. Needs admin (SeBackupPrivilege).</summary>
     public static void Analyze(IEnumerable<HiveInfo> hives, CancellationToken ct = default)
     {
-        if (!IsAdmin) throw new UnauthorizedAccessException("Для анализа сжатия нужны права администратора.");
+        if (!IsAdmin) throw new UnauthorizedAccessException(L.T("Для анализа сжатия нужны права администратора."));
         // previous analyses that were never applied hold only throw-away copies
         if (Directory.Exists(Dir))
             foreach (var d in Directory.GetDirectories(Dir).Where(d => !Directory.EnumerateFiles(d, "*.old").Any()))
@@ -72,7 +72,7 @@ public static class Compaction
         {
             ct.ThrowIfCancellationRequested();
             var file = Path.Combine(dir, Reg.Leaf(h.Key).TrimStart('.'));
-            using var key = Reg.Open(h.Key) ?? throw new IOException("Раздел не открывается: " + h.Key);
+            using var key = Reg.Open(h.Key) ?? throw new IOException(L.T("Раздел не открывается: ") + h.Key);
             Check(RegSaveKeyExW(key.Handle, file, IntPtr.Zero, RegLatestFormat), "RegSaveKeyEx " + h.Key);
             h.Compacted = file;
             h.CompactedSize = new FileInfo(file).Length;
@@ -85,18 +85,18 @@ public static class Compaction
     /// </summary>
     public static void Replace(HiveInfo h, string backup)
     {
-        if (string.IsNullOrWhiteSpace(backup)) throw new ArgumentException("Без резервной копии замена не выполняется.", nameof(backup));
-        if (System.IO.File.Exists(backup)) throw new IOException("Файл резервной копии уже существует: " + backup);
-        if (h.Compacted is not { } file || !System.IO.File.Exists(file)) throw new FileNotFoundException("Нет сжатой копии раздела " + h.Key);
-        if (new FileInfo(file).Length >= h.Size) throw new InvalidOperationException("Сжатие не даёт выигрыша для " + h.Key);
+        if (string.IsNullOrWhiteSpace(backup)) throw new ArgumentException(L.T("Без резервной копии замена не выполняется."), nameof(backup));
+        if (System.IO.File.Exists(backup)) throw new IOException(L.T("Файл резервной копии уже существует: ") + backup);
+        if (h.Compacted is not { } file || !System.IO.File.Exists(file)) throw new FileNotFoundException(L.T("Нет сжатой копии раздела ") + h.Key);
+        if (new FileInfo(file).Length >= h.Size) throw new InvalidOperationException(L.T("Сжатие не даёт выигрыша для ") + h.Key);
         if (!string.Equals(Path.GetPathRoot(backup), Path.GetPathRoot(h.File), StringComparison.OrdinalIgnoreCase)
             || !string.Equals(Path.GetPathRoot(file), Path.GetPathRoot(h.File), StringComparison.OrdinalIgnoreCase))
-            throw new IOException("Сжатая копия и резервная копия должны лежать на том же диске, что и раздел.");
-        if (!IsAdmin) throw new UnauthorizedAccessException("Для сжатия реестра нужны права администратора.");
+            throw new IOException(L.T("Сжатая копия и резервная копия должны лежать на том же диске, что и раздел."));
+        if (!IsAdmin) throw new UnauthorizedAccessException(L.T("Для сжатия реестра нужны права администратора."));
 
         EnablePrivilege("SeBackupPrivilege");
         EnablePrivilege("SeRestorePrivilege");
-        using var key = Reg.Open(h.Key) ?? throw new IOException("Раздел не открывается: " + h.Key);
+        using var key = Reg.Open(h.Key) ?? throw new IOException(L.T("Раздел не открывается: ") + h.Key);
         Check(RegReplaceKeyW(key.Handle, null, file, backup), "RegReplaceKey " + h.Key);
     }
 
@@ -142,7 +142,7 @@ public static class Compaction
             var tp = new TokenPrivileges { Count = 1, Attributes = SePrivilegeEnabled };
             if (!LookupPrivilegeValueW(null, name, out tp.Luid) || !AdjustTokenPrivileges(token, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero)
                 || Marshal.GetLastWin32Error() != 0)
-                throw new UnauthorizedAccessException("Не удалось включить " + name);
+                throw new UnauthorizedAccessException(L.T("Не удалось включить ") + name);
         }
         finally { CloseHandle(token); }
     }

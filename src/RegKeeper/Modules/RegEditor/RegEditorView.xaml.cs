@@ -8,7 +8,7 @@ namespace RegKeeper.Modules;
 
 public sealed record ValueRow(RawValue V)
 {
-    public string Name => V.Name == "" ? "(По умолчанию)" : V.Name;
+    public string Name => V.Name == "" ? L.T("(По умолчанию)") : V.Name;
     public string Type => V.TypeName;
     public string Data => V.Display();
 }
@@ -21,6 +21,7 @@ public partial class RegEditorView : UserControl
     public RegEditorView()
     {
         InitializeComponent();
+        L.Apply(this);
         foreach (var root in Reg.RootNames) Tree.Items.Add(Node(root, root));
         LoadFavorites();
     }
@@ -70,7 +71,7 @@ public partial class RegEditorView : UserControl
             // a key created since this node was loaded (copy target, another program): re-read once before giving up
             if ((Child(node, part) ?? (Reg.Exists(node.Tag + "\\" + part) ? Refill(node, part) : null)) is not { } next)
             {
-                Ui.Info($"Раздел не найден или нет доступа:\n{full}\n\nОткрыт ближайший: {node.Tag}");
+                Ui.Info(L.T($"Раздел не найден или нет доступа:\n{full}\n\nОткрыт ближайший: {node.Tag}"));
                 break;
             }
             node = next;
@@ -116,16 +117,16 @@ public partial class RegEditorView : UserControl
 
     void NewKey_Click(object s, RoutedEventArgs e)
     {
-        if (Current is not { } path || Ui.Prompt("Новый раздел", "Имя раздела:") is not { Length: > 0 } name) return;
-        if (Change("Редактор: новый раздел", tx => tx.CreateKey(path + "\\" + name))) Reload(path + "\\" + name);
+        if (Current is not { } path || Ui.Prompt(L.T("Новый раздел"), L.T("Имя раздела:")) is not { Length: > 0 } name) return;
+        if (Change(L.T("Редактор: новый раздел"), tx => tx.CreateKey(path + "\\" + name))) Reload(path + "\\" + name);
     }
 
     void RenameKey_Click(object s, RoutedEventArgs e)
     {
         if (Current is not { } path || !path.Contains('\\')) return;
-        if (Ui.Prompt("Переименовать раздел", "Новое имя:", Reg.Leaf(path)) is not { Length: > 0 } name || name == Reg.Leaf(path)) return;
-        if (!Ui.Confirm($"Переименование = копия + удаление. Для больших разделов это долго.\nПереименовать {Reg.Short(path)} в {name}?")) return;
-        if (Change("Редактор: переименование раздела", tx => tx.RenameKey(path, name)))
+        if (Ui.Prompt(L.T("Переименовать раздел"), L.T("Новое имя:"), Reg.Leaf(path)) is not { Length: > 0 } name || name == Reg.Leaf(path)) return;
+        if (!Ui.Confirm(L.T($"Переименование = копия + удаление. Для больших разделов это долго.\nПереименовать {Reg.Short(path)} в {name}?"))) return;
+        if (Change(L.T("Редактор: переименование раздела"), tx => tx.RenameKey(path, name)))
         {
             SelectParent();
             Reload(Reg.Combine(Reg.Parent(path), name));
@@ -135,18 +136,18 @@ public partial class RegEditorView : UserControl
     void CopyKey_Click(object s, RoutedEventArgs e)
     {
         if (Current is not { } path || !path.Contains('\\')) return;
-        if (Ui.Prompt("Копировать раздел", "Полный путь копии:", path + " - копия") is not { Length: > 0 } input) return;
+        if (Ui.Prompt(L.T("Копировать раздел"), L.T("Полный путь копии:"), path + L.T(" - копия")) is not { Length: > 0 } input) return;
         var to = Reg.Normalize(input.Trim().Trim('[', ']'));
-        if (to.StartsWith(Reg.Normalize(path) + "\\", StringComparison.OrdinalIgnoreCase)) { Ui.Info("Копия не может лежать внутри самого раздела."); return; }
-        if (Reg.Exists(to)) { Ui.Info("Раздел уже существует: " + to); return; }
-        if (Change("Редактор: копия раздела", tx => tx.CopyKey(path, to))) Reload(to);
+        if (to.StartsWith(Reg.Normalize(path) + "\\", StringComparison.OrdinalIgnoreCase)) { Ui.Info(L.T("Копия не может лежать внутри самого раздела.")); return; }
+        if (Reg.Exists(to)) { Ui.Info(L.T("Раздел уже существует: ") + to); return; }
+        if (Change(L.T("Редактор: копия раздела"), tx => tx.CopyKey(path, to))) Reload(to);
     }
 
     void DeleteKey_Click(object s, RoutedEventArgs e)
     {
         if (Current is not { } path || !path.Contains('\\')) return;
-        if (!Ui.Confirm($"Удалить раздел со всем содержимым?\n{path}")) return;
-        Change("Редактор: удаление раздела", tx => tx.DeleteKey(path));
+        if (!Ui.Confirm(L.T($"Удалить раздел со всем содержимым?\n{path}"))) return;
+        Change(L.T("Редактор: удаление раздела"), tx => tx.DeleteKey(path));
         SelectParent();
         Reload();
     }
@@ -160,14 +161,14 @@ public partial class RegEditorView : UserControl
     async void Export_Click(object s, RoutedEventArgs e)
     {
         if (Current is not { } path) return;
-        var dlg = new SaveFileDialog { Filter = "Файлы реестра (*.reg)|*.reg", FileName = Reg.Leaf(path) + ".reg" };
+        var dlg = new SaveFileDialog { Filter = L.T("Файлы реестра (*.reg)|*.reg"), FileName = Reg.Leaf(path) + ".reg" };
         if (dlg.ShowDialog() != true) return;
         await Ui.Busy(this, () => Task.Run(() => RegFile.Save(dlg.FileName, RegFile.Export(new[] { path }))));
     }
 
     void Import_Click(object s, RoutedEventArgs e)
     {
-        var dlg = new OpenFileDialog { Filter = "Файлы реестра (*.reg)|*.reg" };
+        var dlg = new OpenFileDialog { Filter = L.T("Файлы реестра (*.reg)|*.reg") };
         if (dlg.ShowDialog() != true) return;
         List<RegOp> ops;
         try { ops = RegFile.Parse(File.ReadAllText(dlg.FileName)); }
@@ -175,17 +176,17 @@ public partial class RegEditorView : UserControl
         // preview: every operation of the file, untick what must not be applied
         var rows = ops.Select(o => new Leftover
         {
-            Kind = o.Kind switch { RegOpKind.CreateKey => "Создать ключ", RegOpKind.DeleteKey => "Удалить ключ", RegOpKind.SetValue => "Значение", _ => "Удалить значение" },
+            Kind = o.Kind switch { RegOpKind.CreateKey => L.T("Создать ключ"), RegOpKind.DeleteKey => L.T("Удалить ключ"), RegOpKind.SetValue => L.T("Значение"), _ => L.T("Удалить значение") },
             Path = o.Kind switch
             {
-                RegOpKind.SetValue => $"{o.Key}  :  {(o.Value!.Name == "" ? "(По умолчанию)" : o.Value.Name)} = {o.Value.Display()}",
+                RegOpKind.SetValue => $"{o.Key}  :  {(o.Value!.Name == "" ? L.T("(По умолчанию)") : o.Value.Name)} = {o.Value.Display()}",
                 RegOpKind.DeleteValue => $"{o.Key}  :  {o.ValueName}",
                 _ => o.Key
             }
         }).ToList();
-        if (!ChecklistWindow.Ask("Импорт " + Path.GetFileName(dlg.FileName), "Что будет изменено в реестре. Откат - в Центре отмены.", rows, "Применить отмеченное")) return;
+        if (!ChecklistWindow.Ask(L.T("Импорт ") + Path.GetFileName(dlg.FileName), L.T("Что будет изменено в реестре. Откат - в Центре отмены."), rows, L.T("Применить отмеченное"))) return;
         ops = ops.Where((_, i) => rows[i].Checked).ToList();
-        if (Change("Импорт " + Path.GetFileName(dlg.FileName), tx => RegFile.Apply(ops, tx)) && ops.Count > 0) Reload(ops[0].Key);
+        if (Change(L.T("Импорт ") + Path.GetFileName(dlg.FileName), tx => RegFile.Apply(ops, tx)) && ops.Count > 0) Reload(ops[0].Key);
     }
 
     // ---- values
@@ -197,41 +198,41 @@ public partial class RegEditorView : UserControl
         while (Ui.Prompt(title, $"{name} ({new RawValue("", type, Array.Empty<byte>()).TypeName}):", text, type == RawValue.MultiSz) is { } input)
         {
             try { return ValueText.Parse(name, type, input); }
-            catch (Exception e) when (e is FormatException or OverflowException) { Ui.Info("Неверное значение: " + e.Message); text = input; }
+            catch (Exception e) when (e is FormatException or OverflowException) { Ui.Info(L.T("Неверное значение: ") + e.Message); text = input; }
         }
         return null;
     }
 
     void NewValue_Click(object s, RoutedEventArgs e)
     {
-        if (Current is not { } path || Ui.Prompt("Новое значение", "Имя:") is not { } name) return;
-        if (Reg.Read(path, name) != null) { Ui.Info("Значение с таким именем уже есть."); return; }
+        if (Current is not { } path || Ui.Prompt(L.T("Новое значение"), L.T("Имя:")) is not { } name) return;
+        if (Reg.Read(path, name) != null) { Ui.Info(L.T("Значение с таким именем уже есть.")); return; }
         var type = uint.Parse((string)((ComboBoxItem)NewType.SelectedItem).Tag);
-        if (Ask("Новое значение", name, type, type is RawValue.Dword or RawValue.Qword ? "0" : "") is { } v
-            && Change("Редактор: новое значение", tx => tx.SetValue(path, v))) ShowValues();
+        if (Ask(L.T("Новое значение"), name, type, type is RawValue.Dword or RawValue.Qword ? "0" : "") is { } v
+            && Change(L.T("Редактор: новое значение"), tx => tx.SetValue(path, v))) ShowValues();
     }
 
     void EditValue_Click(object s, RoutedEventArgs e)
     {
         if (Current is not { } path || SelectedValue is not { } old) return;
-        if (Ask("Изменить значение", old.Name, old.Type, ValueText.ToText(old)) is { } v
-            && Change("Редактор: изменение значения", tx => tx.SetValue(path, v))) ShowValues();
+        if (Ask(L.T("Изменить значение"), old.Name, old.Type, ValueText.ToText(old)) is { } v
+            && Change(L.T("Редактор: изменение значения"), tx => tx.SetValue(path, v))) ShowValues();
     }
 
     void RenameValue_Click(object s, RoutedEventArgs e)
     {
         if (Current is not { } path || SelectedValue is not { Name.Length: > 0 } old) return;
-        if (Ui.Prompt("Переименовать значение", "Новое имя:", old.Name) is not { Length: > 0 } name || name == old.Name) return;
-        if (Reg.Read(path, name) != null) { Ui.Info("Значение с таким именем уже есть."); return; }
-        if (Change("Редактор: переименование значения", tx => { tx.SetValue(path, old with { Name = name }); tx.DeleteValue(path, old.Name); })) ShowValues();
+        if (Ui.Prompt(L.T("Переименовать значение"), L.T("Новое имя:"), old.Name) is not { Length: > 0 } name || name == old.Name) return;
+        if (Reg.Read(path, name) != null) { Ui.Info(L.T("Значение с таким именем уже есть.")); return; }
+        if (Change(L.T("Редактор: переименование значения"), tx => { tx.SetValue(path, old with { Name = name }); tx.DeleteValue(path, old.Name); })) ShowValues();
     }
 
     void DeleteValue_Click(object s, RoutedEventArgs e)
     {
         if (Current is not { } path) return;
         var names = Values.SelectedItems.Cast<ValueRow>().Select(r => r.V.Name).ToList();
-        if (names.Count == 0 || !Ui.Confirm($"Удалить значений: {names.Count}?")) return;
-        Change("Редактор: удаление значений", tx => names.ForEach(n => tx.DeleteValue(path, n)));
+        if (names.Count == 0 || !Ui.Confirm(L.T($"Удалить значений: {names.Count}?"))) return;
+        Change(L.T("Редактор: удаление значений"), tx => names.ForEach(n => tx.DeleteValue(path, n)));
         ShowValues();
     }
 

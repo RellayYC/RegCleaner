@@ -6,7 +6,8 @@ namespace RegKeeper.Modules;
 public sealed class Leftover
 {
     public bool Checked { get; set; } = true;
-    public string Kind { get; init; } = "";
+    public string Kind { get; init; } = ""; // i18n: keep - a data value, shown through KindText
+    public string KindText => L.T(Kind);
     public string Path { get; init; } = "";
     public long Size { get; init; }
     public string? ValueName { get; init; }
@@ -63,19 +64,19 @@ public static partial class Leftovers
 
         var installDir = app.InstallDir;
         if (installDir != null && Directory.Exists(installDir) && !IsUsedByOthers(installDir, otherDirs))
-            result.Add(new Leftover { Kind = "Папка", Path = installDir, Size = Sys.DirSize(installDir) });
+            result.Add(new Leftover { Kind = "Папка", Path = installDir, Size = Sys.DirSize(installDir) }); // i18n: keep
 
         foreach (var dir in FindFolders(FolderBases, names, pubs, vendorShared))
             if (!result.Any(r => IsSameOrInside(dir, r.Path)) && !IsUsedByOthers(dir, otherDirs))
             {
                 result.RemoveAll(r => IsSameOrInside(r.Path, dir));
-                result.Add(new Leftover { Kind = "Папка", Path = dir, Size = Sys.DirSize(dir) });
+                result.Add(new Leftover { Kind = "Папка", Path = dir, Size = Sys.DirSize(dir) }); // i18n: keep
             }
 
         foreach (var key in FindKeys(names, pubs, vendorShared))
-            result.Add(new Leftover { Kind = "Ключ реестра", Path = key });
+            result.Add(new Leftover { Kind = "Ключ реестра", Path = key }); // i18n: keep
         if (Reg.Exists(app.KeyPath))
-            result.Add(new Leftover { Kind = "Ключ реестра", Path = app.KeyPath });
+            result.Add(new Leftover { Kind = "Ключ реестра", Path = app.KeyPath }); // i18n: keep
         return result;
     }
 
@@ -202,7 +203,7 @@ public static partial class Leftovers
         foreach (var l in items.Where(i => i.Checked))
         {
             if (l.IsRegistry) tx.DeleteKey(l.Path);
-            else if (Sys.Recycle(l.Path)) tx.Note("В корзину: " + l.Path);
+            else if (Sys.Recycle(l.Path)) tx.Note(L.T("В корзину: ") + l.Path);
             else { failed.Add(l.Path); continue; }
             done++;
         }

@@ -21,13 +21,13 @@ public sealed class StartupItem
 
     public bool CanToggle => Kind is StartupKind.Task or StartupKind.Service || Approved != null;
     public string ApprovedName => Kind == StartupKind.Folder ? Path.GetFileName(Location) : Name;
-    public string Status => Missing ? "файл не найден" : "";
+    public string Status => Missing ? L.T("файл не найден") : "";
     public string KindText => Kind switch
     {
-        StartupKind.Registry => Approved == null ? "Реестр (однократно)" : "Реестр",
-        StartupKind.Folder => "Папка автозагрузки",
-        StartupKind.Task => "Планировщик",
-        _ => "Служба"
+        StartupKind.Registry => Approved == null ? L.T("Реестр (однократно)") : L.T("Реестр"),
+        StartupKind.Folder => L.T("Папка автозагрузки"),
+        StartupKind.Task => L.T("Планировщик"),
+        _ => L.T("Служба")
     };
 }
 
@@ -155,7 +155,7 @@ public static class Autoruns
                 tx.SetValue(item.Approved, new RawValue(item.ApprovedName, RawValue.Binary, flag));
                 break;
             case StartupKind.Task:
-                using (var t = TS.TaskService.Instance.GetTask(item.Location) ?? throw new IOException("Задача не найдена: " + item.Location))
+                using (var t = TS.TaskService.Instance.GetTask(item.Location) ?? throw new IOException(L.T("Задача не найдена: ") + item.Location))
                 {
                     tx.BackupTask(t.Path, t.Xml);
                     t.Enabled = on;
@@ -168,7 +168,7 @@ public static class Autoruns
                 tx.SetValue(item.Location, RawValue.FromDword("Start", on ? 2u : 3u));
                 break;
             default:
-                throw new InvalidOperationException("Однократный запуск (RunOnce) нельзя отключить, только удалить.");
+                throw new InvalidOperationException(L.T("Однократный запуск (RunOnce) нельзя отключить, только удалить."));
         }
         item.Enabled = on;
     }
@@ -181,18 +181,18 @@ public static class Autoruns
                 tx.DeleteValue(item.Location, item.Name);
                 break;
             case StartupKind.Folder:
-                if (!Sys.Recycle(item.Location)) throw new IOException("Не удалось удалить файл: " + item.Location);
-                tx.Note("В корзину: " + item.Location);
+                if (!Sys.Recycle(item.Location)) throw new IOException(L.T("Не удалось удалить файл: ") + item.Location);
+                tx.Note(L.T("В корзину: ") + item.Location);
                 break;
             case StartupKind.Task:
-                using (var t = TS.TaskService.Instance.GetTask(item.Location) ?? throw new IOException("Задача не найдена: " + item.Location))
+                using (var t = TS.TaskService.Instance.GetTask(item.Location) ?? throw new IOException(L.T("Задача не найдена: ") + item.Location))
                 {
                     tx.BackupTask(t.Path, t.Xml);
                     t.Folder.DeleteTask(t.Name, false);
                 }
                 return;
             default:
-                throw new InvalidOperationException("Службы не удаляются, только переводятся на ручной запуск.");
+                throw new InvalidOperationException(L.T("Службы не удаляются, только переводятся на ручной запуск."));
         }
         if (item.Approved != null) tx.DeleteValue(item.Approved, item.ApprovedName);
     }
@@ -205,11 +205,11 @@ public static class Autoruns
     public static string Delay(StartupItem item, TimeSpan delay, UndoTx tx)
     {
         if (item.Kind is not (StartupKind.Registry or StartupKind.Folder) || item.Approved == null)
-            throw new InvalidOperationException("Отложить можно только запись реестра Run или файл из папки автозагрузки.");
+            throw new InvalidOperationException(L.T("Отложить можно только запись реестра Run или файл из папки автозагрузки."));
         var (exe, args) = item.Kind == StartupKind.Folder ? ("explorer.exe", $"\"{item.Location}\"") : SplitCommand(item.Command);
         var user = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
         var td = TS.TaskService.Instance.NewTask();
-        td.RegistrationInfo.Description = "RegKeeper: отложенный запуск " + item.Name;
+        td.RegistrationInfo.Description = L.T("RegKeeper: отложенный запуск ") + item.Name;
         td.Principal.UserId = user;
         td.Principal.LogonType = TS.TaskLogonType.InteractiveToken;
         td.Triggers.Add(new TS.LogonTrigger { UserId = user, Delay = delay });
@@ -217,7 +217,7 @@ public static class Autoruns
         td.Settings.ExecutionTimeLimit = TimeSpan.Zero; // the default 72 h limit would kill a tray app
         td.Settings.DisallowStartIfOnBatteries = false;
         td.Settings.StopIfGoingOnBatteries = false;
-        var name = "RegKeeper - отложенно - " + string.Concat(item.Name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
+        var name = L.T("RegKeeper - отложенно - ") + string.Concat(item.Name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
         SetEnabled(item, false, tx);
         TS.TaskService.Instance.RootFolder.RegisterTaskDefinition(name, td);
         tx.CreatedTask(@"\" + name);

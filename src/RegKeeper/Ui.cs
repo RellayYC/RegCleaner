@@ -53,7 +53,7 @@ public static class Ui
         if (w != null)
         {
             w.PreviewKeyDown += esc;
-            w.Title = title + " - Esc: отмена";
+            w.Title = title + L.T(" - Esc: отмена");
         }
         try
         {
@@ -79,7 +79,7 @@ public static class Ui
     {
         var box = new TextBox { Text = initial, MinWidth = 380, Margin = new Thickness(0, 6, 0, 12), AcceptsReturn = multiline, Height = multiline ? 220 : double.NaN, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         var ok = new Button { Content = "OK", IsDefault = true, Style = (Style)Application.Current.Resources["Primary"] };
-        var cancel = new Button { Content = "Отмена", IsCancel = true, Margin = new Thickness(0) };
+        var cancel = new Button { Content = L.T("Отмена"), IsCancel = true, Margin = new Thickness(0) };
         var w = new Window
         {
             Title = title, SizeToContent = SizeToContent.WidthAndHeight, ResizeMode = ResizeMode.NoResize,

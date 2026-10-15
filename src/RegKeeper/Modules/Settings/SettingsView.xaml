@@ -12,6 +12,13 @@
                 <RadioButton x:Name="ThemeDark" Content="Тёмная" Tag="Dark" Checked="Theme_Checked"/>
             </StackPanel>
 
+            <TextBlock Text="Язык" FontWeight="SemiBold" Margin="0,18,0,6"/>
+            <StackPanel Orientation="Horizontal">
+                <RadioButton x:Name="LangAuto" Content="Как в Windows" Tag="Auto" Checked="Lang_Checked"/>
+                <RadioButton x:Name="LangRu" Content="Русский" Tag="ru" Checked="Lang_Checked"/>
+                <RadioButton x:Name="LangEn" Content="English" Tag="en" Checked="Lang_Checked"/>
+            </StackPanel>
+
             <TextBlock Text="Интеграция с Windows" FontWeight="SemiBold" Margin="0,18,0,6"/>
             <CheckBox x:Name="ShellVerb" Content="Пункт «Удалить с RegKeeper» в контекстном меню exe-файлов и ярлыков" Checked="ShellVerb_Changed" Unchecked="ShellVerb_Changed"/>
             <TextBlock Style="{StaticResource Hint}" Margin="22,2,0,10" Text="В Windows 11 пункт находится в «Показать дополнительные параметры». Только для текущего пользователя."/>

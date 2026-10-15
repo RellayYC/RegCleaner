@@ -116,10 +116,11 @@ public static partial class Winapp2
         ["%UserName%"] = new[] { Environment.UserName },
     };
 
+    // translated where a category is assigned: static fields would keep the language they were created in
     static readonly Dictionary<string, string> LangSec = new()
     {
-        ["3021"] = "Приложения", ["3022"] = "Интернет", ["3023"] = "Мультимедиа", ["3024"] = "Утилиты", ["3025"] = "Windows",
-        ["3026"] = "Firefox", ["3029"] = "Google Chrome", ["3030"] = "Thunderbird", ["3006"] = "Microsoft Edge", ["3036"] = "Мультимедиа",
+        ["3021"] = "Приложения", ["3022"] = "Интернет", ["3023"] = "Мультимедиа", ["3024"] = "Утилиты", ["3025"] = "Windows", // i18n: keep
+        ["3026"] = "Firefox", ["3029"] = "Google Chrome", ["3030"] = "Thunderbird", ["3006"] = "Microsoft Edge", ["3036"] = "Мультимедиа", // i18n: keep
     };
 
     static readonly EnumerationOptions Shallow = new() { IgnoreInaccessible = true, AttributesToSkip = FileAttributes.ReparsePoint };
@@ -135,7 +136,7 @@ public static partial class Winapp2
             if (line == "" || line.StartsWith(';')) continue;
             if (line.StartsWith('[') && line.EndsWith(']'))
             {
-                rules.Add(r = new CleanRule { Name = line[1..^1].TrimEnd(' ', '*') });
+                rules.Add(r = new CleanRule { Name = L.T(line[1..^1].TrimEnd(' ', '*')) }); // our built-ins use Russian names as keys
                 continue;
             }
             var eq = line.IndexOf('=');
@@ -148,16 +149,16 @@ public static partial class Winapp2
                 case "filekey": r.Files.Add(ParseFileKey(val)); break;
                 case "excludekey": r.Excludes.Add(val); break;
                 case "regkey": r.RegKeys.Add(val); break;
-                case "warning": r.Warning = val; break;
+                case "warning": r.Warning = L.T(val); break;
                 case "section": r.Category = val; break;
-                case "langsecref" when r.Category == "": r.Category = LangSec.GetValueOrDefault(val, "Браузеры"); break;
+                case "langsecref" when r.Category == "": r.Category = L.T(LangSec.GetValueOrDefault(val, "Браузеры")); break; // i18n: keep
                 case "default": r.DefaultOn = val == "1"; break;
                 case "recyclebin": r.RecycleBin = val == "1"; break;
                 case "force": r.Force = val == "1"; break;
                 case "componentstore": r.ComponentStore = val == "1"; break;
             }
         }
-        foreach (var x in rules.Where(x => x.Category == "")) x.Category = "Прочее";
+        foreach (var x in rules.Where(x => x.Category == "")) x.Category = L.T("Прочее");
         return rules;
     }
 
@@ -190,9 +191,9 @@ public static partial class Winapp2
         string text;
         try { text = await http.GetStringAsync(Url); }
         catch (Exception e) when (e is HttpRequestException or TaskCanceledException)
-        { throw new IOException("Не удалось скачать winapp2.ini с GitHub, проверьте подключение к интернету.\n" + e.Message, e); }
+        { throw new IOException(L.T("Не удалось скачать winapp2.ini с GitHub, проверьте подключение к интернету.\n") + e.Message, e); }
         var count = Parse(text).Count;
-        if (count < 500) throw new InvalidDataException($"Загруженный файл не похож на winapp2.ini (правил: {count}).");
+        if (count < 500) throw new InvalidDataException(L.T($"Загруженный файл не похож на winapp2.ini (правил: {count})."));
         await File.WriteAllTextAsync(IniPath, text);
         return count;
     }
@@ -304,9 +305,9 @@ public static partial class Winapp2
                     if (fk.Patterns.Any(p => FileSystemName.MatchesSimpleExpression(p, f.Name))
                         && !excl.Any(x => x.IsMatch(f.FullName)) && !ignore.Any(i => Leftovers.IsSameOrInside(f.FullName, i))
                         && seen.Add(f.FullName))
-                        files.Add(new Leftover { Kind = "Файл", Path = f.FullName, Size = f.Length });
+                        files.Add(new Leftover { Kind = "Файл", Path = f.FullName, Size = f.Length }); // i18n: keep
                 if (fk.RemoveSelf && !IsRoot(dir) && !ignore.Any(i => Leftovers.IsSameOrInside(dir, i)) && seen.Add(dir))
-                    dirs.Add(new Leftover { Kind = "Папка", Path = dir });
+                    dirs.Add(new Leftover { Kind = "Папка", Path = dir }); // i18n: keep
             }
 
         var regs = new List<Leftover>();
@@ -316,9 +317,9 @@ public static partial class Winapp2
             var key = Reg.Normalize(p[0]);
             if (p.Length > 1 && p[1] != "")
             {
-                if (Reg.Read(key, p[1]) != null) regs.Add(new Leftover { Kind = "Значение реестра", Path = key, ValueName = p[1] });
+                if (Reg.Read(key, p[1]) != null) regs.Add(new Leftover { Kind = "Значение реестра", Path = key, ValueName = p[1] }); // i18n: keep
             }
-            else if (Reg.Exists(key)) regs.Add(new Leftover { Kind = "Ключ реестра", Path = key });
+            else if (Reg.Exists(key)) regs.Add(new Leftover { Kind = "Ключ реестра", Path = key }); // i18n: keep
         }
 
         r.Found = files.Concat(dirs).Concat(regs).ToList();
@@ -353,14 +354,14 @@ public static partial class Winapp2
                 {
                     switch (l.Kind)
                     {
-                        case "Файл" when Protect.IsProtectedPath(l.Path): failed++; break;
-                        case "Файл":
+                        case "Файл" when Protect.IsProtectedPath(l.Path): failed++; break; // i18n: keep
+                        case "Файл": // i18n: keep
                             Remove(l.Path, r.Force);
                             freed += l.Size;
                             break;
-                        case "Папка": DeleteEmptyTree(l.Path, r.Force); break;
-                        case "Ключ реестра": tx.DeleteKey(l.Path); break;
-                        case "Значение реестра": tx.DeleteValue(l.Path, l.ValueName!); break;
+                        case "Папка": DeleteEmptyTree(l.Path, r.Force); break; // i18n: keep
+                        case "Ключ реестра": tx.DeleteKey(l.Path); break; // i18n: keep
+                        case "Значение реестра": tx.DeleteValue(l.Path, l.ValueName!); break; // i18n: keep
                     }
                 }
                 catch (Exception e) when (e is IOException or UnauthorizedAccessException) { failed++; }
@@ -413,7 +414,7 @@ public static partial class Winapp2
         using var p = System.Diagnostics.Process.Start(psi)!;
         var output = p.StandardOutput.ReadToEnd();
         p.WaitForExit();
-        return p.ExitCode == 0 ? output : throw new IOException($"DISM {op}: код {p.ExitCode}\n{output.Trim()}");
+        return p.ExitCode == 0 ? output : throw new IOException(L.T($"DISM {op}: код {p.ExitCode}\n{output.Trim()}"));
     }
 
     /// <summary>AnalyzeComponentStore report: "Backups and Disabled Features" is what cleanup can reclaim.</summary>

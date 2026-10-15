@@ -82,10 +82,10 @@ public static partial class Sys
 
     public static string Size(long bytes) => bytes switch
     {
-        < 1024 => $"{bytes} Б",
-        < 1024 * 1024 => $"{bytes / 1024.0:0.#} КБ",
-        < 1024L * 1024 * 1024 => $"{bytes / 1024.0 / 1024:0.#} МБ",
-        _ => $"{bytes / 1024.0 / 1024 / 1024:0.##} ГБ"
+        < 1024 => L.T($"{bytes} Б"),
+        < 1024 * 1024 => L.T($"{bytes / 1024.0:0.#} КБ"),
+        < 1024L * 1024 * 1024 => L.T($"{bytes / 1024.0 / 1024:0.#} МБ"),
+        _ => L.T($"{bytes / 1024.0 / 1024 / 1024:0.##} ГБ")
     };
 
     public static long DirSize(string dir)

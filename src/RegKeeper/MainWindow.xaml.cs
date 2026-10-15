@@ -17,18 +17,18 @@ public partial class MainWindow : Window
 {
     readonly List<NavItem> _items = new()
     {
-        new("Деинсталлятор", "", typeof(UninstallerView)),
-        new("Приложения Windows", "", typeof(StoreAppsView)),
-        new("Автозагрузка", "", typeof(StartupView)),
-        new("Очистка диска", "", typeof(DiskCleanupView)),
-        new("Чистка реестра", "", typeof(RegCleanupView)),
-        new("Редактор реестра", "", typeof(RegEditorView)),
-        new("Поиск и замена", "", typeof(RegSearchView)),
-        new("Снимки и трассы", "", typeof(SnapshotsView)),
-        new("Твики", "", typeof(TweaksView)),
-        new("Сжатие реестра", "", typeof(CompactionView)),
-        new("Центр отмены", "", typeof(UndoView)),
-        new("Настройки", "", typeof(SettingsView)),
+        new(L.T("Деинсталлятор"), "", typeof(UninstallerView)),
+        new(L.T("Приложения Windows"), "", typeof(StoreAppsView)),
+        new(L.T("Автозагрузка"), "", typeof(StartupView)),
+        new(L.T("Очистка диска"), "", typeof(DiskCleanupView)),
+        new(L.T("Чистка реестра"), "", typeof(RegCleanupView)),
+        new(L.T("Редактор реестра"), "", typeof(RegEditorView)),
+        new(L.T("Поиск и замена"), "", typeof(RegSearchView)),
+        new(L.T("Снимки и трассы"), "", typeof(SnapshotsView)),
+        new(L.T("Твики"), "", typeof(TweaksView)),
+        new(L.T("Сжатие реестра"), "", typeof(CompactionView)),
+        new(L.T("Центр отмены"), "", typeof(UndoView)),
+        new(L.T("Настройки"), "", typeof(SettingsView)),
     };
 
     public static MainWindow Current => (MainWindow)Application.Current.MainWindow;
@@ -36,6 +36,7 @@ public partial class MainWindow : Window
     public MainWindow(string[] args)
     {
         InitializeComponent();
+        L.Apply(this);
         Nav.ItemsSource = _items;
         // --uninstall "<file>" from the shell menu, --startup from the watcher toast
         if (args.Length >= 2 && args[0] == "--uninstall") Loaded += (_, _) => Show<UninstallerView>().FocusOn(args[1]);
