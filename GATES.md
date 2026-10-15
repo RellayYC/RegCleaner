@@ -12,7 +12,7 @@ Scope: every module real and tested, the clone measured against Reg Organizer an
 - [x] G1: the whole solution builds and every test passes
   CHECK: node scripts/gates/check.mjs tests "" 40
   EXPECT: TESTS GREEN
-  EVIDENCE: automatic-evidence=v1; definition-sha256=0295a0e1c514fc54b85067c076fc5e17b7950766dd878ea9d3cb940bc25a031e; exit=0; EXPECT=matched; output-sha256=7c9d790e2a21236149d4d7d9487d33a3cd2da9de966959b84f0c83f007aecc93; output-bytes=22; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
+  EVIDENCE: automatic-evidence=v1; definition-sha256=0295a0e1c514fc54b85067c076fc5e17b7950766dd878ea9d3cb940bc25a031e; exit=0; EXPECT=matched; output-sha256=fe99798753b9227265087795b693a3350bf5b9bad5ca0c1fe4c41950fcf0767c; output-bytes=22; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
 
 - [x] G2: the tweak catalog is complete and well-formed
   CHECK: node scripts/gates/check.mjs tweaks 30
@@ -75,7 +75,7 @@ Scope: every module real and tested, the clone measured against Reg Organizer an
 - [x] G14: parity with the original: all must features, at least 90% of should, every must from feedback done
   CHECK: node scripts/gates/check.mjs parity 0.9
   EXPECT: PARITY OK
-  EVIDENCE: automatic-evidence=v1; definition-sha256=e26bf00ca952d558aa4eb34885afe6a417c75d3fadf2c277be44698200bfcc74; exit=0; EXPECT=matched; output-sha256=5375604a17c687b74c11e865a47159b9c85ee7e84006565cbee8908af6f35c6b; output-bytes=46; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
+  EVIDENCE: automatic-evidence=v1; definition-sha256=e26bf00ca952d558aa4eb34885afe6a417c75d3fadf2c277be44698200bfcc74; exit=0; EXPECT=matched; output-sha256=8f9f23d65b95d46a1b23929db5017b2b6ba2c19dbba9c90640d8a2094d35f575; output-bytes=46; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
 
 - [x] G15: both themes pass WCAG contrast
   CHECK: node scripts/gates/check.mjs contrast
