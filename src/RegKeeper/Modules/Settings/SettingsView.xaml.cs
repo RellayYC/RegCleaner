@@ -13,6 +13,11 @@ public partial class SettingsView : UserControl
         ShellVerb.IsChecked = Integration.ShellVerb;
         Watcher.IsChecked = Integration.WatcherAutostart;
         Watcher.IsEnabled = File.Exists(Integration.WatcherExe);
+        if (!Watcher.IsEnabled)
+        {
+            Watcher.ToolTip = "Не найден " + Integration.WatcherExe;
+            ToolTipService.SetShowOnDisabled(Watcher, true);
+        }
         DataInfo.Text = $"{AppPaths.Data}\nЦентр отмены, снимки и трассы установок: {Sys.Size(Sys.DirSize(AppPaths.Data))}";
         About.Text = $"RegKeeper {typeof(SettingsView).Assembly.GetName().Version?.ToString(3)}, .NET {Environment.Version}";
     }

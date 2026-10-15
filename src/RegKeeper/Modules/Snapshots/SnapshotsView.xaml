@@ -45,7 +45,7 @@
             <DockPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,10">
                 <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
                 <WrapPanel>
-                    <TextBox x:Name="Search" Width="260" TextChanged="Search_TextChanged" ToolTip="Фильтр по пути"/>
+                    <TextBox x:Name="Search" Width="260" Margin="0,0,8,0" TextChanged="Search_TextChanged" ToolTip="Фильтр по пути"/>
                     <Button Content="Откатить отмеченное" Style="{StaticResource DangerBtn}" Click="Rollback_Click"
                             ToolTip="Удалить добавленное, вернуть изменённые и удалённые значения реестра. Добавленные файлы уходят в корзину."/>
                     <Button Content="Отметить все" Click="All_Click"/>

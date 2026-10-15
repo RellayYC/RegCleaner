@@ -51,3 +51,57 @@ Severity: S3
 Прерванный снимок не оставляет файла, у анализа недоделанные правила остаются непроанализированными.
 Доказательство: `Busy_EscCancelsWithoutError` (падает, если отключить обработчик Esc), `Snapshot_Cancelled_LeavesNoFile`.
 Status: fixed in 3d34fe6
+
+### B7 Приложения Windows: вместо названий сырые ссылки ms-resource
+Severity: S3
+Шаги: открыть «Приложения Windows» (G18, прокликивание без прав администратора).
+Было: «ms-resource://Microsoft.YourPhone/YourPhone/Resources/AppName», «ms-resource:app_name_ms_todo» и ещё
+десяток таких строк в колонке «Название».
+Причина: в репозитории пакетов DisplayName часто хранится голой ссылкой из манифеста, без формы `@{пакет?...}`,
+и она показывалась как есть.
+Исправление: ссылка дополняется до `@{PackageFullName?ms-resource://<Name>/Resources/<ключ>}` (или без
+`Resources/`) и разрешается SHLoadIndirectString: «Phone Link», «Microsoft To Do», «Windows Calculator».
+Доказательство: `Load_RealSystem_And_RemovalKeepsNameOutOfScript` проверяет, что ни одно название не начинается
+с «ms-resource:» (без исправления падает), скриншот `artifacts/g18/b7-store.png`.
+Status: fixed in HEAD
+
+### B8 Поля поиска без подписи
+Severity: S4
+Шаги: Деинсталлятор, Приложения Windows, Автозагрузка, Очистка диска, Чистка реестра, Твики, Снимки (фильтр).
+Было: пустое поле без подписи и плейсхолдера, что в нём искать, видно только из всплывающей подсказки.
+Исправление: общий шаблон TextBox показывает ToolTip серым текстом, пока поле пустое; у встроенных полей
+появился отступ до соседней кнопки.
+Доказательство: скриншоты `artifacts/g18/b8-uninst.png`, `b7-store.png`.
+Status: fixed in HEAD
+
+### B9 Редактор: после «Копировать» выделен родитель, «Удалить» предлагает удалить его
+Severity: S2
+Шаги: Редактор реестра, `HKCU\Software\RegKeeperTest\G18Renamed`, «Копировать» в
+`HKCU\Software\RegKeeperTest\G18Copy`, затем «Удалить».
+Было: после копии выделение вставало на `RegKeeperTest`, а не на копию; «Удалить» спрашивало про удаление всего
+`HKEY_CURRENT_USER\Software\RegKeeperTest`. Невнимательный «Да» сносил родителя (откат в Центре отмены спасал).
+Причина: Navigate не перечитывал уже загруженный узел и не видел созданный после загрузки соседний раздел.
+Исправление: если раздела нет среди загруженных детей, но он есть в реестре, узел перечитывается один раз.
+Доказательство: `EveryView_OpensInBothThemes` → `EditorNavigatesToNewSibling` (без исправления: Expected
+`...\B`, Actual `...\RegKeeperTest`); UIA-сценарий G18: подтверждение удаления показывает `...\G18Copy`.
+Status: fixed in HEAD
+
+### B10 Тесты оставляли записи в настоящем Центре отмены
+Severity: S3
+Шаги: `dotnet test`, затем открыть Центр отмены.
+Было: «test rollback snap» ×9, «test replace», «interrupted» в `%ProgramData%\RegKeeper\Undo` у пользователя.
+Исправление: `AppPaths.Data` берёт `RK_DATA`, тестовая сборка выставляет его на `%TEMP%\RegKeeperTestData`
+до первого обращения. Старые записи перенесены в `%TEMP%\RegKeeperOldTestUndo`.
+Доказательство: `Tests_DoNotWriteToTheRealUndoCenter`; число записей в настоящем Undo до и после полного
+прогона одинаковое (13 = 13).
+Status: fixed in HEAD
+
+### B11 Сообщения об ошибках на английском и без причины
+Severity: S4
+Шаги: Поиск и замена с regex `([`; Настройки в сборке без RegKeeper.Watcher.exe; «Обновить winapp2.ini» на
+медленной сети.
+Было: «Invalid pattern '([' at offset 2...» без пояснения; серый флажок слежения без объяснения; таймаут
+HttpClient через 100 с с английским текстом.
+Исправление: «Неверное регулярное выражение:» перед текстом .NET; подсказка «Не найден ...\RegKeeper.Watcher.exe»
+на сером флажке; таймаут скачивания 5 минут и русское сообщение о сети.
+Status: fixed in HEAD

@@ -33,7 +33,7 @@ public partial class RegSearchView : UserControl
         var o = Options();
         string[] roots;
         try { o.Build(); roots = Roots.Text.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Select(Reg.Normalize).ToArray(); }
-        catch (Exception ex) when (ex is ArgumentException) { Ui.Info(ex.Message); return; }
+        catch (Exception ex) when (ex is ArgumentException) { Ui.Info((ex is System.Text.RegularExpressions.RegexParseException ? "Неверное регулярное выражение:\n" : "") + ex.Message); return; }
 
         _hits.Clear();
         _last = o;

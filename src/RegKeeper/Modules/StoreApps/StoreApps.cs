@@ -108,9 +108,20 @@ public static class StoreApps
     {
         var raw = Reg.GetString(Repository + fullName, "DisplayName");
         if (string.IsNullOrEmpty(raw)) return "";
-        if (!raw.StartsWith('@')) return raw;
+        if (raw.StartsWith('@')) return Load(raw) ?? "";
+        if (!raw.StartsWith("ms-resource:", StringComparison.OrdinalIgnoreCase)) return raw;
+        // the repository often keeps the bare manifest reference; relative keys live under Resources/ or the package root
+        var key = raw[12..];
+        if (key.StartsWith("//")) return Load($"@{{{fullName}?{raw}}}") ?? "";
+        var name = fullName.Split('_')[0];
+        key = key.TrimStart('/');
+        return Load($"@{{{fullName}?ms-resource://{name}/Resources/{key}}}") ?? Load($"@{{{fullName}?ms-resource://{name}/{key}}}") ?? "";
+    }
+
+    static string? Load(string indirect)
+    {
         var sb = new StringBuilder(512);
-        return SHLoadIndirectString(raw, sb, sb.Capacity, IntPtr.Zero) == 0 ? sb.ToString() : "";
+        return SHLoadIndirectString(indirect, sb, sb.Capacity, IntPtr.Zero) == 0 ? sb.ToString() : null;
     }
 
     [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]

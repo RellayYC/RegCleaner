@@ -67,13 +67,19 @@ public partial class RegEditorView : UserControl
         {
             Fill(node);
             node.IsExpanded = true;
-            if (node.Items.OfType<TreeViewItem>().FirstOrDefault(n => ((string)n.Header).Equals(part, StringComparison.OrdinalIgnoreCase)) is not { } next) break;
+            // a key created since this node was loaded (copy target, another program): re-read once before giving up
+            if ((Child(node, part) ?? (Reg.Exists(node.Tag + "\\" + part) ? Refill(node, part) : null)) is not { } next) break;
             node = next;
         }
         node.IsSelected = true;
         node.BringIntoView();
         Dispatcher.BeginInvoke(() => node.BringIntoView(), System.Windows.Threading.DispatcherPriority.Background);
     }
+
+    static TreeViewItem? Child(TreeViewItem n, string name) =>
+        n.Items.OfType<TreeViewItem>().FirstOrDefault(c => ((string)c.Header).Equals(name, StringComparison.OrdinalIgnoreCase));
+
+    static TreeViewItem? Refill(TreeViewItem n, string name) { Fill(n, true); return Child(n, name); }
 
     /// <summary>Re-reads the selected node's children (keeps expansion of the node itself) and its values.</summary>
     void Reload(string? select = null)

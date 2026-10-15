@@ -30,6 +30,8 @@ public class StoreAppsTests
         Assert.Contains(apps, a => a.IsSystem);
         Assert.All(apps, a => Assert.False(string.IsNullOrEmpty(a.PackageFullName)));
         Assert.Contains(apps, a => a.DisplayName != "" && !a.DisplayName.StartsWith('@'));
+        // B7: bare "ms-resource:" references in the repository are resolved, not shown raw
+        Assert.DoesNotContain(apps, a => a.Title.StartsWith("ms-resource:", StringComparison.OrdinalIgnoreCase));
 
         const string evil = "x'; Remove-Item C:\\ -Recurse; '";
         var psi = StoreApps.RemoveStartInfo(evil);

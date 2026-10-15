@@ -6,7 +6,9 @@ namespace RegKeeper.Core;
 
 public static class AppPaths
 {
-    public static readonly string Data = Dir(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RegKeeper");
+    // RK_DATA: tests keep their undo records out of the real Undo Center
+    public static readonly string Data = Dir(Environment.GetEnvironmentVariable("RK_DATA") is { Length: > 0 } d ? d
+        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "RegKeeper"));
     public static readonly string Undo = Dir(Data, "Undo");
     public static readonly string Traces = Dir(Data, "Traces");
     public static readonly string Snapshots = Dir(Data, "Snapshots");

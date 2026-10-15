@@ -8,6 +8,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Microsoft.Win32;
 using RegKeeper.Core;
+using RegKeeper.Modules;
 
 namespace RegKeeper.Tests;
 
@@ -51,6 +52,7 @@ public class SmokeTests
                 var sw = Stopwatch.StartNew();
                 while (views.Any(v => !v.IsEnabled) && sw.Elapsed < TimeSpan.FromSeconds(120)) { Thread.Sleep(50); Pump(); }
                 Assert.True(views.All(v => v.IsEnabled), "still loading: " + string.Join(", ", views.Where(v => !v.IsEnabled).Select(v => v.GetType().Name)));
+                if (theme == Theme.Light) EditorNavigatesToNewSibling(views.OfType<RegEditorView>().Single());
                 if (Environment.GetEnvironmentVariable("RK_SHOTS") is { Length: > 0 } dir)
                     for (var i = 0; i < views.Count; i++) { nav.SelectedIndex = i; Pump(); Shot(win, Path.Combine(dir, $"{theme}-{i:00}-{views[i].GetType().Name}.png")); }
                 Assert.True(problems.Count == 0, $"{theme}:\n" + string.Join("\n", problems));
@@ -66,6 +68,22 @@ public class SmokeTests
             Dispatcher.CurrentDispatcher.InvokeShutdown();
         }
     });
+
+    /// <summary>B9: a key created after its parent was loaded (copy target) must get selected, not its parent.</summary>
+    static void EditorNavigatesToNewSibling(RegEditorView ed)
+    {
+        const string parent = @"HKEY_CURRENT_USER\Software\RegKeeperTest";
+        Registry.CurrentUser.DeleteSubKeyTree(@"Software\RegKeeperTest", false);
+        Registry.CurrentUser.CreateSubKey(@"Software\RegKeeperTest\A").Dispose();
+        try
+        {
+            ed.Navigate(parent + @"\A");
+            Registry.CurrentUser.CreateSubKey(@"Software\RegKeeperTest\B").Dispose();
+            ed.Navigate(parent + @"\B");
+            Assert.Equal(parent + @"\B", ((TreeViewItem)((TreeView)ed.FindName("Tree")).SelectedItem).Tag);
+        }
+        finally { Registry.CurrentUser.DeleteSubKeyTree(@"Software\RegKeeperTest", false); }
+    }
 
     [Fact]
     public void Busy_EscCancelsWithoutError() => Sta(() =>

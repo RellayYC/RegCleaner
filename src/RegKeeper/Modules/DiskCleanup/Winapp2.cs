@@ -169,8 +169,12 @@ public static partial class Winapp2
 
     public static async Task<int> Download()
     {
-        using var http = new HttpClient();
-        var text = await http.GetStringAsync(Url);
+        // 1.7 MB: the default 100 s is not enough on a slow link
+        using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+        string text;
+        try { text = await http.GetStringAsync(Url); }
+        catch (Exception e) when (e is HttpRequestException or TaskCanceledException)
+        { throw new IOException("Не удалось скачать winapp2.ini с GitHub, проверьте подключение к интернету.\n" + e.Message, e); }
         var count = Parse(text).Count;
         if (count < 500) throw new InvalidDataException($"Загруженный файл не похож на winapp2.ini (правил: {count}).");
         await File.WriteAllTextAsync(IniPath, text);

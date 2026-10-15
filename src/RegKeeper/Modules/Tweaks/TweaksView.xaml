@@ -8,7 +8,7 @@
             <DockPanel Margin="0,14,0,10">
                 <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
                 <WrapPanel>
-                    <TextBox x:Name="Search" Width="260" TextChanged="Search_TextChanged" ToolTip="Поиск по названию, описанию и категории"/>
+                    <TextBox x:Name="Search" Width="260" Margin="0,0,8,0" TextChanged="Search_TextChanged" ToolTip="Поиск по названию, описанию и категории"/>
                     <Button Content="Применить" Style="{StaticResource Primary}" Click="Apply_Click"/>
                     <Button Content="Сбросить отметки" Click="Reset_Click" ToolTip="Вернуть галочки к текущему состоянию системы"/>
                     <Button Content="Ключ в редакторе" Click="Open_Click"/>
