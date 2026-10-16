@@ -24,17 +24,13 @@
         </StackPanel>
         <DataGrid x:Name="Grid" IsReadOnly="True" SelectionMode="Single" MouseDoubleClick="Uninstall_Click">
             <DataGrid.Columns>
-                <DataGridTemplateColumn Width="30">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate><Image Source="{Binding Icon}" Width="16" Height="16"/></DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Width="38" CellTemplate="{StaticResource AppIcon}"/>
                 <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="3*"/>
                 <DataGridTextColumn Header="Издатель" Binding="{Binding Publisher}" Width="2*"/>
                 <DataGridTextColumn Header="Версия" Binding="{Binding Version}" Width="110"/>
                 <DataGridTextColumn Header="Размер" Binding="{Binding SizeText}" SortMemberPath="SizeBytes" Width="90"/>
                 <DataGridTextColumn Header="Установлено" Binding="{Binding DateText}" SortMemberPath="InstallDate" Width="100"/>
-                <DataGridTextColumn Header="Для" Binding="{Binding Scope}" Width="150"/>
+                <DataGridTemplateColumn Header="Для" SortMemberPath="Scope" Width="150"><DataGridTemplateColumn.CellTemplate><DataTemplate><ContentPresenter Content="{Binding Scope}" ContentTemplate="{StaticResource Badge}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
     </DockPanel>

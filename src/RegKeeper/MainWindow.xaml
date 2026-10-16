@@ -9,47 +9,88 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
 
-        <DockPanel Background="{DynamicResource PaneBrush}">
-            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="18,18,0,16">
-                <TextBlock Text="&#xE9F5;" FontFamily="{StaticResource Icons}" FontSize="22" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
-                <TextBlock Text="RegKeeper" FontSize="18" FontWeight="SemiBold" Margin="10,0,0,0" VerticalAlignment="Center"/>
-            </StackPanel>
-            <ListBox x:Name="Nav" Background="Transparent" BorderThickness="0" SelectionChanged="Nav_SelectionChanged"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                <ListBox.ItemContainerStyle>
-                    <Style TargetType="ListBoxItem">
-                        <Setter Property="Margin" Value="8,1"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="ListBoxItem">
-                                    <Border x:Name="b" CornerRadius="6" Padding="10,8" Background="Transparent">
-                                        <ContentPresenter/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
-                                        </Trigger>
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Setter TargetName="b" Property="Background" Value="{DynamicResource SelectionBrush}"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </ListBox.ItemContainerStyle>
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding Glyph}" FontFamily="{StaticResource Icons}" FontSize="16" Width="26"
-                                       Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding Title}" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </DockPanel>
+        <Border Background="{DynamicResource PaneBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+            <DockPanel>
+                <!-- the mark: a rounded tile with the R knocked out of it; icon.ps1 draws the same shape into the .ico -->
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="20,20,0,20">
+                    <Viewbox Width="22" Height="22">
+                        <Canvas Width="32" Height="32">
+                            <Rectangle Width="32" Height="32" RadiusX="4" RadiusY="4" Fill="{DynamicResource TextBrush}"/>
+                            <Path Data="M11,8 V24 M11,8 H16.5 A4.5,4.5 0 0 1 16.5,17 H11 M16,17 L22,24" Stroke="{DynamicResource PaneBrush}"
+                                  StrokeThickness="3.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
+                        </Canvas>
+                    </Viewbox>
+                    <TextBlock FontSize="16" FontWeight="SemiBold" Margin="10,0,0,1" VerticalAlignment="Center">
+                        <Run Text="Reg"/><Run Text="Keeper" Foreground="{DynamicResource MutedBrush}"/>
+                    </TextBlock>
+                </StackPanel>
+                <ListBox x:Name="Nav" Background="Transparent" BorderThickness="0" SelectionChanged="Nav_SelectionChanged"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" Padding="10,0">
+                    <!-- one pill under the items, slid onto the selected one by Motion.Slide -->
+                    <ListBox.Template>
+                        <ControlTemplate TargetType="ListBox">
+                            <ScrollViewer Focusable="False" Padding="{TemplateBinding Padding}">
+                                <Grid>
+                                    <Canvas>
+                                        <Border x:Name="Pill" CornerRadius="8" Background="{DynamicResource SelectionBrush}" Visibility="Hidden"/>
+                                    </Canvas>
+                                    <ItemsPresenter/>
+                                </Grid>
+                            </ScrollViewer>
+                        </ControlTemplate>
+                    </ListBox.Template>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Margin" Value="0,1"/>
+                            <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="b" CornerRadius="8" Padding="10,7" Background="Transparent">
+                                            <Grid>
+                                                <Border x:Name="h" CornerRadius="8" Margin="-10,-7" Background="{DynamicResource HoverBrush}" Opacity="0"/>
+                                                <ContentPresenter/>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                                                <Trigger.EnterActions><BeginStoryboard Storyboard="{StaticResource HoverIn}"/></Trigger.EnterActions>
+                                                <Trigger.ExitActions><BeginStoryboard Storyboard="{StaticResource HoverOut}"/></Trigger.ExitActions>
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                                                <Setter TargetName="h" Property="Visibility" Value="Hidden"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Glyph}" FontFamily="{StaticResource Icons}" FontSize="15" Width="26"
+                                           Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Title}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
 
-        <ContentControl x:Name="Host" Grid.Column="1" Margin="24,20,24,16"/>
+        <!-- 2px progress line while a module works (MainWindow.SetBusy) -->
+        <Border x:Name="BusyBar" Grid.Column="1" Height="2" VerticalAlignment="Top" ClipToBounds="True" Visibility="Hidden">
+            <Rectangle x:Name="BusyRun" Width="160" HorizontalAlignment="Left" Fill="{DynamicResource TextBrush}" Opacity="0.6">
+                <Rectangle.RenderTransform><TranslateTransform/></Rectangle.RenderTransform>
+            </Rectangle>
+        </Border>
+        <ContentControl x:Name="Host" Grid.Column="1" Margin="28,24,28,20" Focusable="False"/>
+        <!-- the outgoing page as a picture while it fades (Motion.SwapPage) -->
+        <Image x:Name="Ghost" Grid.Column="1" Margin="28,24,28,20" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Top"
+               IsHitTestVisible="False" Visibility="Collapsed"/>
     </Grid>
 </Window>

@@ -488,3 +488,5 @@ $RECYCLE.BIN/
 .unlazy/
 .unlazy-hook-state.json
 artifacts/
+
+.superdesign/

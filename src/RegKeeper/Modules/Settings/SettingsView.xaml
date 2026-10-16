@@ -5,33 +5,45 @@
         <StackPanel MaxWidth="720" HorizontalAlignment="Left">
             <TextBlock Text="Настройки" Style="{StaticResource Title}"/>
 
-            <TextBlock Text="Оформление" FontWeight="SemiBold" Margin="0,18,0,6"/>
-            <StackPanel Orientation="Horizontal">
-                <RadioButton x:Name="ThemeSystem" Content="Как в Windows" Tag="System" Checked="Theme_Checked"/>
-                <RadioButton x:Name="ThemeLight" Content="Светлая" Tag="Light" Checked="Theme_Checked"/>
-                <RadioButton x:Name="ThemeDark" Content="Тёмная" Tag="Dark" Checked="Theme_Checked"/>
-            </StackPanel>
+            <TextBlock Text="Оформление" Style="{StaticResource Section}"/>
+            <!-- pill segmented control: ThemePill slides under the checked one -->
+            <Border Style="{StaticResource Segments}">
+                <Grid>
+                    <Canvas><Border x:Name="ThemePill" Style="{StaticResource Pill}"/></Canvas>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="ThemeSystem" Content="Как в Windows" Tag="System" Checked="Theme_Checked"/>
+                        <RadioButton x:Name="ThemeLight" Content="Светлая" Tag="Light" Checked="Theme_Checked"/>
+                        <RadioButton x:Name="ThemeDark" Content="Тёмная" Tag="Dark" Checked="Theme_Checked"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
 
-            <TextBlock Text="Язык" FontWeight="SemiBold" Margin="0,18,0,6"/>
-            <StackPanel Orientation="Horizontal">
-                <RadioButton x:Name="LangAuto" Content="Как в Windows" Tag="Auto" Checked="Lang_Checked"/>
-                <RadioButton x:Name="LangRu" Content="Русский" Tag="ru" Checked="Lang_Checked"/>
-                <RadioButton x:Name="LangEn" Content="English" Tag="en" Checked="Lang_Checked"/>
-            </StackPanel>
+            <TextBlock Text="Язык" Style="{StaticResource Section}"/>
+            <!-- pill segmented control: LangPill slides under the checked one -->
+            <Border Style="{StaticResource Segments}">
+                <Grid>
+                    <Canvas><Border x:Name="LangPill" Style="{StaticResource Pill}"/></Canvas>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="LangAuto" Content="Как в Windows" Tag="Auto" Checked="Lang_Checked"/>
+                        <RadioButton x:Name="LangRu" Content="Русский" Tag="ru" Checked="Lang_Checked"/>
+                        <RadioButton x:Name="LangEn" Content="English" Tag="en" Checked="Lang_Checked"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
 
-            <TextBlock Text="Интеграция с Windows" FontWeight="SemiBold" Margin="0,18,0,6"/>
+            <TextBlock Text="Интеграция с Windows" Style="{StaticResource Section}"/>
             <CheckBox x:Name="ShellVerb" Content="Пункт «Удалить с RegKeeper» в контекстном меню exe-файлов и ярлыков" Checked="ShellVerb_Changed" Unchecked="ShellVerb_Changed"/>
-            <TextBlock Style="{StaticResource Hint}" Margin="22,2,0,10" Text="В Windows 11 пункт находится в «Показать дополнительные параметры». Только для текущего пользователя."/>
+            <TextBlock Style="{StaticResource Hint}" Margin="24,2,0,10" Text="В Windows 11 пункт находится в «Показать дополнительные параметры». Только для текущего пользователя."/>
             <CheckBox x:Name="Watcher" Content="Следить за автозагрузкой и предупреждать о новых программах" Checked="Watcher_Changed" Unchecked="Watcher_Changed"/>
-            <TextBlock Style="{StaticResource Hint}" Margin="22,2,0,10" Text="Маленькая программа в трее (RegKeeper.Watcher) запускается при входе в систему и проверяет ключи Run и папки автозагрузки."/>
+            <TextBlock Style="{StaticResource Hint}" Margin="24,2,0,10" Text="Маленькая программа в трее (RegKeeper.Watcher) запускается при входе в систему и проверяет ключи Run и папки автозагрузки."/>
 
-            <TextBlock Text="Данные" FontWeight="SemiBold" Margin="0,18,0,6"/>
+            <TextBlock Text="Данные" Style="{StaticResource Section}"/>
             <TextBlock x:Name="DataInfo" Style="{StaticResource Hint}" TextWrapping="Wrap"/>
             <WrapPanel Margin="0,8,0,0">
                 <Button Content="Открыть папку данных" Click="Data_Click"/>
             </WrapPanel>
 
-            <TextBlock Text="О программе" FontWeight="SemiBold" Margin="0,18,0,6"/>
+            <TextBlock Text="О программе" Style="{StaticResource Section}"/>
             <TextBlock x:Name="About" Style="{StaticResource Hint}" TextWrapping="Wrap"/>
         </StackPanel>
     </ScrollViewer>

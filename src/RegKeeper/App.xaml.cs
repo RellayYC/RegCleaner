@@ -13,6 +13,7 @@ public partial class App : Application
             Ui.Error(ex.Exception);
             ex.Handled = true;
         };
+        if (!Motion.On) Motion.Reduce(Resources.MergedDictionaries[1]);
         Theme.Apply(Theme.Saved);
         var w = new MainWindow(e.Args);
         Theme.TitleBar(w);

@@ -27,6 +27,7 @@ public class SmokeTests
         var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown }; // closing the Light window must not end the run
         foreach (var d in new[] { "Light", "Controls" })
             app.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri($"pack://application:,,,/RegKeeper;component/Themes/{d}.xaml") });
+        Motion.Reduce(app.Resources.MergedDictionaries[1]); // as App does with animations off: screenshots show settled states
         var backgrounds = new List<Color>();
         try
         {

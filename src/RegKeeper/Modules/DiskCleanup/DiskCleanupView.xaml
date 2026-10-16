@@ -22,8 +22,9 @@
         <DataGrid x:Name="Grid" SelectionMode="Single" MouseDoubleClick="Details_Click">
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="32"/>
+                <DataGridTemplateColumn Width="38" CellTemplate="{StaticResource AppIcon}"/>
                 <DataGridTextColumn Header="Название" Binding="{Binding Name}" IsReadOnly="True" Width="3*"/>
-                <DataGridTextColumn Header="Категория" Binding="{Binding Category}" IsReadOnly="True" Width="*"/>
+                <DataGridTemplateColumn Header="Категория" SortMemberPath="Category" Width="140"><DataGridTemplateColumn.CellTemplate><DataTemplate><ContentPresenter Content="{Binding Category}" ContentTemplate="{StaticResource Badge}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
                 <DataGridTextColumn Header="Объектов" Binding="{Binding CountText}" SortMemberPath="Count" IsReadOnly="True" Width="90"/>
                 <DataGridTextColumn Header="Размер" Binding="{Binding SizeText}" SortMemberPath="Size" IsReadOnly="True" Width="90"/>
                 <DataGridTextColumn Header="Предупреждение" Binding="{Binding Warning}" IsReadOnly="True" Width="2*">

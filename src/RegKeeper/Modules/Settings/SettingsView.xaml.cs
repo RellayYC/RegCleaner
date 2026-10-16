@@ -26,6 +26,7 @@ public partial class SettingsView : UserControl
 
     void Theme_Checked(object s, RoutedEventArgs e)
     {
+        Motion.Slide(ThemePill, (FrameworkElement)s);
         var mode = (string)((RadioButton)s).Tag;
         if (mode == Theme.Saved) return; // the initial IsChecked from the constructor
         Theme.Saved = mode;
@@ -34,6 +35,7 @@ public partial class SettingsView : UserControl
 
     void Lang_Checked(object s, RoutedEventArgs e)
     {
+        Motion.Slide(LangPill, (FrameworkElement)s);
         var mode = (string)((RadioButton)s).Tag;
         if (mode == L.Saved) return;
         L.Saved = mode;

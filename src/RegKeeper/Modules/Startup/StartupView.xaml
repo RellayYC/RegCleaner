@@ -24,15 +24,12 @@
         <DataGrid x:Name="Grid" IsReadOnly="True" SelectionMode="Extended" MouseDoubleClick="Toggle_Click">
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Header="Вкл" Binding="{Binding Enabled, Mode=OneWay}" Width="44"/>
+                <DataGridTemplateColumn Width="38" CellTemplate="{StaticResource AppIcon}"/>
                 <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="2*"/>
-                <DataGridTextColumn Header="Тип" Binding="{Binding KindText}" Width="140"/>
+                <DataGridTemplateColumn Header="Тип" SortMemberPath="KindText" Width="140"><DataGridTemplateColumn.CellTemplate><DataTemplate><ContentPresenter Content="{Binding KindText}" ContentTemplate="{StaticResource Badge}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
                 <DataGridTextColumn Header="Издатель" Binding="{Binding Publisher}" Width="*"/>
                 <DataGridTextColumn Header="Команда" Binding="{Binding Command}" Width="3*"/>
-                <DataGridTextColumn Header="Статус" Binding="{Binding Status}" Width="110">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock" BasedOn="{StaticResource DangerText}"/>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
+                <DataGridTemplateColumn Header="Статус" SortMemberPath="Missing" Width="140"><DataGridTemplateColumn.CellTemplate><DataTemplate><ContentPresenter Content="{Binding Status}" ContentTemplate="{StaticResource DangerBadge}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
     </DockPanel>

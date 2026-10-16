@@ -1,4 +1,5 @@
 using System.ServiceProcess;
+using System.Windows.Media;
 using RegKeeper.Core;
 using TS = Microsoft.Win32.TaskScheduler;
 
@@ -18,6 +19,7 @@ public sealed class StartupItem
     public bool Enabled { get; set; }
     public string Publisher { get; set; } = "";
     public bool Missing { get; set; }
+    public ImageSource? Icon { get; set; }
 
     public bool CanToggle => Kind is StartupKind.Task or StartupKind.Service || Approved != null;
     public string ApprovedName => Kind == StartupKind.Folder ? Path.GetFileName(Location) : Name;
@@ -67,6 +69,7 @@ public static class Autoruns
         {
             i.Publisher = Sys.Company(Sys.ExtractPath(i.Command));
             i.Missing = Sys.IsMissing(i.Command);
+            i.Icon = Inventory.LoadIcon(Sys.ExtractPath(i.Command));
         }
         return items;
     }

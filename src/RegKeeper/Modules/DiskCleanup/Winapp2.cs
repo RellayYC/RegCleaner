@@ -2,6 +2,7 @@ using System.IO.Enumeration;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Windows.Media;
 using RegKeeper.Core;
 
 namespace RegKeeper.Modules;
@@ -26,6 +27,14 @@ public sealed class CleanRule
     public List<FileKey> Files { get; } = new();
     public List<string> Excludes { get; } = new();
     public List<string> RegKeys { get; } = new();
+    /// <summary>The detected program's own icon; rows without one show <see cref="Glyph"/>.</summary>
+    public ImageSource? Icon { get; set; }
+    public string Glyph =>
+        Category == L.T("Windows") || ComponentStore || RecycleBin ? "\uE713"
+        : Category == L.T("Мультимедиа") ? "\uE8D6"
+        : Category == L.T("Утилиты") ? "\uE90F"
+        : Category == L.T("Приложения") || Category == L.T("Прочее") ? "\uE71D"
+        : "\uE774"; // browsers and the rest of the internet sections
 
     public bool Analyzed { get; set; }
     public List<Leftover> Found { get; set; } = new();
@@ -177,7 +186,12 @@ public static partial class Winapp2
         if (File.Exists(IniPath)) rules.AddRange(Parse(File.ReadAllText(IniPath)));
         var saved = File.Exists(CheckedPath) ? File.ReadAllLines(CheckedPath).ToHashSet() : null;
         rules = rules.Where(Applies).ToList();
-        foreach (var r in rules) r.Checked = saved?.Contains(r.Name) ?? r.DefaultOn;
+        foreach (var r in rules)
+        {
+            r.Checked = saved?.Contains(r.Name) ?? r.DefaultOn;
+            var exe = r.DetectFile.Where(d => d.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)).SelectMany(ExpandVars).FirstOrDefault(File.Exists);
+            if (exe != null) r.Icon = Inventory.LoadIcon(exe);
+        }
         return rules;
     }
 

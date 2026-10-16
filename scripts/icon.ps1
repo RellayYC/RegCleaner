@@ -1,4 +1,4 @@
-# Draws the RegKeeper icon (blue tile, white shield holding four registry cells) at every size natively
+# Draws the RegKeeper icon (light rounded tile with a dark R stroke, the logo mark) at every size natively
 # and packs the PNGs into src/RegKeeper/Assets/RegKeeper.ico. Run: powershell -File scripts/icon.ps1
 Add-Type -AssemblyName System.Drawing
 $out = Join-Path $PSScriptRoot '..\src\RegKeeper\Assets\RegKeeper.ico'
@@ -19,26 +19,20 @@ $pngs = foreach ($s in $sizes) {
     $g.SmoothingMode = 'AntiAlias'; $g.PixelOffsetMode = 'HighQuality'
     $u = $s / 32.0  # design grid is 32x32
 
-    $g.FillPath((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(0x25, 0x63, 0xEB))), (RoundRect 0 0 $s $s (7 * $u)))
+    $g.FillPath((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(0xFA, 0xFA, 0xFA))), (RoundRect 0 0 $s $s (4 * $u)))
 
-    # shield: flat top, straight sides, pointed bottom
-    $sh = New-Object System.Drawing.Drawing2D.GraphicsPath
-    $sh.AddLines([System.Drawing.PointF[]]@(
-        (New-Object System.Drawing.PointF (7 * $u), (6 * $u)), (New-Object System.Drawing.PointF (25 * $u), (6 * $u)),
-        (New-Object System.Drawing.PointF (25 * $u), (16 * $u)), (New-Object System.Drawing.PointF (16 * $u), (27 * $u)),
-        (New-Object System.Drawing.PointF (7 * $u), (16 * $u))))
-    $sh.CloseFigure()
-    $g.FillPath([System.Drawing.Brushes]::White, $sh)
-
-    # four cells; at 16-20 px they would blur, so the small sizes keep a plain shield with one cell
-    $cell = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(0x25, 0x63, 0xEB))
-    if ($s -ge 24) {
-        foreach ($c in @(@(10, 9), @(16.5, 9), @(10, 15.5), @(16.5, 15.5))) {
-            $g.FillPath($cell, (RoundRect ($c[0] * $u) ($c[1] * $u) (5.5 * $u) (5.5 * $u) (1.2 * $u)))
-        }
-    } else {
-        $g.FillRectangle($cell, [float](12 * $u), [float](10 * $u), [float](8 * $u), [float](7 * $u))
-    }
+    # the R stroke, same geometry as the logo in MainWindow.xaml: M11,8 V24 M11,8 H16.5 A4.5,4.5 0 0 1 16.5,17 H11 M16,17 L22,24
+    $r = New-Object System.Drawing.Drawing2D.GraphicsPath
+    $r.AddLine([float](11 * $u), [float](8 * $u), [float](11 * $u), [float](24 * $u))
+    $r.StartFigure()
+    $r.AddLine([float](11 * $u), [float](8 * $u), [float](16.5 * $u), [float](8 * $u))
+    $r.AddArc([float](12 * $u), [float](8 * $u), [float](9 * $u), [float](9 * $u), 270, 180)
+    $r.AddLine([float](16.5 * $u), [float](17 * $u), [float](11 * $u), [float](17 * $u))
+    $r.StartFigure()
+    $r.AddLine([float](16 * $u), [float](17 * $u), [float](22 * $u), [float](24 * $u))
+    $pen = New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(0x09, 0x09, 0x0B)), ([float](3.5 * $u))
+    $pen.StartCap = 'Round'; $pen.EndCap = 'Round'; $pen.LineJoin = 'Round'
+    $g.DrawPath($pen, $r)
     $g.Dispose()
     $ms = New-Object System.IO.MemoryStream
     $bmp.Save($ms, [System.Drawing.Imaging.ImageFormat]::Png); $bmp.Dispose()

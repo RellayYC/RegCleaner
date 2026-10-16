@@ -34,10 +34,13 @@ public static class Ui
     {
         owner.IsEnabled = false;
         Mouse.OverrideCursor = Cursors.AppStarting;
+        var main = Application.Current is { } app && app.CheckAccess() ? app.MainWindow as MainWindow : null; // tests run Busy on their own thread
+        main?.SetBusy(true);
         try { await work(); }
         catch (Exception e) { Error(e); }
         finally
         {
+            main?.SetBusy(false);
             Mouse.OverrideCursor = null;
             owner.IsEnabled = true;
         }

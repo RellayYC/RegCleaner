@@ -23,6 +23,7 @@ public partial class StoreAppsView : UserControl
             {
                 var apps = StoreApps.Load();
                 StoreApps.FillSizes(apps);
+                foreach (var a in apps) a.Icon = StoreApps.Logo(a.InstallLocation);
                 return apps.OrderBy(a => a.Title, StringComparer.CurrentCultureIgnoreCase).ToList();
             }));
         }

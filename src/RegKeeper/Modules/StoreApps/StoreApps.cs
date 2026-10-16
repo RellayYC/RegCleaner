@@ -2,6 +2,9 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Xml.Linq;
 using RegKeeper.Core;
 
 namespace RegKeeper.Modules;
@@ -18,6 +21,7 @@ public class StoreApp
     public string SignatureKind { get; set; } = "";
     public string DisplayName { get; set; } = "";
     public long SizeBytes { get; set; }
+    public ImageSource? Icon { get; set; }
 
     public string SizeText => SizeBytes > 0 ? Sys.Size(SizeBytes) : "";
     public bool IsSystem => IsFramework || NonRemovable || SignatureKind == "System";
@@ -61,6 +65,32 @@ public static class StoreApps
         var apps = Parse(output);
         foreach (var a in apps) a.DisplayName = ResolveDisplayName(a.PackageFullName);
         return apps;
+    }
+
+    /// <summary>The package logo named in AppxManifest (Properties/Logo); on disk it is usually only scale variants. Frozen.</summary>
+    public static ImageSource? Logo(string? dir)
+    {
+        if (dir == null || !File.Exists(Path.Combine(dir, "AppxManifest.xml"))) return null;
+        try
+        {
+            var logo = XDocument.Load(Path.Combine(dir, "AppxManifest.xml")).Descendants()
+                .FirstOrDefault(e => e.Name.LocalName == "Logo" && e.Parent?.Name.LocalName == "Properties")?.Value;
+            if (string.IsNullOrWhiteSpace(logo)) return null;
+            var full = Path.Combine(dir, logo);
+            var file = File.Exists(full) ? full
+                : Directory.EnumerateFiles(Path.GetDirectoryName(full)!, Path.GetFileNameWithoutExtension(full) + ".*" + Path.GetExtension(full))
+                    .OrderBy(f => f.Contains("contrast-") ? 3 : f.Contains("scale-100") ? 0 : f.Contains("targetsize") ? 1 : 2).FirstOrDefault();
+            if (file == null) return null;
+            var img = new BitmapImage();
+            img.BeginInit();
+            img.UriSource = new Uri(file);
+            img.DecodePixelWidth = 32;
+            img.CacheOption = BitmapCacheOption.OnLoad; // no file lock on the package
+            img.EndInit();
+            img.Freeze();
+            return img;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or System.Xml.XmlException or NotSupportedException or FormatException) { return null; }
     }
 
     public static void FillSizes(IEnumerable<StoreApp> apps)

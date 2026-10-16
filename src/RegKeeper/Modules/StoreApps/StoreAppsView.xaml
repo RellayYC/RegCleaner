@@ -18,6 +18,7 @@
         </StackPanel>
         <DataGrid x:Name="Grid" IsReadOnly="True">
             <DataGrid.Columns>
+                <DataGridTemplateColumn Width="38" CellTemplate="{StaticResource AppIcon}"/>
                 <DataGridTextColumn Header="Название" Binding="{Binding Title}" Width="2*"/>
                 <DataGridTextColumn Header="Пакет" Binding="{Binding Name}" Width="2*"/>
                 <DataGridTextColumn Header="Издатель" Binding="{Binding PublisherName}" Width="*"/>
