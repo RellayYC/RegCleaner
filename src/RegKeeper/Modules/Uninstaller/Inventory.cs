@@ -23,6 +23,8 @@ public sealed class InstalledApp
     public bool IsMsi { get; init; }
     public string Scope { get; init; } = "";
     public ImageSource? Icon { get; set; }
+    public bool Checked { get; set; }
+    public bool Favorite { get; set; }
 
     public string SizeText => SizeBytes > 0 ? Sys.Size(SizeBytes) : "";
     public string DateText => InstallDate?.ToString("dd.MM.yyyy") ?? "";
@@ -42,6 +44,22 @@ public sealed class InstalledApp
                 return d;
             }
             return null;
+        }
+    }
+
+    /// <summary>The program's own exe: DisplayIcon when it points at one, else an exe in InstallDir named like the app
+    /// (or the only one there). Uninstallers never count.</summary>
+    public string? MainExe
+    {
+        get
+        {
+            static bool Ok(string? f) => f != null && f.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) && File.Exists(f)
+                                         && !Path.GetFileName(f).StartsWith("unins", StringComparison.OrdinalIgnoreCase);
+            if (Sys.ExtractPath(DisplayIcon) is { } icon && Ok(icon)) return icon;
+            if (InstallDir is not { } d || !Directory.Exists(d)) return null;
+            var exes = Directory.GetFiles(d, "*.exe").Where(Ok).ToArray();
+            return exes.FirstOrDefault(f => Name.Contains(Path.GetFileNameWithoutExtension(f), StringComparison.OrdinalIgnoreCase))
+                   ?? (exes.Length == 1 ? exes[0] : null);
         }
     }
 }

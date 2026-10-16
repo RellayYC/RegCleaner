@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Microsoft.Win32;
 using RegKeeper.Core;
 
@@ -25,7 +26,12 @@ public partial class UninstallerView : UserControl
             _all = await Task.Run(() =>
             {
                 var apps = Inventory.Load();
-                foreach (var a in apps) a.Icon = Inventory.LoadIcon(a.DisplayIcon != "" ? a.DisplayIcon : a.UninstallString);
+                var favs = Favorites;
+                foreach (var a in apps)
+                {
+                    a.Icon = Inventory.LoadIcon(a.DisplayIcon != "" ? a.DisplayIcon : a.UninstallString);
+                    a.Favorite = favs.Contains(a.KeyPath);
+                }
                 return apps;
             });
             ApplyFilter();
@@ -36,8 +42,9 @@ public partial class UninstallerView : UserControl
     void ApplyFilter()
     {
         var q = Search.Text.Trim();
-        var list = q == "" ? _all : _all.Where(a => a.Name.Contains(q, StringComparison.OrdinalIgnoreCase)
-                                                   || a.Publisher.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
+        var list = _all.Where(a => q == "" || a.Name.Contains(q, StringComparison.OrdinalIgnoreCase)
+                                          || a.Publisher.Contains(q, StringComparison.OrdinalIgnoreCase))
+                       .OrderByDescending(a => a.Favorite).ToList(); // stable: favourites first, each part keeps name order
         Grid.ItemsSource = list;
         Status.Text = L.T($"Программ: {list.Count}   Общий размер: {Sys.Size(list.Sum(a => a.SizeBytes))}");
     }
@@ -46,20 +53,86 @@ public partial class UninstallerView : UserControl
 
     InstalledApp? Selected => Grid.SelectedItem as InstalledApp;
 
+    /// <summary>What Delete acts on: the ticked programs, else the selected one.</summary>
+    List<InstalledApp> Targets => _all.Where(a => a.Checked).ToList() is { Count: > 0 } c ? c : Selected is { } s ? new() { s } : new();
+
+    const string Key = @"HKEY_CURRENT_USER\Software\RegKeeper";
+
+    /// <summary>Uninstall key paths the user starred, HKCU\Software\RegKeeper\Favorites.</summary>
+    static HashSet<string> Favorites
+    {
+        get => new(Registry.GetValue(Key, "Favorites", null) as string[] ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+        set => Registry.SetValue(Key, "Favorites", value.ToArray(), RegistryValueKind.MultiString);
+    }
+
+    void Grid_DoubleClick(object s, MouseButtonEventArgs e)
+    {
+        if (Grid.CurrentColumn is not DataGridCheckBoxColumn) Uninstall_Click(s, e);
+    }
+
+    void Grid_ContextMenuOpening(object s, ContextMenuEventArgs e)
+    {
+        if (Selected is not { } app) { e.Handled = true; return; }
+        MenuCheck.Header = app.Checked ? L.T("Снять выбор") : L.T("Выбрать");
+        MenuFav.Header = app.Favorite ? L.T("Убрать из избранного") : L.T("В избранное");
+        MenuFav.Tag = app.Favorite ? "\uE735" : "\uE734";
+        var n = _all.Count(a => a.Checked);
+        MenuUninstall.Header = n > 0 ? L.T($"Удалить отмеченные ({n})") : L.T("Удалить");
+        MenuRun.IsEnabled = app.MainExe != null;
+    }
+
+    void Check_Click(object s, RoutedEventArgs e)
+    {
+        if (Selected is not { } app) return;
+        app.Checked = !app.Checked;
+        Grid.Items.Refresh();
+    }
+
+    void Fav_Click(object s, RoutedEventArgs e)
+    {
+        if (Selected is not { } app) return;
+        var favs = Favorites;
+        if (app.Favorite = !app.Favorite) favs.Add(app.KeyPath); else favs.Remove(app.KeyPath);
+        Favorites = favs;
+        ApplyFilter();
+        Grid.SelectedItem = app;
+        Grid.ScrollIntoView(app);
+    }
+
+    // ponytail: explorer.exe opens it as the signed-in user, not with our admin token
+    void Run_Click(object s, RoutedEventArgs e)
+    {
+        if (Selected?.MainExe is { } exe) Process.Start("explorer.exe", $"\"{exe}\"");
+    }
+
+    void Details_Click(object s, RoutedEventArgs e)
+    {
+        if (Selected is { } app) new AppDetailsWindow(app).ShowDialog();
+    }
+
     async void Uninstall_Click(object s, RoutedEventArgs e) => await Uninstall(false);
     async void Quiet_Click(object s, RoutedEventArgs e) => await Uninstall(true);
 
     async Task Uninstall(bool quiet)
     {
-        if (Selected is not { } app) return;
-        if (!Ui.Confirm(L.T($"Удалить «{app.Name}»?"))) return;
-        if (!CloseRunning(app)) return;
+        var apps = Targets;
+        if (apps.Count == 0) return;
+        if (!Ui.Confirm(apps.Count == 1 ? L.T($"Удалить «{apps[0].Name}»?")
+                : L.T($"Удалить отмеченные программы ({apps.Count})?") + "\n\n" + string.Join("\n", apps.Select(a => a.Name)))) return;
+        foreach (var app in apps)
+            if (!await UninstallOne(app, quiet)) return;
+    }
+
+    /// <summary>False when the user cancelled, which stops the rest of a batch.</summary>
+    async Task<bool> UninstallOne(InstalledApp app, bool quiet)
+    {
+        if (!CloseRunning(app)) return false;
 
         if (app.Broken)
         {
             if (Ui.Confirm(L.T("Деинсталлятор программы не найден. Выполнить принудительное удаление (только следы)?")))
                 await ScanAndClean(app);
-            return;
+            return true;
         }
 
         await Ui.Busy(this, async () =>
@@ -71,8 +144,9 @@ public partial class UninstallerView : UserControl
         if (Reg.Exists(app.KeyPath) &&
             MessageBox.Show(L.T("Когда деинсталлятор закончит работу, нажмите OK, чтобы найти оставшиеся следы."), "RegKeeper",
                 MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK)
-            return;
+            return true;
         await ScanAndClean(app);
+        return true;
     }
 
     async void Force_Click(object s, RoutedEventArgs e)

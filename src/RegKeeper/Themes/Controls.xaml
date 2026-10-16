@@ -388,6 +388,86 @@
         </Setter>
     </Style>
 
+    <!-- context menus: a rounded surface that scales in from 96%; items carry their glyph in Tag. The popup lives
+         outside the window, so it takes the interface scale itself. The shadow is a sibling so text keeps ClearType. -->
+    <Storyboard x:Key="MenuIn">
+        <DoubleAnimationUsingKeyFrames Storyboard.TargetName="b" Storyboard.TargetProperty="Opacity">
+            <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0"/>
+            <SplineDoubleKeyFrame KeyTime="{StaticResource TFast}" KeySpline="{StaticResource EaseEnter}" Value="1"/>
+        </DoubleAnimationUsingKeyFrames>
+        <DoubleAnimationUsingKeyFrames Storyboard.TargetName="b" Storyboard.TargetProperty="RenderTransform.ScaleX">
+            <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0.96"/>
+            <SplineDoubleKeyFrame KeyTime="{StaticResource TFast}" KeySpline="{StaticResource EaseEnter}" Value="1"/>
+        </DoubleAnimationUsingKeyFrames>
+        <DoubleAnimationUsingKeyFrames Storyboard.TargetName="b" Storyboard.TargetProperty="RenderTransform.ScaleY">
+            <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0.96"/>
+            <SplineDoubleKeyFrame KeyTime="{StaticResource TFast}" KeySpline="{StaticResource EaseEnter}" Value="1"/>
+        </DoubleAnimationUsingKeyFrames>
+    </Storyboard>
+    <Style TargetType="ContextMenu">
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="HasDropShadow" Value="False"/>
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="LayoutTransform" Value="{DynamicResource UiScale}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContextMenu">
+                    <Grid x:Name="b" Margin="0,0,10,10" RenderTransformOrigin="0,0">
+                        <Grid.RenderTransform><ScaleTransform/></Grid.RenderTransform>
+                        <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="8">
+                            <Border.Effect><DropShadowEffect BlurRadius="14" ShadowDepth="3" Direction="270" Opacity="0.14"/></Border.Effect>
+                        </Border>
+                        <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                CornerRadius="8" Padding="4" MinWidth="210">
+                            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsOpen" Value="True">
+                            <Trigger.EnterActions><BeginStoryboard Storyboard="{StaticResource MenuIn}"/></Trigger.EnterActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="MenuItem">
+        <Setter Property="OverridesDefaultStyle" Value="True"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Grid Background="Transparent">
+                        <Border x:Name="h" Background="{DynamicResource HoverBrush}" CornerRadius="5" Opacity="0"/>
+                        <DockPanel Margin="8,7,14,7">
+                            <TextBlock Text="{TemplateBinding Tag}" FontFamily="{StaticResource Icons}" FontSize="14" Width="16" Margin="0,0,10,0"
+                                       VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}"/>
+                            <ContentPresenter ContentSource="Header" RecognizesAccessKey="True" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Trigger.EnterActions><BeginStoryboard Storyboard="{StaticResource HoverIn}"/></Trigger.EnterActions>
+                            <Trigger.ExitActions><BeginStoryboard Storyboard="{StaticResource HoverOut}"/></Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="{x:Static MenuItem.SeparatorStyleKey}" TargetType="Separator">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Separator"><Border Height="1" Margin="6,4" Background="{DynamicResource LineBrush}"/></ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- thin scrollbars: a rounded thumb on a clear track -->
     <Style x:Key="ScrollPage" TargetType="RepeatButton">
         <Setter Property="Focusable" Value="False"/>

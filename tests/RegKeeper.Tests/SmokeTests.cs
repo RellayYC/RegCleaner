@@ -61,6 +61,7 @@ public class SmokeTests
                 if (theme == Theme.Light) EditorNavigatesToNewSibling(views.OfType<RegEditorView>().Single());
                 if (theme == Theme.Light) FilterFollowsAutomationToggle(views.OfType<StartupView>().Single());
                 if (theme == Theme.Light) StickyGroupTitle(nav, views.IndexOf(views.OfType<TweaksView>().Single()), host);
+                if (lang == L.Ru) UninstallerMenuAndDetails(nav, host, $"{theme}");
                 if (Environment.GetEnvironmentVariable("RK_SHOTS") is { Length: > 0 } dir)
                     for (var i = 0; i < views.Count; i++) { nav.SelectedIndex = i; Pump(); Shot(win, Path.Combine(dir, $"{lang}-{theme}-{i:00}-{views[i].GetType().Name}.png")); }
                 Assert.True(problems.Count == 0, $"{theme}:\n" + string.Join("\n", problems));
@@ -153,6 +154,38 @@ public class SmokeTests
         Assert.Equal(Visibility.Collapsed, bar.Visibility);
     }
 
+    /// <summary>The uninstaller's right-click menu opens themed, and "Подробнее" shows the selected program.</summary>
+    static void UninstallerMenuAndDetails(ListBox nav, ContentControl host, string theme)
+    {
+        nav.SelectedIndex = 0;
+        Pump();
+        var grid = (DataGrid)((UserControl)host.Content).FindName("Grid");
+        var app = grid.Items.Cast<InstalledApp>().First(a => a.Publisher != "");
+        grid.SelectedItem = app;
+        var menu = grid.ContextMenu;
+        menu.PlacementTarget = grid;
+        menu.IsOpen = true;
+        Pump();
+        try
+        {
+            Assert.Equal(5, menu.Items.OfType<MenuItem>().Count());
+            Assert.True(menu.ActualWidth >= 210, "menu template not applied");
+            if (Environment.GetEnvironmentVariable("RK_SHOTS") is { Length: > 0 } dir) ShotOf(menu, Path.Combine(dir, $"menu-{theme}.png"));
+        }
+        finally { menu.IsOpen = false; }
+
+        var details = new AppDetailsWindow(app) { WindowStartupLocation = WindowStartupLocation.Manual, Left = -20000, ShowActivated = false, ShowInTaskbar = false };
+        details.Show();
+        Pump();
+        try
+        {
+            Assert.Equal(app.Publisher, ((TextBlock)details.FindName("Author")).Text);
+            Assert.NotEqual("", ((TextBlock)details.FindName("FilePath")).Text);
+            if (Environment.GetEnvironmentVariable("RK_SHOTS") is { Length: > 0 } dir) Shot(details, Path.Combine(dir, $"details-{theme}.png"));
+        }
+        finally { details.Close(); }
+    }
+
     [Fact]
     public void Busy_EscCancelsWithoutError() => Sta(() =>
     {
@@ -226,6 +259,17 @@ public class SmokeTests
             dc.DrawRectangle(new VisualBrush(content) { Stretch = Stretch.None, AlignmentX = AlignmentX.Left, AlignmentY = AlignmentY.Top }, null, rect);
         }
         bmp.Render(dv);
+        var png = new PngBitmapEncoder();
+        png.Frames.Add(BitmapFrame.Create(bmp));
+        Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+        using var f = File.Create(file);
+        png.Save(f);
+    }
+
+    static void ShotOf(FrameworkElement e, string file)
+    {
+        var bmp = new RenderTargetBitmap((int)e.ActualWidth, (int)e.ActualHeight, 96, 96, PixelFormats.Pbgra32);
+        bmp.Render(e);
         var png = new PngBitmapEncoder();
         png.Frames.Add(BitmapFrame.Create(bmp));
         Directory.CreateDirectory(Path.GetDirectoryName(file)!);

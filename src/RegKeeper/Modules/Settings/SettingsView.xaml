@@ -39,6 +39,17 @@
                 </Grid>
             </Border>
 
+            <TextBlock Text="При закрытии окна" Style="{StaticResource Section}"/>
+            <Border Style="{StaticResource Segments}">
+                <Grid>
+                    <Canvas><Border x:Name="ClosePill" Style="{StaticResource Pill}"/></Canvas>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="CloseExit" Content="Закрывать программу" Checked="Close_Checked"/>
+                        <RadioButton x:Name="CloseTray" Content="Сворачивать в трей" Checked="Close_Checked"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
             <TextBlock Text="Интеграция с Windows" Style="{StaticResource Section}"/>
             <CheckBox x:Name="ShellVerb" Content="Пункт «Удалить с RegKeeper» в контекстном меню exe-файлов и ярлыков" Checked="ShellVerb_Changed" Unchecked="ShellVerb_Changed"/>
             <TextBlock Style="{StaticResource Hint}" Margin="24,2,0,10" Text="В Windows 11 пункт находится в «Показать дополнительные параметры». Только для текущего пользователя."/>

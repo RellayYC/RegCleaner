@@ -53,6 +53,21 @@ public class LeftoverTests : IDisposable
     }
 
     [Fact]
+    public void MainExe_SkipsUninstaller_PrefersIconThenName()
+    {
+        var d = Dir("App");
+        foreach (var f in new[] { "unins000.exe", "helper.exe", "crash.exe", "Widget.exe" }) File.WriteAllText(Path.Combine(d, f), "");
+        var app = new InstalledApp { Name = "Widget 2.1", InstallLocation = d, DisplayIcon = Path.Combine(d, "unins000.exe") + ",0" };
+        Assert.Equal(Path.Combine(d, "Widget.exe"), app.MainExe);
+        var byIcon = new InstalledApp { Name = "Widget", InstallLocation = d, DisplayIcon = Path.Combine(d, "helper.exe") + ",0" };
+        Assert.Equal(Path.Combine(d, "helper.exe"), byIcon.MainExe); // the icon beats the name
+        File.Delete(Path.Combine(d, "Widget.exe"));
+        Assert.Null(app.MainExe); // two exes left, neither named like the app
+        File.Delete(Path.Combine(d, "crash.exe"));
+        Assert.Equal(Path.Combine(d, "helper.exe"), app.MainExe); // the only one
+    }
+
+    [Fact]
     public void SharedVendorFolderNeverOffered()
     {
         Dir(@"Microsoft\Widget");

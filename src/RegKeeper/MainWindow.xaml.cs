@@ -1,7 +1,10 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using Microsoft.Win32;
+using RegKeeper.Core;
 using RegKeeper.Modules;
 
 namespace RegKeeper;
@@ -74,6 +77,51 @@ public partial class MainWindow : Window
         if (!Motion.On) return; // reduced motion: a still segment says the same
         run.BeginAnimation(TranslateTransform.XProperty, new DoubleAnimation(-BusyRun.Width, Math.Max(BusyBar.ActualWidth, 400), TimeSpan.FromSeconds(1.2))
             { RepeatBehavior = RepeatBehavior.Forever, EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut } });
+    }
+
+    const string Key = @"HKEY_CURRENT_USER\Software\RegKeeper";
+
+    /// <summary>Closing the window hides it to the tray instead of quitting; off by default. HKCU\Software\RegKeeper\CloseToTray.</summary>
+    public static bool CloseToTray
+    {
+        get => Reg.GetString(Key, "CloseToTray") == "1";
+        set => Registry.SetValue(Key, "CloseToTray", value ? "1" : "0");
+    }
+
+    System.Windows.Forms.NotifyIcon? _tray;
+    bool _quit;
+
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        // a bare Application is the test host: it must really close
+        if (!_quit && CloseToTray && Application.Current is App)
+        {
+            e.Cancel = true;
+            Hide();
+            Tray().Visible = true;
+            return;
+        }
+        _tray?.Dispose();
+        base.OnClosing(e);
+    }
+
+    System.Windows.Forms.NotifyIcon Tray()
+    {
+        if (_tray != null) return _tray;
+        var menu = new System.Windows.Forms.ContextMenuStrip();
+        menu.Items.Add(L.T("Открыть"), null, (_, _) => Restore());
+        menu.Items.Add(L.T("Выход"), null, (_, _) => { _quit = true; Close(); });
+        _tray = new() { Icon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath!), Text = "RegKeeper", ContextMenuStrip = menu };
+        _tray.MouseClick += (_, e) => { if (e.Button == System.Windows.Forms.MouseButtons.Left) Restore(); };
+        return _tray;
+    }
+
+    void Restore()
+    {
+        _tray!.Visible = false;
+        Show();
+        if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
+        Activate();
     }
 
     /// <summary>Switches to a module and returns it (e.g. "open in registry editor" from search results).</summary>

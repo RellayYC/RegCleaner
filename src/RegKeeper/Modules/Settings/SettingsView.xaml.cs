@@ -19,6 +19,7 @@ public partial class SettingsView : UserControl
         }
         Loaded += (_, _) => Motion.Slide(ScalePill, ScaleChoices.Children.OfType<RadioButton>().FirstOrDefault(r => r.IsChecked == true));
         (L.Saved switch { L.Ru => LangRu, L.En => LangEn, _ => LangAuto }).IsChecked = true;
+        (MainWindow.CloseToTray ? CloseTray : CloseExit).IsChecked = true;
         ShellVerb.IsChecked = Integration.ShellVerb;
         Watcher.IsChecked = Integration.WatcherAutostart;
         Watcher.IsEnabled = File.Exists(Integration.WatcherExe);
@@ -44,6 +45,12 @@ public partial class SettingsView : UserControl
     {
         Motion.Slide(ScalePill, (FrameworkElement)s);
         Theme.ApplyScale(Theme.Scale = (int)((RadioButton)s).Tag);
+    }
+
+    void Close_Checked(object s, RoutedEventArgs e)
+    {
+        Motion.Slide(ClosePill, (FrameworkElement)s);
+        if (MainWindow.CloseToTray != (s == CloseTray)) MainWindow.CloseToTray = s == CloseTray;
     }
 
     void Lang_Checked(object s, RoutedEventArgs e)

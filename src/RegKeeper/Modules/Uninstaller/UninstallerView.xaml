@@ -22,15 +22,40 @@
                 <Button Content="Обновить" Click="Refresh_Click"/>
             </WrapPanel>
         </StackPanel>
-        <DataGrid x:Name="Grid" IsReadOnly="True" SelectionMode="Single" MouseDoubleClick="Uninstall_Click">
+        <DataGrid x:Name="Grid" SelectionMode="Single" MouseDoubleClick="Grid_DoubleClick" ContextMenuOpening="Grid_ContextMenuOpening">
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem x:Name="MenuCheck" Header="Выбрать" Tag="&#xE73E;" Click="Check_Click"/>
+                    <MenuItem x:Name="MenuUninstall" Header="Удалить" Tag="&#xE74D;" Click="Uninstall_Click"/>
+                    <MenuItem x:Name="MenuFav" Header="В избранное" Tag="&#xE734;" Click="Fav_Click"/>
+                    <MenuItem x:Name="MenuRun" Header="Запустить" Tag="&#xE768;" Click="Run_Click"/>
+                    <Separator/>
+                    <MenuItem Header="Подробнее..." Tag="&#xE946;" Click="Details_Click"/>
+                </ContextMenu>
+            </DataGrid.ContextMenu>
             <DataGrid.Columns>
-                <DataGridTemplateColumn Width="38" CellTemplate="{StaticResource AppIcon}"/>
-                <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="3*"/>
-                <DataGridTextColumn Header="Издатель" Binding="{Binding Publisher}" Width="2*"/>
-                <DataGridTextColumn Header="Версия" Binding="{Binding Version}" Width="110"/>
-                <DataGridTextColumn Header="Размер" Binding="{Binding SizeText}" SortMemberPath="SizeBytes" Width="90"/>
-                <DataGridTextColumn Header="Установлено" Binding="{Binding DateText}" SortMemberPath="InstallDate" Width="100"/>
-                <DataGridTemplateColumn Header="Для" SortMemberPath="Scope" Width="150"><DataGridTemplateColumn.CellTemplate><DataTemplate><ContentPresenter Content="{Binding Scope}" ContentTemplate="{StaticResource Badge}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="32"/>
+                <DataGridTemplateColumn Width="38" CellTemplate="{StaticResource AppIcon}" IsReadOnly="True"/>
+                <!-- favourites carry a filled star before the name -->
+                <DataGridTemplateColumn Header="Название" SortMemberPath="Name" Width="3*" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <DockPanel>
+                                <TextBlock x:Name="star" Text="&#xE735;" FontFamily="{StaticResource Icons}" FontSize="12" Margin="0,0,6,0"
+                                           VerticalAlignment="Center" Visibility="Collapsed"/>
+                                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding Favorite}" Value="True"><Setter TargetName="star" Property="Visibility" Value="Visible"/></DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn IsReadOnly="True" Header="Издатель" Binding="{Binding Publisher}" Width="2*"/>
+                <DataGridTextColumn IsReadOnly="True" Header="Версия" Binding="{Binding Version}" Width="110"/>
+                <DataGridTextColumn IsReadOnly="True" Header="Размер" Binding="{Binding SizeText}" SortMemberPath="SizeBytes" Width="90"/>
+                <DataGridTextColumn IsReadOnly="True" Header="Установлено" Binding="{Binding DateText}" SortMemberPath="InstallDate" Width="100"/>
+                <DataGridTemplateColumn IsReadOnly="True" Header="Для" SortMemberPath="Scope" Width="180"><DataGridTemplateColumn.CellTemplate><DataTemplate><ContentPresenter Content="{Binding Scope}" ContentTemplate="{StaticResource Badge}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
     </DockPanel>
