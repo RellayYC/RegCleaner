@@ -34,9 +34,17 @@
     <KeyTime x:Key="TSlow">0:0:0.3</KeyTime>
     <KeyTime x:Key="TCount">0:0:0.7</KeyTime>
     <KeyTime x:Key="TStagger">0:0:0.035</KeyTime>
+    <KeyTime x:Key="TSpotIn">0:0:0.2</KeyTime>
+    <KeyTime x:Key="TSpotOut">0:0:0.3</KeyTime>
     <KeySpline x:Key="EaseEnter">0.16,1 0.3,1</KeySpline>
     <KeySpline x:Key="EaseExit">0.4,0 1,1</KeySpline>
     <KeySpline x:Key="EaseMove">0.65,0 0.35,1</KeySpline>
+    <!-- cursor light: radius in px, the pressed share of it, how far the light catches up with the cursor per frame, the halo blur -->
+    <sys:Double x:Key="SpotRadius">120</sys:Double>
+    <sys:Double x:Key="SpotNavRadius">90</sys:Double>
+    <sys:Double x:Key="SpotPress">0.67</sys:Double>
+    <sys:Double x:Key="SpotLerp">0.2</sys:Double>
+    <BlurEffect x:Key="SpotBlur" Radius="30"/>
 
     <!-- shared storyboards: templates name their parts h (hover fill), ring (focus ring), b (pressable body), c (check path) -->
     <Storyboard x:Key="HoverIn">
@@ -276,6 +284,7 @@
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="Tag" Value="{DynamicResource HoverBrush}"/>
+        <Setter Property="rk:Motion.Light" Value="{DynamicResource Spot}"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Template">
@@ -284,6 +293,9 @@
                     <Grid x:Name="lift">
                         <Grid.RenderTransform><TranslateTransform/></Grid.RenderTransform>
                         <Border x:Name="ring" Margin="-3" CornerRadius="{StaticResource RRing}" BorderThickness="2" BorderBrush="{DynamicResource RingBrush}" Opacity="0"/>
+                        <!-- cursor light (Motion.Spot): an optional blurred halo behind the body, a spotlight under the label, the lit border ring -->
+                        <Border CornerRadius="{StaticResource RControl}" Effect="{StaticResource SpotBlur}" SnapsToDevicePixels="False"
+                                rk:Motion.SpotSize="{StaticResource SpotRadius}" rk:Motion.Spot="{Binding (rk:Motion.Halo), RelativeSource={RelativeSource TemplatedParent}}"/>
                         <Border Background="{TemplateBinding Background}" CornerRadius="{StaticResource RControl}"
                                 Effect="{Binding (rk:Ui.Glow), RelativeSource={RelativeSource TemplatedParent}}"/>
                         <Border x:Name="b" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
@@ -291,6 +303,10 @@
                             <Border.RenderTransform><ScaleTransform/></Border.RenderTransform>
                             <Grid>
                                 <Border x:Name="h" Background="{TemplateBinding Tag}" CornerRadius="{StaticResource RControlIn}" Opacity="0"/>
+                                <Border CornerRadius="{StaticResource RControlIn}"
+                                        rk:Motion.SpotSize="{StaticResource SpotRadius}" rk:Motion.Spot="{Binding (rk:Motion.Light), RelativeSource={RelativeSource TemplatedParent}}"/>
+                                <Border Margin="-1" BorderThickness="1" CornerRadius="{StaticResource RControl}"
+                                        rk:Motion.SpotSize="{StaticResource SpotRadius}" rk:Motion.Spot="{DynamicResource SpotEdge}"/>
                                 <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
@@ -321,6 +337,7 @@
         <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}"/>
         <Setter Property="Tag" Value="{DynamicResource AccentHoverBrush}"/>
+        <Setter Property="rk:Motion.Light" Value="{DynamicResource SpotAccent}"/>
         <Setter Property="FontWeight" Value="Medium"/>
     </Style>
     <!-- delete: the coral gradient, a light inset line along the top (the border) and a coral shadow below -->
@@ -329,6 +346,8 @@
         <Setter Property="BorderBrush" Value="{DynamicResource DangerShineBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource OnDangerBrush}"/>
         <Setter Property="Tag" Value="{DynamicResource DangerFillHoverBrush}"/>
+        <Setter Property="rk:Motion.Light" Value="{DynamicResource SpotHot}"/>
+        <Setter Property="rk:Motion.Halo" Value="{DynamicResource SpotHalo}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="rk:Ui.Glow" Value="{DynamicResource DangerShadow}"/>
     </Style>

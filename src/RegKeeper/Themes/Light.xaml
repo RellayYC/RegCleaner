@@ -65,6 +65,13 @@
     <Color x:Key="BgHotClear">#00DC2626</Color>
     <Color x:Key="Shine">#59FFFFFF</Color>
     <Color x:Key="ShineClear">#00FFFFFF</Color>
+    <!-- cursor light (Motion.Spot): spotlight under the label, the border ring near the cursor, the delete button's warm light and coral halo -->
+    <Color x:Key="Spot">#0F000000</Color>
+    <Color x:Key="SpotEdge">#59000000</Color>
+    <Color x:Key="SpotAccent">#2EFFFFFF</Color>
+    <Color x:Key="SpotHot">#1FB91C1C</Color>
+    <Color x:Key="SpotHalo">#59DC2626</Color>
+    <Color x:Key="SpotNav">#0A000000</Color>
 
     <SolidColorBrush x:Key="BgBrush" Color="{StaticResource Bg}"/>
     <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource Surface}"/>

@@ -14,7 +14,7 @@ namespace RegKeeper;
 /// Durations and easings are the T*/Ease* tokens in Themes/Controls.xaml; template storyboards read the same keys.</summary>
 public static class Motion
 {
-    static readonly string[] Times = { "TPress", "THover", "TFast", "TBase", "TSlow", "TCount", "TStagger" };
+    static readonly string[] Times = { "TPress", "THover", "TFast", "TBase", "TSlow", "TCount", "TStagger", "TSpotIn", "TSpotOut" };
 
     /// <summary>Off when Windows animations are off (the reduced-motion switch) and in headless runs.</summary>
     public static bool On => SystemParameters.ClientAreaAnimation && Ui.Headless == null;
@@ -295,5 +295,127 @@ public static class Motion
         Counting[tb] = tick;
         tick(null, EventArgs.Empty); // zeros before the first frame paints the final value
         CompositionTarget.Rendering += tick;
+    }
+
+    // ---- cursor light: a Border overlay in a template lights up around the mouse over its templated parent (Controls.xaml buttons,
+    // sidebar items). The overlay's own Background, or its BorderBrush when it has a border, becomes a radial gradient of Spot.
+
+    public static readonly DependencyProperty SpotProperty = DependencyProperty.RegisterAttached(
+        "Spot", typeof(Color), typeof(Motion), new PropertyMetadata(default(Color), OnSpot));
+    public static Color GetSpot(DependencyObject o) => (Color)o.GetValue(SpotProperty);
+    public static void SetSpot(DependencyObject o, Color v) => o.SetValue(SpotProperty, v);
+
+    public static readonly DependencyProperty SpotSizeProperty = DependencyProperty.RegisterAttached(
+        "SpotSize", typeof(double), typeof(Motion), new PropertyMetadata(120.0));
+    public static double GetSpotSize(DependencyObject o) => (double)o.GetValue(SpotSizeProperty);
+    public static void SetSpotSize(DependencyObject o, double v) => o.SetValue(SpotSizeProperty, v);
+
+    /// <summary>The colours a button hands to its overlays: the spotlight and the outer halo (transparent = none).</summary>
+    public static readonly DependencyProperty LightProperty = DependencyProperty.RegisterAttached("Light", typeof(Color), typeof(Motion));
+    public static Color GetLight(DependencyObject o) => (Color)o.GetValue(LightProperty);
+    public static void SetLight(DependencyObject o, Color v) => o.SetValue(LightProperty, v);
+    public static readonly DependencyProperty HaloProperty = DependencyProperty.RegisterAttached("Halo", typeof(Color), typeof(Motion));
+    public static Color GetHalo(DependencyObject o) => (Color)o.GetValue(HaloProperty);
+    public static void SetHalo(DependencyObject o, Color v) => o.SetValue(HaloProperty, v);
+
+    static void OnSpot(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not Border b) return;
+        if ((b.BorderThickness.Left > 0 ? b.BorderBrush : b.Background) is RadialGradientBrush old) { Tint(old, (Color)e.NewValue, 1); return; }
+        var br = new RadialGradientBrush { MappingMode = BrushMappingMode.Absolute };
+        br.GradientStops.Add(new GradientStop(default, 0));
+        br.GradientStops.Add(new GradientStop(default, 1));
+        Tint(br, (Color)e.NewValue, 1);
+        if (b.BorderThickness.Left > 0) b.BorderBrush = br; else b.Background = br;
+        b.Opacity = 0;
+        b.IsHitTestVisible = false;
+        b.Loaded += (_, _) => { if (b.TemplatedParent is UIElement host) _ = new Light(b, br, host); };
+    }
+
+    /// <summary>Centre colour times <paramref name="k"/> in alpha, fading to the same colour fully transparent.</summary>
+    static void Tint(RadialGradientBrush br, Color c, double k)
+    {
+        br.GradientStops[0].Color = Color.FromArgb((byte)Math.Min(255, c.A * k), c.R, c.G, c.B);
+        br.GradientStops[1].Color = Color.FromArgb(0, c.R, c.G, c.B);
+    }
+
+    static double D(string key, double fallback) => Application.Current?.TryFindResource(key) is double v ? v : fallback;
+
+    sealed class Light
+    {
+        readonly Border b; readonly RadialGradientBrush br; readonly UIElement host;
+        Point at, to;
+        bool tracking;
+
+        public Light(Border b, RadialGradientBrush br, UIElement host)
+        {
+            (this.b, this.br, this.host) = (b, br, host);
+            Size(1, true);
+            host.MouseEnter += Enter; host.MouseMove += Move; host.MouseLeave += Leave;
+            host.PreviewMouseLeftButtonDown += Down; host.PreviewMouseLeftButtonUp += Up;
+            host.IsEnabledChanged += Enabled;
+            b.Unloaded += Gone;
+        }
+
+        void Gone(object s, RoutedEventArgs e)
+        {
+            host.MouseEnter -= Enter; host.MouseMove -= Move; host.MouseLeave -= Leave;
+            host.PreviewMouseLeftButtonDown -= Down; host.PreviewMouseLeftButtonUp -= Up;
+            host.IsEnabledChanged -= Enabled;
+            b.Unloaded -= Gone;
+            Track(false);
+        }
+
+        // reduced motion: a still light in the middle, no following
+        Point Pos(MouseEventArgs e) => On ? e.GetPosition(b) : new Point(b.ActualWidth / 2, b.ActualHeight / 2);
+
+        void Enter(object s, MouseEventArgs e)
+        {
+            if (e.StylusDevice != null || !host.IsEnabled || GetSpot(b).A == 0) return;
+            at = to = Pos(e);
+            Place();
+            b.BeginAnimation(UIElement.OpacityProperty, A(1, "TSpotIn", "EaseEnter"));
+            Track(On);
+        }
+
+        void Move(object s, MouseEventArgs e) { if (e.StylusDevice == null) to = Pos(e); }
+
+        void Leave(object s, MouseEventArgs e) => Off();
+
+        void Enabled(object s, DependencyPropertyChangedEventArgs e) { if (!host.IsEnabled) Off(); }
+
+        void Off()
+        {
+            b.BeginAnimation(UIElement.OpacityProperty, A(0, "TSpotOut", "EaseExit"));
+            Track(false);
+            Size(1, false);
+        }
+
+        // pressed: a tighter, 10% brighter light; back on release
+        void Down(object s, MouseButtonEventArgs e) { if (e.StylusDevice == null) Size(D("SpotPress", 0.67), false); }
+        void Up(object s, MouseButtonEventArgs e) => Size(1, false);
+
+        void Size(double k, bool jump)
+        {
+            var r = GetSpotSize(b) * k;
+            Go(br, RadialGradientBrush.RadiusXProperty, r, jump);
+            Go(br, RadialGradientBrush.RadiusYProperty, r, jump);
+            Tint(br, GetSpot(b), k < 1 ? 1.1 : 1);
+        }
+
+        void Track(bool on)
+        {
+            if (on == tracking) return;
+            tracking = on;
+            if (on) CompositionTarget.Rendering += Frame; else CompositionTarget.Rendering -= Frame;
+        }
+
+        void Frame(object? s, EventArgs e)
+        {
+            at += (to - at) * D("SpotLerp", 0.2);
+            Place();
+        }
+
+        void Place() => br.Center = br.GradientOrigin = at;
     }
 }

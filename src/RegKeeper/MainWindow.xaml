@@ -1,6 +1,7 @@
 <Window x:Class="RegKeeper.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:rk="clr-namespace:RegKeeper"
         Title="RegKeeper" Height="900" Width="1400" MinHeight="560" MinWidth="980"
         Icon="Assets/RegKeeper.ico" Style="{StaticResource {x:Type Window}}" WindowStartupLocation="CenterScreen">
     <Grid>
@@ -80,6 +81,8 @@
                                         <Border x:Name="b" CornerRadius="16" Padding="8,9" Background="Transparent">
                                             <Grid>
                                                 <Border x:Name="h" CornerRadius="16" Margin="-8,-9" Background="{DynamicResource HoverBrush}" Opacity="0"/>
+                                                <!-- cursor light, softer than on buttons; over the active pill too -->
+                                                <Border CornerRadius="16" Margin="-8,-9" rk:Motion.SpotSize="{StaticResource SpotNavRadius}" rk:Motion.Spot="{DynamicResource SpotNav}"/>
                                                 <ContentPresenter/>
                                             </Grid>
                                         </Border>

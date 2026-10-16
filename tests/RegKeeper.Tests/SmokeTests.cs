@@ -62,6 +62,7 @@ public class SmokeTests
                 if (theme == Theme.Light) FilterFollowsAutomationToggle(views.OfType<StartupView>().Single());
                 if (theme == Theme.Light) StickyGroupTitle(nav, views.IndexOf(views.OfType<TweaksView>().Single()), host);
                 if (lang == L.Ru) UninstallerMenuAndDetails(nav, host, $"{theme}");
+                if (lang == L.Ru) CursorLight(win, nav, views.IndexOf(views.OfType<DiskCleanupView>().Single()), $"{theme}");
                 var store = views.OfType<StoreAppsView>().Single();
                 nav.SelectedIndex = views.IndexOf(store); Pump();
                 var storeGrid = (DataGrid)store.FindName("Grid");
@@ -165,6 +166,42 @@ public class SmokeTests
         sv.ScrollToVerticalOffset(0);
         Pump();
         Assert.Equal(Visibility.Collapsed, bar.Visibility);
+    }
+
+    /// <summary>Hovering a plain button, the delete button and a sidebar item lights their overlays (reduced motion: at once,
+    /// in the middle); leaving puts them out. The delete button also lights its halo.</summary>
+    static void CursorLight(MainWindow win, ListBox nav, int index, string theme)
+    {
+        nav.SelectedIndex = index;
+        Pump();
+        static IEnumerable<DependencyObject> Down(DependencyObject d)
+        {
+            for (var i = 0; i < VisualTreeHelper.GetChildrenCount(d); i++)
+            {
+                var c = VisualTreeHelper.GetChild(d, i);
+                yield return c;
+                foreach (var g in Down(c)) yield return g;
+            }
+        }
+        static List<Border> Lights(DependencyObject host) => Down(host).OfType<Border>().Where(b => Motion.GetSpot(b).A > 0).ToList();
+        var buttons = Down(win).OfType<Button>().Where(b => b.IsVisible && b.IsEnabled).ToList();
+        var danger = buttons.First(b => b.Style == win.FindResource("DangerBtn"));
+        var plain = buttons.First(b => b.Style == win.FindResource(typeof(Button)));
+        var item = (ListBoxItem)nav.ItemContainerGenerator.ContainerFromIndex(1);
+        var hosts = new UIElement[] { plain, danger, item };
+        Assert.Equal(new[] { 2, 3, 1 }, hosts.Select(h => Lights(h).Count));
+        // even a zero-length fade lands on a render tick, which an offscreen window gets late
+        bool Settle(double to)
+        {
+            var sw = Stopwatch.StartNew();
+            while (!hosts.SelectMany(Lights).All(b => b.Opacity == to) && sw.Elapsed < TimeSpan.FromSeconds(2)) { Thread.Sleep(20); Pump(); }
+            return hosts.SelectMany(Lights).All(b => b.Opacity == to);
+        }
+        foreach (var h in hosts) h.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, 0) { RoutedEvent = Mouse.MouseEnterEvent });
+        Assert.True(Settle(1), $"{theme}: hovered lights not on");
+        if (Environment.GetEnvironmentVariable("RK_SHOTS") is { Length: > 0 } dir) Shot(win, Path.Combine(dir, $"light-{theme}.png"));
+        foreach (var h in hosts) h.RaiseEvent(new MouseEventArgs(Mouse.PrimaryDevice, 0) { RoutedEvent = Mouse.MouseLeaveEvent });
+        Assert.True(Settle(0), $"{theme}: lights stay on after leaving");
     }
 
     /// <summary>The uninstaller's right-click menu opens themed, and "Подробнее" shows the selected program.</summary>

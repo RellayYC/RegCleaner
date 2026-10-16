@@ -191,13 +191,15 @@ const checks = {
       ['OnAccent', 'Accent', 4.5], ['OnAccent', 'AccentHover', 4.5], ['OnAccent', 'Danger', 4.5], ['Accent', 'Bg', 3], ['Border', 'Bg', 1.3],
       ['Text', 'Selection', 4.5], ['Text', 'Alt', 4.5], ['Text', 'Hover', 4.5], ['DangerText', 'Bg', 4.5], ['DangerText', 'Surface', 4.5], ['Muted', 'Surface', 4.5],
       ['Subtle', 'Surface', 4.5], ['Muted', 'CardTop', 4.5], ['Subtle', 'CardTop', 4.5], ['Text', 'Tile1', 4.5], ['OnAccent', 'SegFirst', 4.5],
-      ['OnDanger', 'Danger', 4.5], ['OnDanger', 'DangerDeep', 4.5], ['DangerText', 'DangerSoft', 4.5], ['DangerText', 'CardTop', 4.5], ['Text', 'HotTop', 4.5]];
+      ['OnDanger', 'Danger', 4.5], ['OnDanger', 'DangerDeep', 4.5], ['DangerText', 'DangerSoft', 4.5], ['DangerText', 'CardTop', 4.5], ['Text', 'HotTop', 4.5],
+      // cursor light (Motion.Spot) lies over the button's own fill, named fourth
+      ['Text', 'Spot', 4.5], ['Text', 'SpotNav', 4.5], ['OnAccent', 'SpotAccent', 4.5, 'Accent'], ['OnDanger', 'SpotHot', 4.5, 'Danger']];
     let n = 0;
     for (const theme of ['Light', 'Dark']) {
       const x = read(join(src, 'Themes', theme + '.xaml'));
       const colors = Object.fromEntries([...x.matchAll(/<Color x:Key="(\w+)">(#[0-9A-Fa-f]{6,8})<\/Color>/g)].map((m) => [m[1], m[2]]));
-      bg = colors.Bg;
-      for (const [f, b, min] of pairs) {
+      for (const [f, b, min, under = 'Bg'] of pairs) {
+        bg = colors[under];
         if (!colors[f] || !colors[b]) fail(`${theme}: color ${colors[f] ? b : f} not defined`);
         const r = ratio(colors[f], colors[b]);
         if (r < min) fail(`${theme}: ${f} on ${b} = ${r.toFixed(2)} < ${min}`);
