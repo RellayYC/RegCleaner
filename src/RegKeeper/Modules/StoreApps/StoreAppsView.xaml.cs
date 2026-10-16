@@ -224,7 +224,7 @@ public partial class StoreAppsView : UserControl
         Details.Width = under ? double.NaN : Math.Clamp(w * 0.3, 340, 420);
         Details.Margin = under ? new Thickness(0, 18, 0, 0) : new Thickness(18, 0, 0, 0);
         // the table keeps a fixed height so the grid virtualizes its rows inside the scrolling page
-        TableCard.Height = Math.Max(360, Page.ViewportHeight - 24);
+        Grid.Height = Math.Max(360, Page.ViewportHeight - 24);
     }
 
     void Search_TextChanged(object s, RoutedEventArgs e) => ApplyFilter();

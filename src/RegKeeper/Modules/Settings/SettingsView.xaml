@@ -2,68 +2,81 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel MaxWidth="720" HorizontalAlignment="Left">
+        <StackPanel MaxWidth="820" HorizontalAlignment="Left" Margin="0,0,8,24">
             <TextBlock Text="Настройки" Style="{StaticResource Title}"/>
 
-            <TextBlock Text="Оформление" Style="{StaticResource Section}"/>
-            <!-- pill segmented control: ThemePill slides under the checked one -->
-            <Border Style="{StaticResource Segments}">
-                <Grid>
-                    <Canvas><Border x:Name="ThemePill" Style="{StaticResource Pill}"/></Canvas>
-                    <StackPanel Orientation="Horizontal">
-                        <RadioButton x:Name="ThemeSystem" Content="Как в Windows" Tag="System" Checked="Theme_Checked"/>
-                        <RadioButton x:Name="ThemeLight" Content="Светлая" Tag="Light" Checked="Theme_Checked"/>
-                        <RadioButton x:Name="ThemeDark" Content="Тёмная" Tag="Dark" Checked="Theme_Checked"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
+            <ContentControl Style="{StaticResource Card}" Margin="0,24,0,0">
+                <StackPanel>
+                    <TextBlock Text="Оформление" Style="{StaticResource Section}" Margin="0,0,0,10"/>
+                    <!-- pill segmented control: ThemePill slides under the checked one -->
+                    <Border Style="{StaticResource Segments}">
+                        <Grid>
+                            <Canvas><Border x:Name="ThemePill" Style="{StaticResource Pill}"/></Canvas>
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="ThemeSystem" Content="Как в Windows" Tag="System" Checked="Theme_Checked"/>
+                                <RadioButton x:Name="ThemeLight" Content="Светлая" Tag="Light" Checked="Theme_Checked"/>
+                                <RadioButton x:Name="ThemeDark" Content="Тёмная" Tag="Dark" Checked="Theme_Checked"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
 
-            <TextBlock Text="Масштаб интерфейса" Style="{StaticResource Section}"/>
-            <Border Style="{StaticResource Segments}">
-                <Grid>
-                    <Canvas><Border x:Name="ScalePill" Style="{StaticResource Pill}"/></Canvas>
-                    <StackPanel x:Name="ScaleChoices" Orientation="Horizontal"/>
-                </Grid>
-            </Border>
+                    <TextBlock Text="Масштаб интерфейса" Style="{StaticResource Section}"/>
+                    <Border Style="{StaticResource Segments}">
+                        <Grid>
+                            <Canvas><Border x:Name="ScalePill" Style="{StaticResource Pill}"/></Canvas>
+                            <StackPanel x:Name="ScaleChoices" Orientation="Horizontal"/>
+                        </Grid>
+                    </Border>
 
-            <TextBlock Text="Язык" Style="{StaticResource Section}"/>
-            <!-- pill segmented control: LangPill slides under the checked one -->
-            <Border Style="{StaticResource Segments}">
-                <Grid>
-                    <Canvas><Border x:Name="LangPill" Style="{StaticResource Pill}"/></Canvas>
-                    <StackPanel Orientation="Horizontal">
-                        <RadioButton x:Name="LangAuto" Content="Как в Windows" Tag="Auto" Checked="Lang_Checked"/>
-                        <RadioButton x:Name="LangRu" Content="Русский" Tag="ru" Checked="Lang_Checked"/>
-                        <RadioButton x:Name="LangEn" Content="English" Tag="en" Checked="Lang_Checked"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
+                    <TextBlock Text="Язык" Style="{StaticResource Section}"/>
+                    <!-- pill segmented control: LangPill slides under the checked one -->
+                    <Border Style="{StaticResource Segments}">
+                        <Grid>
+                            <Canvas><Border x:Name="LangPill" Style="{StaticResource Pill}"/></Canvas>
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="LangAuto" Content="Как в Windows" Tag="Auto" Checked="Lang_Checked"/>
+                                <RadioButton x:Name="LangRu" Content="Русский" Tag="ru" Checked="Lang_Checked"/>
+                                <RadioButton x:Name="LangEn" Content="English" Tag="en" Checked="Lang_Checked"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
 
-            <TextBlock Text="При закрытии окна" Style="{StaticResource Section}"/>
-            <Border Style="{StaticResource Segments}">
-                <Grid>
-                    <Canvas><Border x:Name="ClosePill" Style="{StaticResource Pill}"/></Canvas>
-                    <StackPanel Orientation="Horizontal">
-                        <RadioButton x:Name="CloseExit" Content="Закрывать программу" Checked="Close_Checked"/>
-                        <RadioButton x:Name="CloseTray" Content="Сворачивать в трей" Checked="Close_Checked"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <TextBlock Text="Интеграция с Windows" Style="{StaticResource Section}"/>
-            <CheckBox x:Name="ShellVerb" Content="Пункт «Удалить с RegKeeper» в контекстном меню exe-файлов и ярлыков" Checked="ShellVerb_Changed" Unchecked="ShellVerb_Changed"/>
-            <TextBlock Style="{StaticResource Hint}" Margin="24,2,0,10" Text="В Windows 11 пункт находится в «Показать дополнительные параметры». Только для текущего пользователя."/>
-            <CheckBox x:Name="Watcher" Content="Следить за автозагрузкой и предупреждать о новых программах" Checked="Watcher_Changed" Unchecked="Watcher_Changed"/>
-            <TextBlock Style="{StaticResource Hint}" Margin="24,2,0,10" Text="Маленькая программа в трее (RegKeeper.Watcher) запускается при входе в систему и проверяет ключи Run и папки автозагрузки."/>
-
-            <TextBlock Text="Данные" Style="{StaticResource Section}"/>
-            <TextBlock x:Name="DataInfo" Style="{StaticResource Hint}" TextWrapping="Wrap"/>
-            <WrapPanel Margin="0,8,0,0">
-                <Button Content="Открыть папку данных" Click="Data_Click"/>
-            </WrapPanel>
-
-            <TextBlock Text="О программе" Style="{StaticResource Section}"/>
-            <TextBlock x:Name="About" Style="{StaticResource Hint}" TextWrapping="Wrap"/>
+                    <TextBlock Text="При закрытии окна" Style="{StaticResource Section}"/>
+                    <Border Style="{StaticResource Segments}">
+                        <Grid>
+                            <Canvas><Border x:Name="ClosePill" Style="{StaticResource Pill}"/></Canvas>
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="CloseExit" Content="Закрывать программу" Checked="Close_Checked"/>
+                                <RadioButton x:Name="CloseTray" Content="Сворачивать в трей" Checked="Close_Checked"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </ContentControl>
+            <ContentControl Style="{StaticResource Card}" Margin="0,24,0,0">
+                <StackPanel>
+                    <TextBlock Text="Интеграция с Windows" Style="{StaticResource Section}" Margin="0,0,0,10"/>
+                    <CheckBox x:Name="ShellVerb" Content="Пункт «Удалить с RegKeeper» в контекстном меню exe-файлов и ярлыков" Checked="ShellVerb_Changed" Unchecked="ShellVerb_Changed"/>
+                    <TextBlock Style="{StaticResource Hint}" Margin="24,2,0,10" Text="В Windows 11 пункт находится в «Показать дополнительные параметры». Только для текущего пользователя."/>
+                    <CheckBox x:Name="Watcher" Content="Следить за автозагрузкой и предупреждать о новых программах" Checked="Watcher_Changed" Unchecked="Watcher_Changed"/>
+                    <TextBlock Style="{StaticResource Hint}" Margin="24,2,0,10" Text="Маленькая программа в трее (RegKeeper.Watcher) запускается при входе в систему и проверяет ключи Run и папки автозагрузки."/>
+                </StackPanel>
+            </ContentControl>
+            <ContentControl Style="{StaticResource Card}" Margin="0,24,0,0">
+                <StackPanel>
+                    <TextBlock Text="Данные" Style="{StaticResource Section}" Margin="0,0,0,10"/>
+                    <TextBlock x:Name="DataInfo" Style="{StaticResource Hint}" TextWrapping="Wrap"/>
+                    <WrapPanel Margin="0,8,0,0">
+                        <Button Content="Открыть папку данных" Click="Data_Click"/>
+                    </WrapPanel>
+                </StackPanel>
+            </ContentControl>
+            <ContentControl Style="{StaticResource Card}" Margin="0,24,0,0">
+                <StackPanel>
+                    <TextBlock Text="О программе" Style="{StaticResource Section}" Margin="0,0,0,10"/>
+                    <TextBlock x:Name="About" Style="{StaticResource Hint}" TextWrapping="Wrap"/>
+                </StackPanel>
+            </ContentControl>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

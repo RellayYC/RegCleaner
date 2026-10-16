@@ -4,12 +4,12 @@
     <DockPanel>
         <StackPanel DockPanel.Dock="Top">
             <TextBlock Text="Автозагрузка" Style="{StaticResource Title}"/>
-            <TextBlock Style="{StaticResource Hint}" Text="Ключи Run, папки автозагрузки, задачи планировщика при входе/старте и сторонние службы. Отключение обратимо, всё пишется в Центр отмены."/>
-            <DockPanel Margin="0,14,0,10">
+            <TextBlock Style="{StaticResource Lead}" Text="Ключи Run, папки автозагрузки, задачи планировщика при входе/старте и сторонние службы. Отключение обратимо, всё пишется в Центр отмены."/>
+            <DockPanel Margin="{StaticResource Toolbar}">
                 <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
-                <TextBox x:Name="Search" Width="320" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск по названию, команде и издателю"/>
+                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" Width="420" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск по названию, команде и издателю"/>
             </DockPanel>
-            <WrapPanel Margin="0,0,0,10">
+            <WrapPanel Margin="0,0,0,6">
                 <Button Content="Вкл / выкл" Style="{StaticResource Primary}" Click="Toggle_Click"/>
                 <Button Content="Отложить" Click="Delay_Click" ToolTip="Запускать через заданное время после входа в Windows (задачей планировщика)"/>
                 <Button Content="Удалить" Style="{StaticResource DangerBtn}" Click="Delete_Click"/>

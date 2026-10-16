@@ -4,12 +4,12 @@
     <DockPanel>
         <StackPanel DockPanel.Dock="Top">
             <TextBlock Text="Очистка диска" Style="{StaticResource Title}"/>
-            <TextBlock Style="{StaticResource Hint}" TextWrapping="Wrap" Text="Встроенные пункты Windows плюс база winapp2.ini (CC-BY-SA, проект Winapp2). Показаны только правила для программ, найденных на этом ПК. Сначала анализ, потом очистка."/>
-            <DockPanel Margin="0,14,0,10">
+            <TextBlock Style="{StaticResource Lead}" Text="Встроенные пункты Windows плюс база winapp2.ini (CC-BY-SA, проект Winapp2). Показаны только правила для программ, найденных на этом ПК. Сначала анализ, потом очистка."/>
+            <DockPanel Margin="{StaticResource Toolbar}">
                 <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
-                <TextBox x:Name="Search" Width="320" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск по названию и категории"/>
+                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" Width="420" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск по названию и категории"/>
             </DockPanel>
-            <WrapPanel Margin="0,0,0,10">
+            <WrapPanel Margin="0,0,0,6">
                 <Button Content="Анализ" Style="{StaticResource Primary}" Click="Analyze_Click"/>
                 <Button Content="Очистить" Style="{StaticResource DangerBtn}" Click="Clean_Click"/>
                 <Button Content="Подробно" Click="Details_Click" ToolTip="Найденные файлы выбранного правила, можно снять галочки"/>

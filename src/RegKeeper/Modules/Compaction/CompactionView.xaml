@@ -4,8 +4,8 @@
     <DockPanel>
         <StackPanel DockPanel.Dock="Top">
             <TextBlock Text="Сжатие реестра" Style="{StaticResource Title}"/>
-            <TextBlock Style="{StaticResource Hint}" Text="Файлы реестра со временем фрагментируются. Анализ записывает сжатые копии разделов и показывает выигрыш. Сжатие создаёт точку восстановления, а замена происходит при следующей перезагрузке. Старые файлы остаются резервной копией в папке сжатия."/>
-            <DockPanel Margin="0,14,0,10">
+            <TextBlock Style="{StaticResource Lead}" Text="Файлы реестра со временем фрагментируются. Анализ записывает сжатые копии разделов и показывает выигрыш. Сжатие создаёт точку восстановления, а замена происходит при следующей перезагрузке. Старые файлы остаются резервной копией в папке сжатия."/>
+            <DockPanel Margin="{StaticResource Toolbar}">
                 <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
                 <WrapPanel>
                     <Button x:Name="AnalyzeBtn" Content="Анализ" Style="{StaticResource Primary}" Click="Analyze_Click"/>
@@ -18,7 +18,7 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Раздел" Binding="{Binding Key}" Width="2*"/>
                 <DataGridTextColumn Header="Файл" Binding="{Binding File}" Width="2*"/>
-                <DataGridTextColumn Header="Размер" Binding="{Binding SizeText}" SortMemberPath="Size" Width="110"/>
+                <DataGridTextColumn Header="Размер" Binding="{Binding SizeText}" SortMemberPath="Size" Width="140"/>
                 <DataGridTextColumn Header="После сжатия" Binding="{Binding CompactedText}" SortMemberPath="CompactedSize" Width="130"/>
                 <DataGridTextColumn Header="Выигрыш" Binding="{Binding GainText}" SortMemberPath="Gain" Width="130"/>
             </DataGrid.Columns>

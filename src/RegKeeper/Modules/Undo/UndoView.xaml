@@ -4,8 +4,8 @@
     <DockPanel>
         <StackPanel DockPanel.Dock="Top">
             <TextBlock Text="Центр отмены" Style="{StaticResource Title}"/>
-            <TextBlock Style="{StaticResource Hint}" Text="Каждое изменение реестра и задач планировщика сохраняется здесь до применения. Отмена возвращает всё как было и убирает запись. Файлы и папки удаляются в корзину, восстанавливайте их оттуда."/>
-            <DockPanel Margin="0,14,0,10">
+            <TextBlock Style="{StaticResource Lead}" Text="Каждое изменение реестра и задач планировщика сохраняется здесь до применения. Отмена возвращает всё как было и убирает запись. Файлы и папки удаляются в корзину, восстанавливайте их оттуда."/>
+            <DockPanel Margin="{StaticResource Toolbar}">
                 <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
                 <WrapPanel>
                     <Button Content="Отменить изменения" Style="{StaticResource Primary}" Click="Restore_Click"/>
@@ -16,12 +16,12 @@
                 </WrapPanel>
             </DockPanel>
         </StackPanel>
-        <ListBox x:Name="Items" DockPanel.Dock="Bottom" Height="170" Margin="0,10,0,0" ItemsSource="{Binding SelectedItem.Items, ElementName=Grid}"/>
+        <ListBox x:Name="Items" DockPanel.Dock="Bottom" Height="200" Margin="0,18,0,0" ItemsSource="{Binding SelectedItem.Items, ElementName=Grid}"/>
         <DataGrid x:Name="Grid" IsReadOnly="True" MouseDoubleClick="Restore_Click">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Когда" Binding="{Binding Date, StringFormat=dd.MM.yyyy HH:mm:ss}" SortMemberPath="Date" Width="150"/>
+                <DataGridTextColumn Header="Когда" Binding="{Binding Date, StringFormat=dd.MM.yyyy HH:mm:ss}" SortMemberPath="Date" Width="180"/>
                 <DataGridTextColumn Header="Операция" Binding="{Binding Title}" Width="*"/>
-                <DataGridTextColumn Header="Изменений" Binding="{Binding Count}" Width="90"/>
+                <DataGridTextColumn Header="Изменений" Binding="{Binding Count}" Width="120"/>
             </DataGrid.Columns>
         </DataGrid>
     </DockPanel>

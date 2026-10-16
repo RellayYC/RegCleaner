@@ -4,12 +4,12 @@
     <DockPanel>
         <StackPanel DockPanel.Dock="Top">
             <TextBlock Text="Снимки и отслеживание установок" Style="{StaticResource Title}"/>
-            <TextBlock Style="{StaticResource Hint}" TextWrapping="Wrap" Text="Снимок фиксирует разделы реестра и файлы. Сравнение двух снимков показывает, что изменилось; отслеживание установки делает снимки до и после инсталлятора и сохраняет разницу, чтобы потом откатить ровно её."/>
-            <DockPanel Margin="0,14,0,6">
-                <TextBlock Text="Что снимать:" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,8,0"/>
+            <TextBlock Style="{StaticResource Lead}" Text="Снимок фиксирует разделы реестра и файлы. Сравнение двух снимков показывает, что изменилось; отслеживание установки делает снимки до и после инсталлятора и сохраняет разницу, чтобы потом откатить ровно её."/>
+            <DockPanel Margin="{StaticResource Toolbar}">
+                <TextBlock Text="Что снимать:" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,14,0"/>
                 <TextBox x:Name="Roots" ToolTip="Разделы реестра и папки через ;"/>
             </DockPanel>
-            <WrapPanel Margin="0,0,0,10">
+            <WrapPanel Margin="0,0,0,6">
                 <Button Content="Сделать снимок" Style="{StaticResource Primary}" Click="Take_Click"/>
                 <Button Content="Сравнить два выбранных" Click="Compare_Click"/>
                 <Button Content="Отследить установку..." Style="{StaticResource Primary}" Click="Trace_Click"/>
@@ -20,7 +20,7 @@
         </StackPanel>
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="180"/>
+                <RowDefinition Height="250"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
@@ -28,24 +28,24 @@
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <DataGrid x:Name="SnapList" SelectionMode="Extended" IsReadOnly="True" Margin="0,0,5,0" GotFocus="List_GotFocus">
+            <DataGrid x:Name="SnapList" SelectionMode="Extended" IsReadOnly="True" Margin="0,0,9,0" GotFocus="List_GotFocus">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Снимок" Binding="{Binding Note}" Width="2*"/>
                     <DataGridTextColumn Header="Дата" Binding="{Binding Date, StringFormat=dd.MM.yyyy HH:mm}" Width="120"/>
                     <DataGridTextColumn Header="Размер" Binding="{Binding SizeText}" Width="80"/>
                 </DataGrid.Columns>
             </DataGrid>
-            <DataGrid x:Name="TraceList" Grid.Column="1" SelectionMode="Single" IsReadOnly="True" Margin="5,0,0,0"
+            <DataGrid x:Name="TraceList" Grid.Column="1" SelectionMode="Single" IsReadOnly="True" Margin="9,0,0,0"
                       GotFocus="List_GotFocus" MouseDoubleClick="ShowTrace_Click">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Отслеженная установка" Binding="{Binding Note}" Width="2*"/>
                     <DataGridTextColumn Header="Дата" Binding="{Binding Date, StringFormat=dd.MM.yyyy HH:mm}" Width="120"/>
                 </DataGrid.Columns>
             </DataGrid>
-            <DockPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,10">
+            <DockPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,24,0,14">
                 <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
                 <WrapPanel>
-                    <TextBox x:Name="Search" Width="260" Margin="0,0,8,0" TextChanged="Search_TextChanged" ToolTip="Фильтр по пути"/>
+                    <TextBox x:Name="Search" Style="{StaticResource SearchBox}" Width="420" Margin="0,0,8,0" TextChanged="Search_TextChanged" ToolTip="Фильтр по пути"/>
                     <Button Content="Откатить отмеченное" Style="{StaticResource DangerBtn}" Click="Rollback_Click"
                             ToolTip="Удалить добавленное, вернуть изменённые и удалённые значения реестра. Добавленные файлы уходят в корзину."/>
                     <Button Content="Отметить все" Click="All_Click"/>

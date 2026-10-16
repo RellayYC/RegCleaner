@@ -18,6 +18,12 @@
     <Thickness x:Key="CardPad">22,20</Thickness>
     <Thickness x:Key="Gap">0,0,18,18</Thickness>
     <sys:Double x:Key="BarHeight">6</sys:Double>
+    <!-- controls and table rows share one height so toolbars line up -->
+    <sys:Double x:Key="ControlHeight">44</sys:Double>
+    <sys:Double x:Key="SearchHeight">52</sys:Double>
+    <sys:Double x:Key="RowHeight">52</sys:Double>
+    <Thickness x:Key="TablePad">8,6,8,8</Thickness>
+    <Thickness x:Key="Toolbar">0,24,0,14</Thickness>
 
     <!-- Motion tokens, the only place durations and easings live. Motion.cs reads the same keys; reduced motion zeroes the T* ones.
          Enter = cubic-bezier(0.16,1,0.3,1), Exit = (0.4,0,1,1) at ~70% of the enter time, Move = (0.65,0,0.35,1) between states. -->
@@ -101,7 +107,7 @@
     <ScaleTransform x:Key="UiScale" ScaleX="1" ScaleY="1"/>
     <Style TargetType="Window">
         <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
-        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontSize" Value="14"/>
         <Setter Property="Typography.NumeralAlignment" Value="Tabular"/>
         <Setter Property="Background" Value="{DynamicResource BgBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
@@ -139,15 +145,17 @@
         </Setter>
     </Style>
 
+    <!-- page header of every screen: 40 display title, 16 grey lead capped at 820 -->
     <Style x:Key="Title" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="20"/>
-        <Setter Property="FontWeight" Value="Medium"/>
-        <Setter Property="Margin" Value="0,0,0,6"/>
+        <Setter Property="FontFamily" Value="{StaticResource DisplayFont}"/>
+        <Setter Property="FontSize" Value="40"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Margin" Value="0,0,0,8"/>
     </Style>
     <Style x:Key="Section" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="FontWeight" Value="Medium"/>
-        <Setter Property="Margin" Value="0,24,0,8"/>
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Margin" Value="0,22,0,10"/>
     </Style>
     <!-- hints and status lines; a status line that gains numbers after load counts them up -->
     <Style x:Key="Hint" TargetType="TextBlock">
@@ -157,13 +165,6 @@
     </Style>
     <Style x:Key="DangerText" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{DynamicResource DangerTextBrush}"/>
-    </Style>
-    <!-- page header of the redesigned screens: 40 display title, 16 grey lead capped at 820 -->
-    <Style x:Key="PageTitle" TargetType="TextBlock">
-        <Setter Property="FontFamily" Value="{StaticResource DisplayFont}"/>
-        <Setter Property="FontSize" Value="40"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Margin" Value="0,0,0,8"/>
     </Style>
     <Style x:Key="Lead" TargetType="TextBlock">
         <Setter Property="FontSize" Value="16"/>
@@ -265,8 +266,9 @@
     <!-- buttons: ghost by default; Tag is the hover fill, faded in over the base. Ui.Glow is an optional shadow cast by a copy of the
          body behind it, so the label keeps ClearType -->
     <Style TargetType="Button">
-        <Setter Property="Padding" Value="12,6"/>
-        <Setter Property="Margin" Value="0,0,8,0"/>
+        <Setter Property="Padding" Value="18,6"/>
+        <Setter Property="MinHeight" Value="{StaticResource ControlHeight}"/>
+        <Setter Property="Margin" Value="0,4,8,4"/>
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
@@ -329,7 +331,8 @@
     </Style>
 
     <Style TargetType="TextBox">
-        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="Padding" Value="14,6"/>
+        <Setter Property="MinHeight" Value="{StaticResource ControlHeight}"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
@@ -347,6 +350,8 @@
                         <Border x:Name="b" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{StaticResource RControl}" SnapsToDevicePixels="True">
                             <Grid>
+                                <TextBlock Text="{TemplateBinding Tag}" FontFamily="{StaticResource Icons}" FontSize="16" Foreground="{DynamicResource MutedBrush}"
+                                           HorizontalAlignment="Left" VerticalAlignment="Center" Margin="18,0,0,0" IsHitTestVisible="False"/>
                                 <TextBlock x:Name="Hint" Text="{Binding ToolTip, RelativeSource={RelativeSource TemplatedParent}}"
                                            Foreground="{DynamicResource SubtleBrush}" Padding="{TemplateBinding Padding}" Margin="2,0,0,0"
                                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}" TextTrimming="CharacterEllipsis"
@@ -375,6 +380,14 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <!-- search: tall glass field with a magnifier (the TextBox template draws Tag as a leading glyph) -->
+    <Style x:Key="SearchBox" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+        <Setter Property="Height" Value="{StaticResource SearchHeight}"/>
+        <Setter Property="Padding" Value="44,0,14,0"/>
+        <Setter Property="Background" Value="{DynamicResource GlassBrush}"/>
+        <Setter Property="Tag" Value="&#xE721;"/>
     </Style>
 
     <!-- checkbox: the mark draws itself (stroke-dashoffset, in stroke-thickness units: the path is ~7.5 long) -->
@@ -626,27 +639,48 @@
         </Style.Triggers>
     </Style>
 
-    <Style TargetType="ListBox">
-        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+    <Style TargetType="TreeViewItem">
+        <Setter Property="Padding" Value="6,5"/>
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+    </Style>
+    <!-- ListBox in a card; MainWindow's sidebar sets its own template -->
+    <Style TargetType="ListBox">
+        <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource CardEdgeBrush}"/>
+        <Setter Property="Padding" Value="{StaticResource TablePad}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBox">
+                    <Grid>
+                        <Border Margin="16,24,16,0" CornerRadius="{StaticResource RCard}" Background="{DynamicResource BgBrush}" Effect="{DynamicResource CardShadow}"/>
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="{StaticResource RCard}">
+                            <ScrollViewer Padding="{TemplateBinding Padding}" Focusable="False">
+                                <ItemsPresenter/>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
         <Setter Property="VirtualizingPanel.ScrollUnit" Value="Pixel"/>
     </Style>
     <!-- stock ListBoxItem selection colours are fixed light blues -->
     <Style TargetType="ListBoxItem">
-        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="Padding" Value="12,8"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListBoxItem">
-                    <Border x:Name="b" Background="Transparent" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                    <Border x:Name="b" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="{StaticResource RTile}" Padding="{TemplateBinding Padding}">
                         <ContentPresenter/>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                            <Setter TargetName="b" Property="Background" Value="{DynamicResource RowHoverBrush}"/>
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="b" Property="Background" Value="{DynamicResource SelectionBrush}"/>
+                            <Setter TargetName="b" Property="Background" Value="{DynamicResource RowSelBrush}"/>
+                            <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource SelEdgeBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -654,9 +688,24 @@
         </Setter>
     </Style>
     <Style TargetType="TreeView">
-        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-        <Setter Property="Padding" Value="4"/>
+        <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource CardEdgeBrush}"/>
+        <Setter Property="Padding" Value="{StaticResource TablePad}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TreeView">
+                    <Grid>
+                        <Border Margin="16,24,16,0" CornerRadius="{StaticResource RCard}" Background="{DynamicResource BgBrush}" Effect="{DynamicResource CardShadow}"/>
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="{StaticResource RCard}">
+                            <ScrollViewer Padding="{TemplateBinding Padding}" Focusable="False" CanContentScroll="False"
+                                          HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                                <ItemsPresenter/>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- stock ComboBox paints a fixed light gradient, so it gets a flat template; the list scales in from 0.96 -->
@@ -664,7 +713,8 @@
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-        <Setter Property="Padding" Value="10,6,28,6"/>
+        <Setter Property="Padding" Value="14,6,30,6"/>
+        <Setter Property="MinHeight" Value="{StaticResource ControlHeight}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBox">
@@ -674,7 +724,7 @@
                             <ToggleButton.Template>
                                 <ControlTemplate TargetType="ToggleButton">
                                     <Border x:Name="b" Background="{Binding Background, RelativeSource={RelativeSource AncestorType=ComboBox}}"
-                                            BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=ComboBox}}" BorderThickness="1" CornerRadius="8">
+                                            BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=ComboBox}}" BorderThickness="1" CornerRadius="{StaticResource RControl}">
                                         <Path Data="M0,0 L4,4 L8,0" Stroke="{DynamicResource MutedBrush}" StrokeThickness="1.5" StrokeStartLineCap="Round"
                                               StrokeEndLineCap="Round" StrokeLineJoin="Round" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,1,11,0"/>
                                     </Border>
@@ -747,7 +797,7 @@
         </Setter>
     </Style>
 
-    <!-- tables are 12px-radius cards: faint row dividers, hover a barely lighter fill, rows stagger in on first load -->
+    <!-- tables are cards: faint row dividers, hover a lighter fill, the selected row gets an edge; rows stagger in on first load -->
     <Style TargetType="DataGrid">
         <Setter Property="AutoGenerateColumns" Value="False"/>
         <Setter Property="CanUserAddRows" Value="False"/>
@@ -755,13 +805,15 @@
         <Setter Property="HeadersVisibility" Value="Column"/>
         <Setter Property="GridLinesVisibility" Value="Horizontal"/>
         <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource LineBrush}"/>
-        <Setter Property="RowHeight" Value="34"/>
-        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+        <Setter Property="RowHeight" Value="{StaticResource RowHeight}"/>
+        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
+        <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
         <Setter Property="RowBackground" Value="Transparent"/>
         <Setter Property="AlternatingRowBackground" Value="Transparent"/>
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource CardEdgeBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="{StaticResource TablePad}"/>
         <Setter Property="SelectionMode" Value="Extended"/>
         <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True"/>
         <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling"/>
@@ -771,8 +823,10 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="DataGrid">
+                    <Grid>
+                    <Border Margin="16,24,16,0" CornerRadius="{StaticResource RCard}" Background="{DynamicResource BgBrush}" Effect="{DynamicResource CardShadow}"/>
                     <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="12" Padding="0,0,0,6" SnapsToDevicePixels="True">
+                            CornerRadius="{StaticResource RCard}" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
                         <ScrollViewer x:Name="DG_ScrollViewer" Focusable="False">
                             <ScrollViewer.Template>
                                 <ControlTemplate TargetType="ScrollViewer">
@@ -783,7 +837,7 @@
                                         <ScrollContentPresenter x:Name="PART_ScrollContentPresenter" Grid.Row="1" CanContentScroll="{TemplateBinding CanContentScroll}"/>
                                         <!-- grouped grids: the title of the group at the top stays pinned here (Motion.Stick) -->
                                         <Border Grid.Row="1" ClipToBounds="True" IsHitTestVisible="False">
-                                            <Border x:Name="Sticky" VerticalAlignment="Top" Visibility="Collapsed" Background="{DynamicResource SurfaceBrush}"
+                                            <Border x:Name="Sticky" VerticalAlignment="Top" Visibility="Collapsed" Background="{DynamicResource CardTopBrush}"
                                                     BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,0,1">
                                                 <ContentPresenter/>
                                             </Border>
@@ -802,27 +856,34 @@
                             <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
                         </ScrollViewer>
                     </Border>
+                    </Grid>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
     <Style TargetType="DataGridRow">
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+                <Setter Property="Background" Value="{DynamicResource RowHoverBrush}"/>
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="{DynamicResource RowSelBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource SelEdgeBrush}"/>
             </Trigger>
         </Style.Triggers>
     </Style>
     <Style TargetType="DataGridColumnHeader">
-        <Setter Property="Padding" Value="10,9"/>
+        <Setter Property="Padding" Value="14,12"/>
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}"/>
         <Setter Property="BorderThickness" Value="0,0,0,1"/>
-        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontSize" Value="13"/>
     </Style>
     <Style TargetType="DataGridCell">
-        <Setter Property="Padding" Value="10,0"/>
+        <Setter Property="Padding" Value="14,0"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Template">
@@ -836,7 +897,7 @@
         </Setter>
         <Style.Triggers>
             <Trigger Property="IsSelected" Value="True">
-                <Setter Property="Background" Value="{DynamicResource SelectionBrush}"/>
+                <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
             </Trigger>
         </Style.Triggers>

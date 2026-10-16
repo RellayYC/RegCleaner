@@ -4,14 +4,14 @@
     <DockPanel>
         <StackPanel DockPanel.Dock="Top">
             <TextBlock Text="Удаление программ" Style="{StaticResource Title}"/>
-            <TextBlock Style="{StaticResource Hint}" Text="Запускает штатный деинсталлятор, затем ищет оставшиеся папки и ключи реестра. Ключи уходят в Центр отмены, папки в корзину."/>
-            <DockPanel Margin="0,14,0,10">
+            <TextBlock Style="{StaticResource Lead}" Text="Запускает штатный деинсталлятор, затем ищет оставшиеся папки и ключи реестра. Ключи уходят в Центр отмены, папки в корзину."/>
+            <DockPanel Margin="{StaticResource Toolbar}">
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                     <TextBlock x:Name="Status" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
                 </StackPanel>
-                <TextBox x:Name="Search" Width="320" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск по названию и издателю"/>
+                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" Width="420" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск по названию и издателю"/>
             </DockPanel>
-            <WrapPanel Margin="0,0,0,10">
+            <WrapPanel Margin="0,0,0,6">
                 <Button Content="Удалить" Style="{StaticResource Primary}" Click="Uninstall_Click"/>
                 <Button Content="Тихое удаление" Click="Quiet_Click" ToolTip="QuietUninstallString / msiexec /qb, если есть"/>
                 <Button Content="Принудительно" Style="{StaticResource DangerBtn}" Click="Force_Click" ToolTip="Без деинсталлятора: сразу поиск и удаление следов"/>

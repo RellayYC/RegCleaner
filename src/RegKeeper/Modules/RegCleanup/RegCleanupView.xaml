@@ -4,12 +4,12 @@
     <DockPanel>
         <StackPanel DockPanel.Dock="Top">
             <TextBlock Text="Чистка реестра" Style="{StaticResource Title}"/>
-            <TextBlock Style="{StaticResource Hint}" TextWrapping="Wrap" Text="Ищет записи, ссылающиеся на удалённые файлы: деинсталляция, пути приложений, общие DLL, COM, библиотеки типов, автозагрузка, брандмауэр. Всё исправленное возвращается из Центра отмены."/>
-            <DockPanel Margin="0,14,0,10">
+            <TextBlock Style="{StaticResource Lead}" Text="Ищет записи, ссылающиеся на удалённые файлы: деинсталляция, пути приложений, общие DLL, COM, библиотеки типов, автозагрузка, брандмауэр. Всё исправленное возвращается из Центра отмены."/>
+            <DockPanel Margin="{StaticResource Toolbar}">
                 <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
-                <TextBox x:Name="Search" Width="320" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск по категории, ключу и проблеме"/>
+                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" Width="420" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск по категории, ключу и проблеме"/>
             </DockPanel>
-            <WrapPanel Margin="0,0,0,10">
+            <WrapPanel Margin="0,0,0,6">
                 <Button Content="Сканировать" Style="{StaticResource Primary}" Click="Scan_Click"/>
                 <Button Content="Исправить отмеченное" Style="{StaticResource DangerBtn}" Click="Fix_Click"/>
                 <Button Content="Отметить все" Click="All_Click"/>

@@ -105,6 +105,7 @@
     <SolidColorBrush x:Key="Seg5Brush" Color="{StaticResource Seg5}"/>
     <SolidColorBrush x:Key="SegOtherBrush" Color="{StaticResource SegOther}"/>
 
+    <SolidColorBrush x:Key="CardTopBrush" Color="{StaticResource CardTop}"/>
     <LinearGradientBrush x:Key="CardBrush" StartPoint="0,0" EndPoint="0,1">
         <GradientStop Color="{StaticResource CardTop}" Offset="0"/><GradientStop Color="{StaticResource CardBottom}" Offset="1"/>
     </LinearGradientBrush>

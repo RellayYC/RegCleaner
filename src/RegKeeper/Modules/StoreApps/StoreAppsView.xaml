@@ -5,7 +5,7 @@
     <!-- the page scrolls as a whole; the table card is sized to the viewport so the grid still virtualizes (Page_ScrollChanged) -->
     <ScrollViewer x:Name="Page" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False" ScrollChanged="Page_ScrollChanged">
         <StackPanel x:Name="Body" Margin="0,0,8,8">
-            <TextBlock Text="Приложения Windows" Style="{StaticResource PageTitle}"/>
+            <TextBlock Text="Приложения Windows" Style="{StaticResource Title}"/>
             <TextBlock Style="{StaticResource Lead}" Text="Приложения из Microsoft Store и встроенные UWP-приложения текущего пользователя. Фреймворки и системные пакеты скрыты и не удаляются. Удалённое приложение можно вернуть только переустановкой из Store."/>
 
             <!-- four figures; two columns on a narrow window -->
@@ -68,53 +68,19 @@
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <CheckBox x:Name="ShowSystem" Content="Показать системные" VerticalAlignment="Center" Margin="18,0,18,0"
                               Checked="Filter_Changed" Unchecked="Filter_Changed"/>
-                    <Button Content="Удалить" Style="{StaticResource DangerBtn}" Height="52" Padding="24,0" Click="Remove_Click"/>
-                    <Button Content="Папка" Height="52" Padding="20,0" Click="Folder_Click"/>
+                    <Button Content="Удалить" Style="{StaticResource DangerBtn}" Height="52" Margin="0,0,8,0" Padding="24,0" Click="Remove_Click"/>
+                    <Button Content="Папка" Height="52" Margin="0,0,8,0" Padding="20,0" Click="Folder_Click"/>
                     <Button Content="Обновить" Height="52" Padding="20,0" Margin="0" Click="Refresh_Click"/>
                 </StackPanel>
-                <Grid>
-                    <TextBox x:Name="Search" Height="52" Padding="44,0,14,0" Background="{DynamicResource GlassBrush}" TextChanged="Search_TextChanged"
-                             ToolTip="Поиск по названию, пакету и издателю"/>
-                    <TextBlock Text="&#xE721;" FontFamily="{StaticResource Icons}" FontSize="16" Foreground="{DynamicResource MutedBrush}"
-                               VerticalAlignment="Center" Margin="18,0,0,0" IsHitTestVisible="False"/>
-                </Grid>
+                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" TextChanged="Search_TextChanged" ToolTip="Поиск по названию, пакету и издателю"/>
             </DockPanel>
 
             <!-- table and details side by side; on a narrow window the details go under the table (Page_ScrollChanged) -->
             <Grid x:Name="Main">
                 <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                <ContentControl x:Name="TableCard" Style="{StaticResource Card}" Padding="8,6,8,8" VerticalAlignment="Top">
-                    <DataGrid x:Name="Grid" Background="Transparent" BorderThickness="0" RowHeight="70" FontSize="15" HorizontalScrollBarVisibility="Disabled"
+                    <DataGrid x:Name="Grid" RowHeight="70" FontSize="15" HorizontalScrollBarVisibility="Disabled" VerticalAlignment="Top"
                               SelectionChanged="Grid_SelectionChanged" ContextMenuOpening="Grid_ContextMenuOpening">
-                        <DataGrid.ColumnHeaderStyle>
-                            <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
-                                <Setter Property="FontSize" Value="13"/>
-                                <Setter Property="Padding" Value="14,12"/>
-                                <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}"/>
-                            </Style>
-                        </DataGrid.ColumnHeaderStyle>
-                        <DataGrid.RowStyle>
-                            <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                                <Setter Property="BorderThickness" Value="1"/>
-                                <Setter Property="BorderBrush" Value="Transparent"/>
-                                <Style.Triggers>
-                                    <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{DynamicResource RowHoverBrush}"/></Trigger>
-                                    <Trigger Property="IsSelected" Value="True">
-                                        <Setter Property="Background" Value="{DynamicResource RowSelBrush}"/>
-                                        <Setter Property="BorderBrush" Value="{DynamicResource SelEdgeBrush}"/>
-                                    </Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DataGrid.RowStyle>
-                        <DataGrid.CellStyle>
-                            <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
-                                <Setter Property="Padding" Value="14,0"/>
-                                <Style.Triggers>
-                                    <Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="Transparent"/></Trigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DataGrid.CellStyle>
                         <DataGrid.ContextMenu>
                             <ContextMenu>
                                 <MenuItem x:Name="MenuCheck" Header="Выбрать" Tag="&#xE73E;" Click="Check_Click"/>
@@ -184,7 +150,6 @@
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
-                </ContentControl>
 
                 <ContentControl x:Name="Details" Grid.Column="1" Style="{StaticResource Card}" Margin="18,0,0,0" Width="400" Padding="24,24" VerticalAlignment="Top">
                     <Grid>
