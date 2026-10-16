@@ -23,8 +23,8 @@
         </StackPanel>
         <DataGrid x:Name="Grid" IsReadOnly="True" SelectionMode="Extended" MouseDoubleClick="Toggle_Click">
             <DataGrid.Columns>
-                <DataGridCheckBoxColumn Header="Вкл" Binding="{Binding Enabled, Mode=OneWay}" Width="44"/>
-                <DataGridTemplateColumn Width="38" CellTemplate="{StaticResource AppIcon}"/>
+                <DataGridCheckBoxColumn Header="Вкл" Binding="{Binding Enabled, Mode=OneWay}" Width="60"/>
+                <DataGridTemplateColumn Width="62" CellTemplate="{StaticResource AppIcon}"/>
                 <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="2*"/>
                 <DataGridTemplateColumn Header="Тип" SortMemberPath="KindText" Width="140"><DataGridTemplateColumn.CellTemplate><DataTemplate><ContentPresenter Content="{Binding KindText}" ContentTemplate="{StaticResource Badge}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
                 <DataGridTextColumn Header="Издатель" Binding="{Binding Publisher}" Width="*"/>

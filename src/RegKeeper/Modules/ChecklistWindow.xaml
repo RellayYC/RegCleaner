@@ -17,7 +17,7 @@
         </DockPanel>
         <DataGrid x:Name="Grid">
             <DataGrid.Columns>
-                <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="32"/>
+                <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="48"/>
                 <DataGridTextColumn Header="Тип" Binding="{Binding KindText}" IsReadOnly="True" Width="120"/>
                 <DataGridTextColumn Header="Путь" Binding="{Binding Path}" IsReadOnly="True" Width="*"/>
                 <DataGridTextColumn Header="Размер" Binding="{Binding SizeText}" IsReadOnly="True" Width="90"/>

@@ -55,7 +55,7 @@
             </DockPanel>
             <DataGrid x:Name="Changes" Grid.Row="2" Grid.ColumnSpan="2" SelectionMode="Extended" MouseDoubleClick="Open_Click">
                 <DataGrid.Columns>
-                    <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="32"/>
+                    <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="48"/>
                     <DataGridTextColumn Header="Изменение" Binding="{Binding KindText}" IsReadOnly="True" Width="170"/>
                     <DataGridTextColumn Header="Путь" Binding="{Binding Display}" IsReadOnly="True" Width="*"/>
                 </DataGrid.Columns>

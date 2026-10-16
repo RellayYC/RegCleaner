@@ -34,8 +34,8 @@
                 </ContextMenu>
             </DataGrid.ContextMenu>
             <DataGrid.Columns>
-                <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="32"/>
-                <DataGridTemplateColumn Width="38" CellTemplate="{StaticResource AppIcon}" IsReadOnly="True"/>
+                <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="48"/>
+                <DataGridTemplateColumn Width="62" CellTemplate="{StaticResource AppIcon}" IsReadOnly="True"/>
                 <!-- favourites carry a filled star before the name -->
                 <DataGridTemplateColumn Header="Название" SortMemberPath="Name" Width="3*" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
@@ -54,7 +54,7 @@
                 <DataGridTextColumn IsReadOnly="True" Header="Издатель" Binding="{Binding Publisher}" Width="2*"/>
                 <DataGridTextColumn IsReadOnly="True" Header="Версия" Binding="{Binding Version}" Width="110"/>
                 <DataGridTextColumn IsReadOnly="True" Header="Размер" Binding="{Binding SizeText}" SortMemberPath="SizeBytes" Width="90"/>
-                <DataGridTextColumn IsReadOnly="True" Header="Установлено" Binding="{Binding DateText}" SortMemberPath="InstallDate" Width="100"/>
+                <DataGridTextColumn IsReadOnly="True" Header="Установлено" Binding="{Binding DateText}" SortMemberPath="InstallDate" Width="130"/>
                 <DataGridTemplateColumn IsReadOnly="True" Header="Для" SortMemberPath="Scope" Width="180"><DataGridTemplateColumn.CellTemplate><DataTemplate><ContentPresenter Content="{Binding Scope}" ContentTemplate="{StaticResource Badge}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>

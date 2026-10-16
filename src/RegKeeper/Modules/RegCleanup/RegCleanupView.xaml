@@ -21,7 +21,7 @@
         </StackPanel>
         <DataGrid x:Name="Grid" SelectionMode="Extended" MouseDoubleClick="Open_Click">
             <DataGrid.Columns>
-                <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="32"/>
+                <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="48"/>
                 <DataGridTextColumn Header="Категория" Binding="{Binding Category}" IsReadOnly="True" Width="150"/>
                 <DataGridTextColumn Header="Ключ" Binding="{Binding Display}" IsReadOnly="True" Width="3*"/>
                 <DataGridTextColumn Header="Проблема" Binding="{Binding Problem}" IsReadOnly="True" Width="2*"/>

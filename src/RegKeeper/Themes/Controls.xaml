@@ -251,13 +251,16 @@
         </DataTemplate.Triggers>
     </DataTemplate>
 
-    <!-- 16px app icon cell; a row without an icon shows its Glyph, or a generic app glyph -->
+    <!-- 34px app icon tile with a 20px icon; a row without an icon shows its Glyph, or a generic app glyph -->
     <DataTemplate x:Key="AppIcon">
-        <Grid Width="16" Height="16" HorizontalAlignment="Center">
-            <TextBlock x:Name="g" Text="{Binding Glyph, FallbackValue=&#xE71D;}" FontFamily="{StaticResource Icons}" FontSize="14"
-                       Foreground="{DynamicResource MutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
-            <Image Source="{Binding Icon}" Width="16" Height="16"/>
-        </Grid>
+        <Border Width="34" Height="34" CornerRadius="{StaticResource RTile}" BorderThickness="1" HorizontalAlignment="Center"
+                Background="{DynamicResource TileBrush}" BorderBrush="{DynamicResource TileEdgeBrush}">
+            <Grid>
+                <TextBlock x:Name="g" Text="{Binding Glyph, FallbackValue=&#xE71D;}" FontFamily="{StaticResource Icons}" FontSize="16"
+                           Foreground="{DynamicResource MutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
+                <Image Source="{Binding Icon}" Width="20" Height="20"/>
+            </Grid>
+        </Border>
         <DataTemplate.Triggers>
             <DataTrigger Binding="{Binding Icon}" Value="{x:Null}"><Setter TargetName="g" Property="Visibility" Value="Visible"/></DataTrigger>
         </DataTemplate.Triggers>

@@ -43,7 +43,7 @@
         </StackPanel>
         <DataGrid x:Name="Grid" SelectionMode="Extended" MouseDoubleClick="Open_Click">
             <DataGrid.Columns>
-                <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="32"/>
+                <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="48"/>
                 <DataGridTextColumn Header="Где" Binding="{Binding KindText}" IsReadOnly="True" Width="80"/>
                 <DataGridTextColumn Header="Ключ" Binding="{Binding Display}" IsReadOnly="True" Width="3*"/>
                 <DataGridTextColumn Header="Совпадение" Binding="{Binding Text}" IsReadOnly="True" Width="2*"/>
