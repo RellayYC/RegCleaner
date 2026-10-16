@@ -10,6 +10,12 @@ public static class Ui
     /// <summary>Set by headless runs (smoke tests): messages go here instead of a MessageBox and Confirm answers no.</summary>
     public static Action<string>? Headless;
 
+    /// <summary>Shadow a button casts from a copy of its body (Controls.xaml), so the label itself keeps ClearType.</summary>
+    public static readonly DependencyProperty GlowProperty = DependencyProperty.RegisterAttached(
+        "Glow", typeof(System.Windows.Media.Effects.Effect), typeof(Ui));
+    public static System.Windows.Media.Effects.Effect? GetGlow(DependencyObject o) => (System.Windows.Media.Effects.Effect?)o.GetValue(GlowProperty);
+    public static void SetGlow(DependencyObject o, System.Windows.Media.Effects.Effect? v) => o.SetValue(GlowProperty, v);
+
     public static bool Confirm(string text, string title = "RegKeeper")
     {
         if (Headless != null) { Headless("confirm: " + text); return false; }

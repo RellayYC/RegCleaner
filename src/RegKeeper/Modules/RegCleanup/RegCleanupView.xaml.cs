@@ -17,6 +17,8 @@ public partial class RegCleanupView : UserControl
     async Task Scan() => await Ui.Busy(this, async () =>
     {
         _all = await Task.Run(RegScanner.Scan);
+        Microsoft.Win32.Registry.SetValue(MainWindow.Key, "LastProblems", _all.Count.ToString());
+        MainWindow.SetBadge(typeof(RegCleanupView), _all.Count > 0 ? _all.Count.ToString() : null);
         ApplyFilter();
     });
 

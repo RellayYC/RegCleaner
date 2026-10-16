@@ -62,8 +62,21 @@ public class SmokeTests
                 if (theme == Theme.Light) FilterFollowsAutomationToggle(views.OfType<StartupView>().Single());
                 if (theme == Theme.Light) StickyGroupTitle(nav, views.IndexOf(views.OfType<TweaksView>().Single()), host);
                 if (lang == L.Ru) UninstallerMenuAndDetails(nav, host, $"{theme}");
+                var store = views.OfType<StoreAppsView>().Single();
+                nav.SelectedIndex = views.IndexOf(store); Pump();
+                var storeGrid = (DataGrid)store.FindName("Grid");
+                if (storeGrid.Items.Count > 0)
+                {
+                    storeGrid.SelectedIndex = 0; Pump();
+                    Assert.True(((FrameworkElement)store.FindName("DetailsBody")).IsVisible, $"{theme}: store details stay empty after a selection");
+                }
                 if (Environment.GetEnvironmentVariable("RK_SHOTS") is { Length: > 0 } dir)
+                {
                     for (var i = 0; i < views.Count; i++) { nav.SelectedIndex = i; Pump(); Shot(win, Path.Combine(dir, $"{lang}-{theme}-{i:00}-{views[i].GetType().Name}.png")); }
+                    nav.SelectedIndex = views.IndexOf(store); Pump();
+                    ((ScrollViewer)store.FindName("Page")).ScrollToEnd(); Pump();
+                    Shot(win, Path.Combine(dir, $"{lang}-{theme}-01b-StoreAppsView-details.png"));
+                }
                 Assert.True(problems.Count == 0, $"{theme}:\n" + string.Join("\n", problems));
                 if (lang == L.Ru) backgrounds.Add(((SolidColorBrush)win.Background).Color);
                 Assert.Equal((Color)app.Resources["Bg"], backgrounds[^1]);

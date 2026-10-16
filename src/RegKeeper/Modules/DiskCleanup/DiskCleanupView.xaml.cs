@@ -37,6 +37,11 @@ public partial class DiskCleanupView : UserControl
         var done = _all.Where(r => r.Analyzed && r.Checked).ToList();
         Status.Text = L.T($"Правил: {_visible.Count}   Отмечено: {_all.Count(r => r.Checked)}") +
                       (done.Count > 0 ? L.T($"   Найдено: {Sys.Size(done.Sum(r => r.Size))}") : "");
+        if (!_all.Any(r => r.Analyzed)) return;
+        // the sidebar counter and the Windows Apps "can be freed" card read this
+        var free = done.Sum(r => r.Size);
+        Microsoft.Win32.Registry.SetValue(MainWindow.Key, "LastFreeable", free.ToString());
+        MainWindow.SetBadge(typeof(DiskCleanupView), free > 0 ? Sys.Size(free) : null);
     }
 
     void Search_TextChanged(object s, TextChangedEventArgs e) => ApplyFilter();

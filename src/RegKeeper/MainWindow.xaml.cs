@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Microsoft.Win32;
@@ -10,40 +11,54 @@ using RegKeeper.Modules;
 namespace RegKeeper;
 
 // a class, not a record: Selector hashes its items, and value equality over the mutable Instance broke selection
-public sealed class NavItem(string title, string glyph, Type view)
+public sealed class NavItem(string title, string glyph, Type view, string group, string tone = "") : INotifyPropertyChanged
 {
     public string Title { get; } = title;
     public string Glyph { get; } = glyph;
     public Type View { get; } = view;
+    /// <summary>Sidebar section; the header shows it as is, upper-cased by the caller (WPF has no text-transform).</summary>
+    public string Group { get; } = group;
+    /// <summary>Counter colour: light, hot or plain (grey).</summary>
+    public string Tone { get; } = tone;
     public UserControl? Instance { get; set; }
+
+    string? _badge;
+    /// <summary>Counter on the right of the item; null hides it.</summary>
+    public string? Badge { get => _badge; set { _badge = value; PropertyChanged?.Invoke(this, new(nameof(Badge))); PropertyChanged?.Invoke(this, new(nameof(HasBadge))); } }
+    public bool HasBadge => !string.IsNullOrEmpty(_badge);
+    public event PropertyChangedEventHandler? PropertyChanged;
 }
 
 public partial class MainWindow : Window
 {
-    readonly List<NavItem> _items = new()
-    {
-        new(L.T("Деинсталлятор"), "", typeof(UninstallerView)),
-        new(L.T("Приложения Windows"), "", typeof(StoreAppsView)),
-        new(L.T("Автозагрузка"), "", typeof(StartupView)),
-        new(L.T("Очистка диска"), "", typeof(DiskCleanupView)),
-        new(L.T("Чистка реестра"), "", typeof(RegCleanupView)),
-        new(L.T("Редактор реестра"), "", typeof(RegEditorView)),
-        new(L.T("Поиск и замена"), "", typeof(RegSearchView)),
-        new(L.T("Снимки и трассы"), "", typeof(SnapshotsView)),
-        new(L.T("Твики"), "", typeof(TweaksView)),
-        new(L.T("Сжатие реестра"), "", typeof(CompactionView)),
-        new(L.T("Центр отмены"), "", typeof(UndoView)),
-        new(L.T("Настройки"), "", typeof(SettingsView)),
-    };
+    readonly List<NavItem> _items;
 
     public static MainWindow Current => (MainWindow)Application.Current.MainWindow;
 
     public MainWindow(string[] args)
     {
+        // section titles per window: the language can change between windows (tests run ru and en)
+        string programs = L.T("Программы").ToUpper(), cleaning = L.T("Очистка").ToUpper(), registry = L.T("Реестр").ToUpper(), system = L.T("Система").ToUpper();
+        _items = new()
+        {
+            new(L.T("Деинсталлятор"), "", typeof(UninstallerView), programs),
+            new(L.T("Приложения Windows"), "", typeof(StoreAppsView), programs, "light"),
+            new(L.T("Автозагрузка"), "", typeof(StartupView), programs),
+            new(L.T("Очистка диска"), "", typeof(DiskCleanupView), cleaning, "hot"),
+            new(L.T("Чистка реестра"), "", typeof(RegCleanupView), cleaning, "hot"),
+            new(L.T("Сжатие реестра"), "", typeof(CompactionView), cleaning),
+            new(L.T("Редактор реестра"), "", typeof(RegEditorView), registry),
+            new(L.T("Поиск и замена"), "", typeof(RegSearchView), registry),
+            new(L.T("Снимки и трассы"), "", typeof(SnapshotsView), registry),
+            new(L.T("Твики"), "", typeof(TweaksView), system),
+            new(L.T("Центр отмены"), "", typeof(UndoView), system),
+            new(L.T("Настройки"), "", typeof(SettingsView), system),
+        };
         InitializeComponent();
         L.Apply(this);
         Nav.ItemsSource = _items;
-        Loaded += (_, _) => SlideNav();
+        Nav.Items.GroupDescriptions.Add(new PropertyGroupDescription(nameof(NavItem.Group)));
+        Loaded += (_, _) => { SlideNav(); _ = LoadBadges(); };
         // --uninstall "<file>" from the shell menu, --startup from the watcher toast
         if (args.Length >= 2 && args[0] == "--uninstall") Loaded += (_, _) => Show<UninstallerView>().FocusOn(args[1]);
         else if (args.Length >= 1 && args[0] == "--startup") Nav.SelectedIndex = 2;
@@ -61,8 +76,44 @@ public partial class MainWindow : Window
     void SlideNav()
     {
         if (Nav.Template.FindName("Pill", Nav) is FrameworkElement pill)
-            Motion.Slide(pill, Nav.ItemContainerGenerator.ContainerFromItem(Nav.SelectedItem) as FrameworkElement);
+            Motion.Slide(pill, Container(Nav, Nav.SelectedItem));
     }
+
+    // grouped lists hand out containers per group, so ContainerFromItem on the list itself finds nothing
+    static ListBoxItem? Container(DependencyObject d, object? item)
+    {
+        if (d is ListBoxItem li && li.DataContext == item) return li;
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(d); i++)
+            if (Container(VisualTreeHelper.GetChild(d, i), item) is { } found) return found;
+        return null;
+    }
+
+    /// <summary>Sets the counter of a sidebar item; views call it after they load or scan.</summary>
+    public static void SetBadge(Type view, string? text)
+    {
+        if (Application.Current?.MainWindow is MainWindow w && w._items.FirstOrDefault(i => i.View == view) is { } item) item.Badge = text;
+    }
+
+    // store apps and enabled autoruns are counted on start; cleanup figures are the ones the last scan saved
+    async Task LoadBadges()
+    {
+        if (long.TryParse(Reg.GetString(Key, "LastFreeable"), out var free) && free > 0) SetBadge(typeof(DiskCleanupView), Sys.Size(free));
+        if (int.TryParse(Reg.GetString(Key, "LastProblems"), out var problems) && problems > 0) SetBadge(typeof(RegCleanupView), problems.ToString());
+        try
+        {
+            var startup = await Task.Run(() => Autoruns.Load().Count(i => i.Enabled));
+            SetBadge(typeof(StartupView), startup.ToString());
+            var apps = await Task.Run(() => StoreApps.Load().Count(a => !a.IsSystem));
+            SetBadge(typeof(StoreAppsView), apps.ToString());
+        }
+        catch { } // a counter is decoration: the module itself reports the failure when opened
+    }
+
+    async void Backup_Click(object sender, RoutedEventArgs e) => await Ui.Busy(BackupCard, async () =>
+    {
+        var ok = await Task.Run(() => Compaction.CreateRestorePoint(L.T("RegKeeper: резервная копия")));
+        Ui.Info(ok ? L.T("Точка восстановления создана.") : L.T("Не удалось создать точку восстановления. Включите защиту системы для диска C:."));
+    });
 
     int _busy;
 
@@ -79,7 +130,7 @@ public partial class MainWindow : Window
             { RepeatBehavior = RepeatBehavior.Forever, EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut } });
     }
 
-    const string Key = @"HKEY_CURRENT_USER\Software\RegKeeper";
+    internal const string Key = @"HKEY_CURRENT_USER\Software\RegKeeper";
 
     /// <summary>Closing the window hides it to the tray instead of quitting; off by default. HKCU\Software\RegKeeper\CloseToTray.</summary>
     public static bool CloseToTray

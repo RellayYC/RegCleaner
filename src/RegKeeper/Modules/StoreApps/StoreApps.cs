@@ -23,9 +23,23 @@ public class StoreApp
     public long SizeBytes { get; set; }
     public ImageSource? Icon { get; set; }
 
+    public bool Checked { get; set; }
+    public bool Favorite { get; set; }
+    /// <summary>Size against the largest app in the list, 0..1: the length of the bar in the Size column.</summary>
+    public double Rel { get; set; }
+
     public string SizeText => SizeBytes > 0 ? Sys.Size(SizeBytes) : "";
     public bool IsSystem => IsFramework || NonRemovable || SignatureKind == "System";
     public string Title => DisplayName != "" ? DisplayName : Name;
+    public string Letter => Title.FirstOrDefault(char.IsLetterOrDigit) is var c and not '\0' ? char.ToUpper(c).ToString() : "?";
+    public bool Heavy => SizeBytes > 500L * 1024 * 1024;
+    // in a DataTemplate L.Apply never sees the text, so it comes translated from here
+    public string HeavyLabel => L.T("Тяжёлое");
+    /// <summary>Not heavy but at least 9% of the largest: its bar is drawn bright.</summary>
+    public bool Big => !Heavy && Rel >= 0.09;
+    // a 2% stub so even a tiny app shows a bar
+    public System.Windows.GridLength BarFill => new(Math.Max(Rel, 0.02), System.Windows.GridUnitType.Star);
+    public System.Windows.GridLength BarRest => new(1 - Math.Max(Rel, 0.02), System.Windows.GridUnitType.Star);
 
     /// <summary>"CN=Foo Inc, O=Foo Inc, C=US" → "Foo Inc".</summary>
     public string PublisherName
@@ -84,13 +98,27 @@ public static class StoreApps
             var img = new BitmapImage();
             img.BeginInit();
             img.UriSource = new Uri(file);
-            img.DecodePixelWidth = 32;
+            img.DecodePixelWidth = 64; // drawn at 26 in the list and 44 in the details card
             img.CacheOption = BitmapCacheOption.OnLoad; // no file lock on the package
             img.EndInit();
             img.Freeze();
             return img;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or System.Xml.XmlException or NotSupportedException or FormatException) { return null; }
+    }
+
+    /// <summary>App user model id for "shell:AppsFolder\..." (family name + the first Application Id in the manifest); null when the package has no app.</summary>
+    public static string? Aumid(StoreApp app)
+    {
+        var parts = app.PackageFullName.Split('_');
+        if (parts.Length < 2 || app.InstallLocation is not { } dir || !File.Exists(Path.Combine(dir, "AppxManifest.xml"))) return null;
+        try
+        {
+            var id = XDocument.Load(Path.Combine(dir, "AppxManifest.xml")).Descendants()
+                .FirstOrDefault(e => e.Name.LocalName == "Application")?.Attribute("Id")?.Value;
+            return string.IsNullOrEmpty(id) ? null : $"{parts[0]}_{parts[^1]}!{id}";
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or System.Xml.XmlException) { return null; }
     }
 
     public static void FillSizes(IEnumerable<StoreApp> apps)

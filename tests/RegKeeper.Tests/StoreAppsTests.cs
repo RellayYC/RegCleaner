@@ -41,4 +41,21 @@ public class StoreAppsTests
 
         Assert.NotNull(StoreApps.Remove(apps.First(a => a.IsSystem))); // guarded, never reaches PowerShell
     }
+
+    [Fact]
+    public void Aumid_FamilyNameAndFirstApplication()
+    {
+        var dir = Directory.CreateTempSubdirectory("rk-aumid").FullName;
+        var app = new StoreApp { PackageFullName = "Foo.Bar_1.2.3.0_x64__8wekyb3d8bbwe", InstallLocation = dir };
+        Assert.Null(StoreApps.Aumid(app)); // no manifest
+        File.WriteAllText(Path.Combine(dir, "AppxManifest.xml"), """
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Applications><Application Id="App" /><Application Id="Second" /></Applications>
+            </Package>
+            """);
+        Assert.Equal("Foo.Bar_8wekyb3d8bbwe!App", StoreApps.Aumid(app));
+        File.WriteAllText(Path.Combine(dir, "AppxManifest.xml"), "<Package><broken");
+        Assert.Null(StoreApps.Aumid(app));
+        Directory.Delete(dir, true);
+    }
 }

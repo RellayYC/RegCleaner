@@ -173,19 +173,30 @@ const checks = {
 
   /** WCAG contrast of every text/background pair in both themes. */
   contrast() {
+    // #AARRGGBB is laid over the theme's Bg first, which is how translucent overlays are actually seen
+    const rgb = (hex, under) => {
+      const h = hex.replace('#', ''), c = h.slice(-6).match(/../g).map((x) => parseInt(x, 16) / 255);
+      if (h.length < 8) return c;
+      const a = parseInt(h.slice(0, 2), 16) / 255, u = rgb(under);
+      return c.map((v, i) => a * v + (1 - a) * u[i]);
+    };
+    let bg;
     const lum = (hex) => {
-      const c = hex.replace('#', '').slice(-6).match(/../g).map((x) => parseInt(x, 16) / 255).map((v) => v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+      const c = rgb(hex, bg).map((v) => v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
       return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
     };
     const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
     // [foreground, background, minimum]: 4.5 body text, 3 for large text and non-text UI
     const pairs = [['Text', 'Bg', 4.5], ['Text', 'Pane', 4.5], ['Text', 'Surface', 4.5], ['Muted', 'Bg', 4.5], ['Muted', 'Pane', 4.5],
       ['OnAccent', 'Accent', 4.5], ['OnAccent', 'AccentHover', 4.5], ['OnAccent', 'Danger', 4.5], ['Accent', 'Bg', 3], ['Border', 'Bg', 1.3],
-      ['Text', 'Selection', 4.5], ['Text', 'Alt', 4.5], ['Text', 'Hover', 4.5], ['DangerText', 'Bg', 4.5], ['DangerText', 'Surface', 4.5], ['Muted', 'Surface', 4.5]];
+      ['Text', 'Selection', 4.5], ['Text', 'Alt', 4.5], ['Text', 'Hover', 4.5], ['DangerText', 'Bg', 4.5], ['DangerText', 'Surface', 4.5], ['Muted', 'Surface', 4.5],
+      ['Subtle', 'Surface', 4.5], ['Muted', 'CardTop', 4.5], ['Subtle', 'CardTop', 4.5], ['Text', 'Tile1', 4.5], ['OnAccent', 'SegFirst', 4.5],
+      ['OnDanger', 'Danger', 4.5], ['OnDanger', 'DangerDeep', 4.5], ['DangerText', 'DangerSoft', 4.5], ['DangerText', 'CardTop', 4.5], ['Text', 'HotTop', 4.5]];
     let n = 0;
     for (const theme of ['Light', 'Dark']) {
       const x = read(join(src, 'Themes', theme + '.xaml'));
       const colors = Object.fromEntries([...x.matchAll(/<Color x:Key="(\w+)">(#[0-9A-Fa-f]{6,8})<\/Color>/g)].map((m) => [m[1], m[2]]));
+      bg = colors.Bg;
       for (const [f, b, min] of pairs) {
         if (!colors[f] || !colors[b]) fail(`${theme}: color ${colors[f] ? b : f} not defined`);
         const r = ratio(colors[f], colors[b]);

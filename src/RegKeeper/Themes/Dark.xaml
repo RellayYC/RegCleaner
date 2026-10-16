@@ -1,33 +1,80 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <!-- Dark theme: zinc monochrome. Views use the *Brush keys via DynamicResource; contrast is checked by scripts/gates/check.mjs contrast.
-         Borders are opaque equivalents of white at 8% / 16% over the page, so they read the same on every surface. -->
-    <Color x:Key="Bg">#09090B</Color>
-    <Color x:Key="Surface">#121214</Color>
-    <Color x:Key="Pane">#0F0F11</Color>
-    <Color x:Key="Alt">#161619</Color>
-    <Color x:Key="Hover">#1C1C1F</Color>
-    <Color x:Key="Selection">#27272A</Color>
-    <Color x:Key="Text">#FAFAFA</Color>
-    <Color x:Key="Muted">#A1A1AA</Color>
-    <Color x:Key="Subtle">#71717A</Color>
-    <Color x:Key="Border">#27272A</Color>
-    <Color x:Key="BorderStrong">#3F3F46</Color>
-    <Color x:Key="Line">#1C1C1F</Color>
+    <!-- Dark theme: black and white with one coral accent (Danger*), used only for delete, heavy apps and space that can be freed.
+         Views use the *Brush keys via DynamicResource; contrast is checked by scripts/gates/check.mjs contrast,
+         which lays translucent colours over Bg. Overlays (hover, borders, edges) are white at low alpha, so they read the same on every surface. -->
+    <Color x:Key="Bg">#0A0A0D</Color>
+    <Color x:Key="Surface">#16161A</Color>
+    <Color x:Key="Pane">#0F0F12</Color>
+    <Color x:Key="Alt">#141418</Color>
+    <Color x:Key="Hover">#0DFFFFFF</Color>
+    <Color x:Key="RowHover">#0BFFFFFF</Color>
+    <Color x:Key="Selection">#26262C</Color>
+    <Color x:Key="Text">#ECECF1</Color>
+    <Color x:Key="Muted">#9A9AA6</Color>
+    <Color x:Key="Subtle">#83838F</Color>
+    <Color x:Key="Border">#24FFFFFF</Color>
+    <Color x:Key="BorderStrong">#40FFFFFF</Color>
+    <Color x:Key="Line">#0FFFFFFF</Color>
     <Color x:Key="Ring">#40FFFFFF</Color>
-    <Color x:Key="Accent">#FAFAFA</Color>
-    <Color x:Key="AccentHover">#D4D4D8</Color>
-    <Color x:Key="OnAccent">#09090B</Color>
-    <Color x:Key="Danger">#F07272</Color>
-    <Color x:Key="DangerHover">#F49A9A</Color>
-    <Color x:Key="DangerText">#F07272</Color>
+    <Color x:Key="Accent">#ECECF1</Color>
+    <Color x:Key="AccentHover">#FFFFFF</Color>
+    <Color x:Key="OnAccent">#0A0A0D</Color>
+    <!-- the accent: #FF5D57 to #FF9A8F; the deep end is lifted from #D9433E so the button label keeps 4.5:1 -->
+    <Color x:Key="Danger">#FF5D57</Color>
+    <Color x:Key="DangerHover">#FF7A74</Color>
+    <Color x:Key="DangerEnd">#FF9A8F</Color>
+    <Color x:Key="DangerDeep">#E04A44</Color>
+    <Color x:Key="OnDanger">#1F0605</Color>
+    <Color x:Key="DangerText">#FF8A84</Color>
+    <Color x:Key="DangerSoft">#1FFF5D57</Color>
+    <Color x:Key="DangerEdge">#73FF5D57</Color>
     <Color x:Key="Success">#22C55E</Color>
+
+    <Color x:Key="Side">#05FFFFFF</Color>
+    <Color x:Key="Glass">#08FFFFFF</Color>
+    <Color x:Key="Dim">#47FFFFFF</Color>
+    <Color x:Key="Track">#14FFFFFF</Color>
+    <Color x:Key="Tile1">#2A2A31</Color>
+    <Color x:Key="Tile2">#1B1B20</Color>
+    <Color x:Key="TileEdge">#17FFFFFF</Color>
+    <Color x:Key="CardTop">#19191E</Color>
+    <Color x:Key="CardBottom">#121216</Color>
+    <Color x:Key="CardEdge1">#38FFFFFF</Color>
+    <Color x:Key="CardEdge2">#08FFFFFF</Color>
+    <Color x:Key="CardEdge3">#17FFFFFF</Color>
+    <Color x:Key="HotTop">#2A1618</Color>
+    <Color x:Key="HotBottom">#161012</Color>
+    <Color x:Key="HotEdge1">#A6FF5D57</Color>
+    <Color x:Key="HotEdge2">#1AFF5D57</Color>
+    <Color x:Key="HotEdge3">#59FF5D57</Color>
+    <Color x:Key="NavTop">#24FFFFFF</Color>
+    <Color x:Key="NavBottom">#08FFFFFF</Color>
+    <Color x:Key="NavEdge">#1FFFFFFF</Color>
+    <Color x:Key="SelTop">#1AFFFFFF</Color>
+    <Color x:Key="SelBottom">#05FFFFFF</Color>
+    <Color x:Key="SelEdge">#1AFFFFFF</Color>
+    <Color x:Key="SegFirst">#FFFFFF</Color>
+    <Color x:Key="SegFirstEnd">#C9C9D1</Color>
+    <Color x:Key="Seg3">#8A8A95</Color>
+    <Color x:Key="Seg4">#5E5E68</Color>
+    <Color x:Key="Seg5">#44444C</Color>
+    <Color x:Key="SegOther">#2C2C33</Color>
+    <Color x:Key="GlowLightColor">#FFFFFF</Color>
+    <Color x:Key="Shadow">#000000</Color>
+    <Color x:Key="BgGlow">#14FFFFFF</Color>
+    <Color x:Key="BgGlowClear">#00FFFFFF</Color>
+    <Color x:Key="BgHot">#17FF5D57</Color>
+    <Color x:Key="BgHotClear">#00FF5D57</Color>
+    <Color x:Key="Shine">#73FFFFFF</Color>
+    <Color x:Key="ShineClear">#00FFFFFF</Color>
 
     <SolidColorBrush x:Key="BgBrush" Color="{StaticResource Bg}"/>
     <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource Surface}"/>
     <SolidColorBrush x:Key="PaneBrush" Color="{StaticResource Pane}"/>
     <SolidColorBrush x:Key="AltBrush" Color="{StaticResource Alt}"/>
     <SolidColorBrush x:Key="HoverBrush" Color="{StaticResource Hover}"/>
+    <SolidColorBrush x:Key="RowHoverBrush" Color="{StaticResource RowHover}"/>
     <SolidColorBrush x:Key="SelectionBrush" Color="{StaticResource Selection}"/>
     <SolidColorBrush x:Key="TextBrush" Color="{StaticResource Text}"/>
     <SolidColorBrush x:Key="MutedBrush" Color="{StaticResource Muted}"/>
@@ -42,7 +89,75 @@
     <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource Danger}"/>
     <SolidColorBrush x:Key="DangerHoverBrush" Color="{StaticResource DangerHover}"/>
     <SolidColorBrush x:Key="DangerTextBrush" Color="{StaticResource DangerText}"/>
+    <SolidColorBrush x:Key="OnDangerBrush" Color="{StaticResource OnDanger}"/>
+    <SolidColorBrush x:Key="DangerSoftBrush" Color="{StaticResource DangerSoft}"/>
+    <SolidColorBrush x:Key="DangerEdgeBrush" Color="{StaticResource DangerEdge}"/>
     <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource Success}"/>
+    <SolidColorBrush x:Key="SideBrush" Color="{StaticResource Side}"/>
+    <SolidColorBrush x:Key="GlassBrush" Color="{StaticResource Glass}"/>
+    <SolidColorBrush x:Key="DimBrush" Color="{StaticResource Dim}"/>
+    <SolidColorBrush x:Key="TrackBrush" Color="{StaticResource Track}"/>
+    <SolidColorBrush x:Key="TileEdgeBrush" Color="{StaticResource TileEdge}"/>
+    <SolidColorBrush x:Key="NavEdgeBrush" Color="{StaticResource NavEdge}"/>
+    <SolidColorBrush x:Key="SelEdgeBrush" Color="{StaticResource SelEdge}"/>
+    <SolidColorBrush x:Key="Seg3Brush" Color="{StaticResource Seg3}"/>
+    <SolidColorBrush x:Key="Seg4Brush" Color="{StaticResource Seg4}"/>
+    <SolidColorBrush x:Key="Seg5Brush" Color="{StaticResource Seg5}"/>
+    <SolidColorBrush x:Key="SegOtherBrush" Color="{StaticResource SegOther}"/>
+
+    <LinearGradientBrush x:Key="CardBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="{StaticResource CardTop}" Offset="0"/><GradientStop Color="{StaticResource CardBottom}" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="CardEdgeBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{StaticResource CardEdge1}" Offset="0"/><GradientStop Color="{StaticResource CardEdge2}" Offset="0.5"/>
+        <GradientStop Color="{StaticResource CardEdge3}" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="HotCardBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="{StaticResource HotTop}" Offset="0"/><GradientStop Color="{StaticResource HotBottom}" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="HotEdgeBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{StaticResource HotEdge1}" Offset="0"/><GradientStop Color="{StaticResource HotEdge2}" Offset="0.5"/>
+        <GradientStop Color="{StaticResource HotEdge3}" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="TileBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="{StaticResource Tile1}" Offset="0"/><GradientStop Color="{StaticResource Tile2}" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="NavActiveBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="{StaticResource NavTop}" Offset="0"/><GradientStop Color="{StaticResource NavBottom}" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="RowSelBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="{StaticResource SelTop}" Offset="0"/><GradientStop Color="{StaticResource SelBottom}" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DangerFillBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="{StaticResource Danger}" Offset="0"/><GradientStop Color="{StaticResource DangerDeep}" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="DangerFillHoverBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="{StaticResource DangerHover}" Offset="0"/><GradientStop Color="{StaticResource Danger}" Offset="1"/>
+    </LinearGradientBrush>
+    <!-- the light inset line along the top of the delete button -->
+    <LinearGradientBrush x:Key="DangerShineBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="{StaticResource Shine}" Offset="0"/><GradientStop Color="{StaticResource ShineClear}" Offset="0.12"/>
+        <GradientStop Color="{StaticResource ShineClear}" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="HotBarBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="{StaticResource Danger}" Offset="0"/><GradientStop Color="{StaticResource DangerEnd}" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="SegFirstBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="{StaticResource SegFirst}" Offset="0"/><GradientStop Color="{StaticResource SegFirstEnd}" Offset="1"/>
+    </LinearGradientBrush>
+    <RadialGradientBrush x:Key="BgGlowBrush" Center="1,0" GradientOrigin="1,0" RadiusX="0.65" RadiusY="0.75">
+        <GradientStop Color="{StaticResource BgGlow}" Offset="0"/><GradientStop Color="{StaticResource BgGlowClear}" Offset="1"/>
+    </RadialGradientBrush>
+    <RadialGradientBrush x:Key="BgHotBrush" Center="0,1" GradientOrigin="0,1" RadiusX="0.6" RadiusY="0.7">
+        <GradientStop Color="{StaticResource BgHot}" Offset="0"/><GradientStop Color="{StaticResource BgHotClear}" Offset="1"/>
+    </RadialGradientBrush>
+
+    <!-- glows only go on small elements (bars, dots, tiles); cards cast their shadow from a sibling so text keeps ClearType -->
+    <DropShadowEffect x:Key="GlowLight" Color="{StaticResource GlowLightColor}" ShadowDepth="0" BlurRadius="16" Opacity="0.45"/>
+    <DropShadowEffect x:Key="GlowHot" Color="{StaticResource Danger}" ShadowDepth="0" BlurRadius="16" Opacity="0.7"/>
+    <DropShadowEffect x:Key="CardShadow" Color="{StaticResource Shadow}" Direction="270" ShadowDepth="18" BlurRadius="40" Opacity="0.55"/>
+    <DropShadowEffect x:Key="HotCardShadow" Color="{StaticResource Danger}" ShadowDepth="0" BlurRadius="36" Opacity="0.3"/>
+    <DropShadowEffect x:Key="DangerShadow" Color="{StaticResource Danger}" Direction="270" ShadowDepth="8" BlurRadius="26" Opacity="0.6"/>
 
     <!-- stock control templates (TreeView, menus, tooltips) read these -->
     <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="{StaticResource Surface}"/>
