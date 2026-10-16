@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.ExceptionServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Automation.Peers;
 using System.Windows.Automation.Provider;
 using System.Windows.Input;
@@ -59,6 +60,7 @@ public class SmokeTests
                 if (lang == L.En && Russian(win, views) is { Count: > 0 } ru) Assert.Fail("untranslated:\n" + string.Join("\n", ru));
                 if (theme == Theme.Light) EditorNavigatesToNewSibling(views.OfType<RegEditorView>().Single());
                 if (theme == Theme.Light) FilterFollowsAutomationToggle(views.OfType<StartupView>().Single());
+                if (theme == Theme.Light) StickyGroupTitle(nav, views.IndexOf(views.OfType<TweaksView>().Single()), host);
                 if (Environment.GetEnvironmentVariable("RK_SHOTS") is { Length: > 0 } dir)
                     for (var i = 0; i < views.Count; i++) { nav.SelectedIndex = i; Pump(); Shot(win, Path.Combine(dir, $"{lang}-{theme}-{i:00}-{views[i].GetType().Name}.png")); }
                 Assert.True(problems.Count == 0, $"{theme}:\n" + string.Join("\n", problems));
@@ -132,6 +134,23 @@ public class SmokeTests
         Pump();
         try { Assert.DoesNotContain(grid.Items.Cast<StartupItem>(), i => i.Kind == StartupKind.Service); }
         finally { ((IToggleProvider)new CheckBoxAutomationPeer(services)).Toggle(); Pump(); }
+    }
+
+    /// <summary>Scrolled into a group, the grouped tweaks grid pins that group's title; at the top it shows none.</summary>
+    static void StickyGroupTitle(ListBox nav, int index, ContentControl host)
+    {
+        nav.SelectedIndex = index;
+        Pump();
+        var grid = (DataGrid)((UserControl)host.Content).FindName("Grid");
+        var sv = (ScrollViewer)grid.Template.FindName("DG_ScrollViewer", grid);
+        var bar = (Border)sv.Template.FindName("Sticky", sv);
+        sv.ScrollToVerticalOffset(sv.ScrollableHeight / 2);
+        Pump();
+        Assert.Equal(Visibility.Visible, bar.Visibility);
+        Assert.IsAssignableFrom<CollectionViewGroup>(((ContentPresenter)bar.Child).Content);
+        sv.ScrollToVerticalOffset(0);
+        Pump();
+        Assert.Equal(Visibility.Collapsed, bar.Visibility);
     }
 
     [Fact]

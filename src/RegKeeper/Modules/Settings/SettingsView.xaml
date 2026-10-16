@@ -18,6 +18,14 @@
                 </Grid>
             </Border>
 
+            <TextBlock Text="Масштаб интерфейса" Style="{StaticResource Section}"/>
+            <Border Style="{StaticResource Segments}">
+                <Grid>
+                    <Canvas><Border x:Name="ScalePill" Style="{StaticResource Pill}"/></Canvas>
+                    <StackPanel x:Name="ScaleChoices" Orientation="Horizontal"/>
+                </Grid>
+            </Border>
+
             <TextBlock Text="Язык" Style="{StaticResource Section}"/>
             <!-- pill segmented control: LangPill slides under the checked one -->
             <Border Style="{StaticResource Segments}">

@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Media;
 using Microsoft.Win32;
 using RegKeeper.Core;
 
@@ -30,6 +31,23 @@ public static class Theme
         Application.Current.Resources.MergedDictionaries[0] =
             new ResourceDictionary { Source = new Uri($"pack://application:,,,/RegKeeper;component/Themes/{Current}.xaml") };
         foreach (Window w in Application.Current.Windows) TitleBar(w);
+    }
+
+    public static readonly int[] Scales = { 90, 100, 110, 125, 150 };
+
+    /// <summary>Interface size in percent, HKCU\Software\RegKeeper\Scale.</summary>
+    public static int Scale
+    {
+        get => Reg.GetString(Key, "Scale") is { } s && int.TryParse(s, out var p) && Scales.Contains(p) ? p : 100;
+        set => Registry.SetValue(Key, "Scale", value.ToString());
+    }
+
+    /// <summary>Every window lays its content out through the UiScale resource (the Window template), so this resizes them all at once.</summary>
+    public static void ApplyScale(int percent)
+    {
+        var t = new ScaleTransform(percent / 100.0, percent / 100.0);
+        t.Freeze();
+        Application.Current.Resources["UiScale"] = t;
     }
 
     /// <summary>Dark caption to match the theme (Windows 10 2004+, ignored elsewhere).</summary>

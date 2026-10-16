@@ -224,6 +224,7 @@
  "Светлая": "Light",
  "Тёмная": "Dark",
  "Язык": "Language",
+ "Масштаб интерфейса": "Interface scale",
  "Русский": "Русский",
  "Интеграция с Windows": "Windows integration",
  "Пункт «Удалить с RegKeeper» в контекстном меню exe-файлов и ярлыков": "\"Uninstall with RegKeeper\" in the context menu of exe files and shortcuts",

@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
@@ -9,7 +10,7 @@ using System.Windows.Media.Imaging;
 
 namespace RegKeeper;
 
-/// <summary>Code-driven motion: page swap, sliding pill, row stagger, count-up.
+/// <summary>Code-driven motion: page swap, sliding pill, row stagger, count-up, smooth wheel, sticky group titles.
 /// Durations and easings are the T*/Ease* tokens in Themes/Controls.xaml; template storyboards read the same keys.</summary>
 public static class Motion
 {
@@ -143,6 +144,7 @@ public static class Motion
             g.SetValue(FilledProperty, filled);
         });
         g.LoadingRow += (_, r) => Row(g, r.Row);
+        g.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, e) => Stick(g, e)));
     }
 
     static void Row(DataGrid g, DataGridRow row)
@@ -169,6 +171,86 @@ public static class Motion
             if (c.ElementStyle == DataGridCheckBoxColumn.DefaultElementStyle && g.TryFindResource("GridCheck") is Style s) c.ElementStyle = s;
             if (c.EditingElementStyle == DataGridCheckBoxColumn.DefaultEditingElementStyle && g.TryFindResource("GridCheckEdit") is Style es) c.EditingElementStyle = es;
         }
+    }
+
+    // ---- sticky group titles: in a grouped grid the title of the group the top rows belong to stays pinned,
+    // and the next group's title pushes it out (the Sticky slot in the DataGrid template)
+
+    static void Stick(DataGrid g, ScrollChangedEventArgs e)
+    {
+        if (g.GroupStyle.Count == 0 || e.OriginalSource is not ScrollViewer sv || sv.TemplatedParent != g
+            || sv.Template.FindName("Sticky", sv) is not Border bar || bar.Child is not ContentPresenter title
+            || sv.Template.FindName("PART_ScrollContentPresenter", sv) is not UIElement view) return;
+        GroupItem? top = null;
+        var next = double.PositiveInfinity;
+        foreach (var gi in Groups(view))
+        {
+            var y = gi.TranslatePoint(new Point(), view).Y;
+            if (y < 0) top = gi;
+            else { next = y; break; }
+        }
+        bar.Visibility = top == null ? Visibility.Collapsed : Visibility.Visible; // a title right at the top shows itself
+        if (top == null) return;
+        title.Content = top.Content; // the CollectionViewGroup
+        title.ContentTemplate = g.GroupStyle[0].HeaderTemplate;
+        if (bar.RenderTransform is not TranslateTransform tt) bar.RenderTransform = tt = new TranslateTransform();
+        tt.Y = Math.Min(0, next - bar.ActualHeight);
+    }
+
+    static IEnumerable<GroupItem> Groups(DependencyObject d)
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(d); i++)
+        {
+            var c = VisualTreeHelper.GetChild(d, i);
+            if (c is GroupItem gi) yield return gi;
+            else foreach (var x in Groups(c)) yield return x;
+        }
+    }
+
+    // ---- smooth wheel: the innermost scrollable viewer under the mouse glides to its target instead of jumping
+
+    static readonly Dictionary<ScrollViewer, double> Targets = new();
+
+    /// <summary>Once per process, before windows open.</summary>
+    public static void SmoothWheel() =>
+        EventManager.RegisterClassHandler(typeof(ScrollViewer), UIElement.PreviewMouseWheelEvent, new MouseWheelEventHandler(Wheel));
+
+    static void Wheel(object s, MouseWheelEventArgs e)
+    {
+        var sv = (ScrollViewer)s;
+        // Preview tunnels from the outermost viewer: only the one that would scroll takes it; Ctrl/Shift wheel stays stock
+        if (!On || e.Handled || Keyboard.Modifiers != ModifierKeys.None || Scrollable(e.OriginalSource as DependencyObject) != sv) return;
+        if (sv.CanContentScroll && sv.TemplatedParent is ItemsControl ic && VirtualizingPanel.GetScrollUnit(ic) == ScrollUnit.Item) return; // offsets are rows
+        e.Handled = true;
+        var running = Targets.TryGetValue(sv, out var from);
+        if (!running) from = sv.VerticalOffset;
+        Targets[sv] = Math.Clamp(from - e.Delta / 120.0 * SystemParameters.WheelScrollLines * 16, 0, sv.ScrollableHeight);
+        if (running) return;
+        var start = DateTime.UtcNow;
+        var last = start;
+        EventHandler tick = null!;
+        tick = (_, _) =>
+        {
+            var now = DateTime.UtcNow;
+            var goal = Math.Clamp(Targets[sv], 0, sv.ScrollableHeight);
+            var cur = sv.VerticalOffset;
+            // exponential approach: ~250 ms to settle, and a new notch mid-glide just moves the goal
+            var step = cur + (goal - cur) * (1 - Math.Exp(-(now - last).TotalSeconds * 18));
+            last = now;
+            var done = Math.Abs(goal - step) < 0.5 || now - start > TimeSpan.FromSeconds(2) || !sv.IsLoaded;
+            sv.ScrollToVerticalOffset(done ? goal : step);
+            if (!done) return;
+            CompositionTarget.Rendering -= tick;
+            Targets.Remove(sv);
+        };
+        CompositionTarget.Rendering += tick;
+    }
+
+    static ScrollViewer? Scrollable(DependencyObject? d)
+    {
+        for (; d != null; d = d is Visual ? VisualTreeHelper.GetParent(d) : LogicalTreeHelper.GetParent(d))
+            if (d is ScrollViewer sv && sv.ScrollableHeight > 0) return sv;
+        return null;
     }
 
     // ---- count-up: when a loaded status line gets new numbers, they run up from zero

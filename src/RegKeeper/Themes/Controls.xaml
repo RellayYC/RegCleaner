@@ -73,6 +73,8 @@
     </Storyboard>
 
     <!-- dialogs and the main window: the panel fades in and scales from 0.97 -->
+    <!-- interface size from Settings; Theme.ApplyScale replaces it at the application level -->
+    <ScaleTransform x:Key="UiScale" ScaleX="1" ScaleY="1"/>
     <Style TargetType="Window">
         <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
         <Setter Property="FontSize" Value="13"/>
@@ -83,7 +85,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Window">
                     <Border Background="{TemplateBinding Background}">
-                        <AdornerDecorator x:Name="a" RenderTransformOrigin="0.5,0.5">
+                        <AdornerDecorator x:Name="a" RenderTransformOrigin="0.5,0.5" LayoutTransform="{DynamicResource UiScale}">
                             <AdornerDecorator.RenderTransform><ScaleTransform/></AdornerDecorator.RenderTransform>
                             <ContentPresenter/>
                         </AdornerDecorator>
@@ -320,13 +322,13 @@
     </Style>
     <!-- DataGridCheckBoxColumn sets its own element styles, which skip the implicit one; Motion puts these in -->
     <Style x:Key="GridCheck" TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
-        <Setter Property="Margin" Value="0"/>
+        <Setter Property="Margin" Value="-4,0"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="IsHitTestVisible" Value="False"/>
         <Setter Property="Focusable" Value="False"/>
     </Style>
     <Style x:Key="GridCheckEdit" TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
-        <Setter Property="Margin" Value="0"/>
+        <Setter Property="Margin" Value="-4,0"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
     </Style>
 
@@ -449,6 +451,7 @@
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="VirtualizingPanel.ScrollUnit" Value="Pixel"/>
     </Style>
     <!-- stock ListBoxItem selection colours are fixed light blues -->
     <Style TargetType="ListBoxItem">
@@ -583,6 +586,7 @@
         <Setter Property="SelectionMode" Value="Extended"/>
         <Setter Property="VirtualizingPanel.IsVirtualizing" Value="True"/>
         <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Recycling"/>
+        <Setter Property="VirtualizingPanel.ScrollUnit" Value="Pixel"/>
         <Setter Property="EnableRowVirtualization" Value="True"/>
         <Setter Property="rk:Motion.Stagger" Value="True"/>
         <Setter Property="Template">
@@ -598,6 +602,13 @@
                                         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                                         <DataGridColumnHeadersPresenter x:Name="PART_ColumnHeadersPresenter" Grid.ColumnSpan="2"/>
                                         <ScrollContentPresenter x:Name="PART_ScrollContentPresenter" Grid.Row="1" CanContentScroll="{TemplateBinding CanContentScroll}"/>
+                                        <!-- grouped grids: the title of the group at the top stays pinned here (Motion.Stick) -->
+                                        <Border Grid.Row="1" ClipToBounds="True" IsHitTestVisible="False">
+                                            <Border x:Name="Sticky" VerticalAlignment="Top" Visibility="Collapsed" Background="{DynamicResource SurfaceBrush}"
+                                                    BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,0,1">
+                                                <ContentPresenter/>
+                                            </Border>
+                                        </Border>
                                         <ScrollBar x:Name="PART_VerticalScrollBar" Grid.Row="1" Grid.Column="1" Orientation="Vertical"
                                                    Maximum="{TemplateBinding ScrollableHeight}" ViewportSize="{TemplateBinding ViewportHeight}"
                                                    Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"

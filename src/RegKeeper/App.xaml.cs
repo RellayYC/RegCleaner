@@ -14,6 +14,8 @@ public partial class App : Application
             ex.Handled = true;
         };
         if (!Motion.On) Motion.Reduce(Resources.MergedDictionaries[1]);
+        Motion.SmoothWheel();
+        Theme.ApplyScale(Theme.Scale);
         Theme.Apply(Theme.Saved);
         var w = new MainWindow(e.Args);
         Theme.TitleBar(w);

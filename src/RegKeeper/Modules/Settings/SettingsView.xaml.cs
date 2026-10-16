@@ -11,6 +11,13 @@ public partial class SettingsView : UserControl
         InitializeComponent();
         L.Apply(this);
         (Theme.Saved switch { Theme.Light => ThemeLight, Theme.Dark => ThemeDark, _ => ThemeSystem }).IsChecked = true;
+        foreach (var p in Theme.Scales)
+        {
+            var r = new RadioButton { Content = p + " %", Tag = p, IsChecked = p == Theme.Scale };
+            r.Checked += Scale_Checked;
+            ScaleChoices.Children.Add(r);
+        }
+        Loaded += (_, _) => Motion.Slide(ScalePill, ScaleChoices.Children.OfType<RadioButton>().FirstOrDefault(r => r.IsChecked == true));
         (L.Saved switch { L.Ru => LangRu, L.En => LangEn, _ => LangAuto }).IsChecked = true;
         ShellVerb.IsChecked = Integration.ShellVerb;
         Watcher.IsChecked = Integration.WatcherAutostart;
@@ -31,6 +38,12 @@ public partial class SettingsView : UserControl
         if (mode == Theme.Saved) return; // the initial IsChecked from the constructor
         Theme.Saved = mode;
         Theme.Apply(Theme.Saved);
+    }
+
+    void Scale_Checked(object s, RoutedEventArgs e)
+    {
+        Motion.Slide(ScalePill, (FrameworkElement)s);
+        Theme.ApplyScale(Theme.Scale = (int)((RadioButton)s).Tag);
     }
 
     void Lang_Checked(object s, RoutedEventArgs e)
