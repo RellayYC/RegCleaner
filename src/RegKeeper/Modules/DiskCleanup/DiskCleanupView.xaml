@@ -5,10 +5,12 @@
         <StackPanel DockPanel.Dock="Top">
             <TextBlock Text="Очистка диска" Style="{StaticResource Title}"/>
             <TextBlock Style="{StaticResource Lead}" Text="Встроенные пункты Windows плюс база winapp2.ini (CC-BY-SA, проект Winapp2). Показаны только правила для программ, найденных на этом ПК. Сначала анализ, потом очистка."/>
-            <DockPanel Margin="{StaticResource Toolbar}">
-                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
-                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" Width="420" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск по названию и категории"/>
-            </DockPanel>
+            <!-- the search box gives way to the counters in a narrow window -->
+            <Grid Margin="{StaticResource Toolbar}">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="3*" MaxWidth="420"/><ColumnDefinition Width="*" MinWidth="16"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" TextChanged="Search_TextChanged" ToolTip="Поиск по названию и категории"/>
+                <TextBlock x:Name="Status" Grid.Column="2" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
+            </Grid>
             <WrapPanel Margin="0,0,0,6">
                 <Button Content="Анализ" Style="{StaticResource Primary}" Click="Analyze_Click"/>
                 <Button Content="Очистить" Style="{StaticResource DangerBtn}" Click="Clean_Click"/>

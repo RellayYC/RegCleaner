@@ -4,13 +4,15 @@
     <DockPanel>
         <StackPanel DockPanel.Dock="Top">
             <TextBlock Text="Редактор реестра" Style="{StaticResource Title}"/>
-            <DockPanel Margin="{StaticResource Toolbar}">
-                <Button DockPanel.Dock="Right" Content="Из буфера" Click="Clipboard_Click" ToolTip="Перейти к пути из буфера обмена"/>
-                <ComboBox x:Name="Favorites" DockPanel.Dock="Right" Width="220" Margin="6,0" SelectionChanged="Favorites_SelectionChanged" ToolTip="Избранное"/>
-                <Button DockPanel.Dock="Right" Content="★" Click="AddFavorite_Click" ToolTip="Добавить текущий ключ в избранное (повторно - убрать)"/>
-                <Button DockPanel.Dock="Right" Content="Перейти" Click="Go_Click"/>
+            <!-- the address keeps most of the room in a narrow window, favourites give way first -->
+            <Grid Margin="{StaticResource Toolbar}">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*" MinWidth="120" MaxWidth="232"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <TextBox x:Name="Address" Style="{StaticResource SearchBox}" Tag="&#xE8B7;" KeyDown="Address_KeyDown"/>
-            </DockPanel>
+                <Button Grid.Column="1" Content="Перейти" Click="Go_Click"/>
+                <Button Grid.Column="2" Content="★" Click="AddFavorite_Click" ToolTip="Добавить текущий ключ в избранное (повторно - убрать)"/>
+                <ComboBox x:Name="Favorites" Grid.Column="3" Margin="6,0" SelectionChanged="Favorites_SelectionChanged" ToolTip="Избранное"/>
+                <Button Grid.Column="4" Content="Из буфера" Click="Clipboard_Click" ToolTip="Перейти к пути из буфера обмена"/>
+            </Grid>
             <WrapPanel Margin="0,0,0,14">
                 <TextBlock Text="Раздел:" Style="{StaticResource Hint}" VerticalAlignment="Center" Margin="0,0,6,0"/>
                 <Button Content="Создать" Click="NewKey_Click"/>

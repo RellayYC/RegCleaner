@@ -5,10 +5,12 @@
         <StackPanel DockPanel.Dock="Top">
             <TextBlock Text="Автозагрузка" Style="{StaticResource Title}"/>
             <TextBlock Style="{StaticResource Lead}" Text="Ключи Run, папки автозагрузки, задачи планировщика при входе/старте и сторонние службы. Отключение обратимо, всё пишется в Центр отмены."/>
-            <DockPanel Margin="{StaticResource Toolbar}">
-                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
-                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" Width="420" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск по названию, команде и издателю"/>
-            </DockPanel>
+            <!-- the search box gives way to the counters in a narrow window -->
+            <Grid Margin="{StaticResource Toolbar}">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="3*" MaxWidth="420"/><ColumnDefinition Width="*" MinWidth="16"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" TextChanged="Search_TextChanged" ToolTip="Поиск по названию, команде и издателю"/>
+                <TextBlock x:Name="Status" Grid.Column="2" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
+            </Grid>
             <WrapPanel Margin="0,0,0,6">
                 <Button Content="Вкл / выкл" Style="{StaticResource Primary}" Click="Toggle_Click"/>
                 <Button Content="Отложить" Click="Delay_Click" ToolTip="Запускать через заданное время после входа в Windows (задачей планировщика)"/>

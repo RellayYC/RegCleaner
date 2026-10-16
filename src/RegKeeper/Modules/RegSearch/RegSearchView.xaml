@@ -30,7 +30,7 @@
                 <CheckBox x:Name="IsRegex" Content="Регулярное выражение"/>
             </WrapPanel>
             <DockPanel Margin="0,0,0,14">
-                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
+                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" MaxWidth="320" TextAlignment="Right" VerticalAlignment="Center"/>
                 <WrapPanel>
                     <Button x:Name="SearchBtn" Content="Искать" Style="{StaticResource Primary}" Click="Search_Click"/>
                     <Button Content="Заменить в отмеченных" Click="Replace_Click"/>

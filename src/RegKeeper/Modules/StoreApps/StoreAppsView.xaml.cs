@@ -223,6 +223,9 @@ public partial class StoreAppsView : UserControl
         System.Windows.Controls.Grid.SetRow(Details, under ? 1 : 0);
         Details.Width = under ? double.NaN : Math.Clamp(w * 0.3, 340, 420);
         Details.Margin = under ? new Thickness(0, 18, 0, 0) : new Thickness(18, 0, 0, 0);
+        // and the buttons go under the search box, which would otherwise shrink to nothing
+        DockPanel.SetDock(Actions, under ? Dock.Bottom : Dock.Right);
+        Actions.Margin = new Thickness(0, under ? 14 : 0, 0, 0);
         // the table keeps a fixed height so the grid virtualizes its rows inside the scrolling page
         Grid.Height = Math.Max(360, Page.ViewportHeight - 24);
     }

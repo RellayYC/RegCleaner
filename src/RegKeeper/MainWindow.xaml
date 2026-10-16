@@ -116,7 +116,7 @@
                                         Background="{DynamicResource HoverBrush}" Visibility="Collapsed">
                                     <TextBlock x:Name="badgeText" Text="{Binding Badge}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource MutedBrush}"/>
                                 </Border>
-                                <TextBlock Text="{Binding Title}" Margin="10,0,0,1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="{Binding Title}" Margin="10,0,0,1" VerticalAlignment="Center" TextWrapping="Wrap"/>
                             </DockPanel>
                             <DataTemplate.Triggers>
                                 <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">

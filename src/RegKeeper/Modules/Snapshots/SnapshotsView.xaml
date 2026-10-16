@@ -43,7 +43,7 @@
                 </DataGrid.Columns>
             </DataGrid>
             <DockPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,24,0,14">
-                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
+                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" MaxWidth="320" TextAlignment="Right" VerticalAlignment="Center"/>
                 <WrapPanel>
                     <TextBox x:Name="Search" Style="{StaticResource SearchBox}" Width="420" Margin="0,0,8,0" TextChanged="Search_TextChanged" ToolTip="Фильтр по пути"/>
                     <Button Content="Откатить отмеченное" Style="{StaticResource DangerBtn}" Click="Rollback_Click"

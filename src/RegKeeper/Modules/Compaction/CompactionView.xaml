@@ -6,7 +6,7 @@
             <TextBlock Text="Сжатие реестра" Style="{StaticResource Title}"/>
             <TextBlock Style="{StaticResource Lead}" Text="Файлы реестра со временем фрагментируются. Анализ записывает сжатые копии разделов и показывает выигрыш. Сжатие создаёт точку восстановления, а замена происходит при следующей перезагрузке. Старые файлы остаются резервной копией в папке сжатия."/>
             <DockPanel Margin="{StaticResource Toolbar}">
-                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
+                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" MaxWidth="320" TextAlignment="Right" VerticalAlignment="Center"/>
                 <WrapPanel>
                     <Button x:Name="AnalyzeBtn" Content="Анализ" Style="{StaticResource Primary}" Click="Analyze_Click"/>
                     <Button x:Name="CompactBtn" Content="Сжать" Style="{StaticResource DangerBtn}" Click="Compact_Click" IsEnabled="False"/>

@@ -77,6 +77,10 @@ public class SmokeTests
                     nav.SelectedIndex = views.IndexOf(store); Pump();
                     ((ScrollViewer)store.FindName("Page")).ScrollToEnd(); Pump();
                     Shot(win, Path.Combine(dir, $"{lang}-{theme}-01b-StoreAppsView-details.png"));
+                    // the narrowest window: text wraps, nothing is cut
+                    win.Width = win.MinWidth; Pump(); ((ScrollViewer)store.FindName("Page")).ScrollToTop();
+                    for (var i = 0; i < views.Count; i++) { nav.SelectedIndex = i; Pump(); Shot(win, Path.Combine(dir, $"narrow-{lang}-{theme}-{i:00}-{views[i].GetType().Name}.png")); }
+                    win.Width = 1400; Pump();
                 }
                 Assert.True(problems.Count == 0, $"{theme}:\n" + string.Join("\n", problems));
                 if (lang == L.Ru) backgrounds.Add(((SolidColorBrush)win.Background).Color);

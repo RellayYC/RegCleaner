@@ -22,6 +22,7 @@
     <sys:Double x:Key="ControlHeight">44</sys:Double>
     <sys:Double x:Key="SearchHeight">52</sys:Double>
     <sys:Double x:Key="RowHeight">52</sys:Double>
+    <sys:Double x:Key="ColumnMin">150</sys:Double>
     <Thickness x:Key="TablePad">8,6,8,8</Thickness>
     <Thickness x:Key="Toolbar">0,24,0,14</Thickness>
 
@@ -158,6 +159,7 @@
         <Setter Property="FontFamily" Value="{StaticResource DisplayFont}"/>
         <Setter Property="FontSize" Value="40"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
         <Setter Property="Margin" Value="0,0,0,8"/>
     </Style>
     <Style x:Key="Section" TargetType="TextBlock">
@@ -189,7 +191,7 @@
     <Style x:Key="Caption" TargetType="TextBlock">
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
-        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
     </Style>
 
     <!-- cards: top-lit gradient with a gradient edge; the soft shadow comes from a copy behind, inset so it only shows below
@@ -819,6 +821,11 @@
         </Setter>
     </Style>
 
+    <!-- a text column's cell (Motion.ThemeChecks): wraps rather than cuts when the window is narrow -->
+    <Style x:Key="GridText" TargetType="TextBlock" BasedOn="{x:Static DataGridTextColumn.DefaultElementStyle}">
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="Margin" Value="0,8"/>
+    </Style>
     <!-- tables are cards: faint row dividers, hover a lighter fill, the selected row gets an edge; rows stagger in on first load -->
     <Style TargetType="DataGrid">
         <Setter Property="AutoGenerateColumns" Value="False"/>
@@ -827,8 +834,11 @@
         <Setter Property="HeadersVisibility" Value="Column"/>
         <Setter Property="GridLinesVisibility" Value="Horizontal"/>
         <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource LineBrush}"/>
-        <Setter Property="RowHeight" Value="{StaticResource RowHeight}"/>
-        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
+        <!-- rows are at least RowHeight and grow when wrapped text needs more (GridText) -->
+        <Setter Property="RowHeight" Value="NaN"/>
+        <Setter Property="MinRowHeight" Value="{StaticResource RowHeight}"/>
+        <!-- star columns keep ColumnMin (Motion.ThemeChecks); a window too narrow for that scrolls sideways instead of crushing text -->
+        <Setter Property="HorizontalScrollBarVisibility" Value="Auto"/>
         <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
         <Setter Property="RowBackground" Value="Transparent"/>
         <Setter Property="AlternatingRowBackground" Value="Transparent"/>
@@ -903,6 +913,10 @@
         <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}"/>
         <Setter Property="BorderThickness" Value="0,0,0,1"/>
         <Setter Property="FontSize" Value="13"/>
+        <!-- a header wraps rather than cut off when its column is at its narrowest -->
+        <Setter Property="ContentTemplate">
+            <Setter.Value><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap"/></DataTemplate></Setter.Value>
+        </Setter>
     </Style>
     <Style TargetType="DataGridCell">
         <Setter Property="Padding" Value="14,0"/>

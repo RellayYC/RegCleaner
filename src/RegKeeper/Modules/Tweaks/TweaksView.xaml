@@ -6,7 +6,7 @@
             <TextBlock Text="Твики" Style="{StaticResource Title}"/>
             <TextBlock Style="{StaticResource Lead}" Text="Отметьте, что включить, снимите, что выключить, и нажмите «Применить». Галочка отражает текущее состояние системы. Каждое применение можно откатить в Центре отмены."/>
             <DockPanel Margin="{StaticResource Toolbar}">
-                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
+                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" MaxWidth="320" TextAlignment="Right" VerticalAlignment="Center"/>
                 <WrapPanel>
                     <TextBox x:Name="Search" Style="{StaticResource SearchBox}" Width="420" Margin="0,0,8,0" TextChanged="Search_TextChanged" ToolTip="Поиск по названию, описанию и категории"/>
                     <Button Content="Применить" Style="{StaticResource Primary}" Click="Apply_Click"/>
@@ -15,7 +15,7 @@
                 </WrapPanel>
             </DockPanel>
         </StackPanel>
-        <DataGrid x:Name="Grid" MouseDoubleClick="Open_Click" RowHeight="NaN" MinRowHeight="{StaticResource RowHeight}">
+        <DataGrid x:Name="Grid" MouseDoubleClick="Open_Click">
             <DataGrid.GroupStyle>
                 <GroupStyle>
                     <GroupStyle.HeaderTemplate>
@@ -28,14 +28,8 @@
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Binding="{Binding Wanted, UpdateSourceTrigger=PropertyChanged}" Width="48"/>
                 <DataGridTextColumn Header="Твик" Binding="{Binding Name}" IsReadOnly="True" Width="2*"/>
-                <DataGridTextColumn Header="Что делает" Binding="{Binding Description}" IsReadOnly="True" Width="3*">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="TextWrapping" Value="Wrap"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-                <DataGridTextColumn Header="Нужно" Binding="{Binding RestartText}" IsReadOnly="True" Width="220"/>
+                <DataGridTextColumn Header="Что делает" Binding="{Binding Description}" IsReadOnly="True" Width="3*"/>
+                <DataGridTextColumn Header="Нужно" Binding="{Binding RestartText}" IsReadOnly="True" Width="*" MinWidth="120" MaxWidth="220"/>
             </DataGrid.Columns>
         </DataGrid>
     </DockPanel>

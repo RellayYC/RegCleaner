@@ -48,7 +48,7 @@
                     <StackPanel>
                         <TextBlock Text="Можно освободить" Style="{StaticResource Caption}" FontSize="14" Foreground="{DynamicResource DangerTextBrush}"/>
                         <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left" Margin="0,6,0,2"><TextBlock x:Name="FreeFigure" Style="{StaticResource Figure}"/></Viewbox>
-                        <TextBlock x:Name="FreeNote" Style="{StaticResource Caption}" TextWrapping="Wrap" TextTrimming="None"/>
+                        <TextBlock x:Name="FreeNote" Style="{StaticResource Caption}"/>
                     </StackPanel>
                 </ContentControl>
             </UniformGrid>
@@ -65,7 +65,7 @@
             </ContentControl>
 
             <DockPanel Margin="0,24,0,18">
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <StackPanel x:Name="Actions" DockPanel.Dock="Right" Orientation="Horizontal">
                     <CheckBox x:Name="ShowSystem" Content="Показать системные" VerticalAlignment="Center" Margin="18,0,18,0"
                               Checked="Filter_Changed" Unchecked="Filter_Changed"/>
                     <Button Content="Удалить" Style="{StaticResource DangerBtn}" Height="52" Margin="0,0,8,0" Padding="24,0" Click="Remove_Click"/>
@@ -79,7 +79,7 @@
             <Grid x:Name="Main">
                 <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                    <DataGrid x:Name="Grid" RowHeight="70" FontSize="15" HorizontalScrollBarVisibility="Disabled" VerticalAlignment="Top"
+                    <DataGrid x:Name="Grid" MinRowHeight="70" FontSize="15" HorizontalScrollBarVisibility="Disabled" VerticalAlignment="Top"
                               SelectionChanged="Grid_SelectionChanged" ContextMenuOpening="Grid_ContextMenuOpening">
                         <DataGrid.ContextMenu>
                             <ContextMenu>
@@ -104,7 +104,7 @@
                                             </Border>
                                             <TextBlock x:Name="star" Text="&#xE735;" FontFamily="{StaticResource Icons}" FontSize="12" Margin="0,0,8,0"
                                                        VerticalAlignment="Center" Visibility="Collapsed"/>
-                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,8" VerticalAlignment="Center"/>
                                         </DockPanel>
                                         <DataTemplate.Triggers>
                                             <DataTrigger Binding="{Binding Favorite}" Value="True"><Setter TargetName="star" Property="Visibility" Value="Visible"/></DataTrigger>
@@ -117,7 +117,7 @@
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
-                                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                        <Setter Property="TextWrapping" Value="Wrap"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>

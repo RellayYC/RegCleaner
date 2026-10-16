@@ -6,7 +6,7 @@
             <TextBlock Text="Центр отмены" Style="{StaticResource Title}"/>
             <TextBlock Style="{StaticResource Lead}" Text="Каждое изменение реестра и задач планировщика сохраняется здесь до применения. Отмена возвращает всё как было и убирает запись. Файлы и папки удаляются в корзину, восстанавливайте их оттуда."/>
             <DockPanel Margin="{StaticResource Toolbar}">
-                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
+                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" MaxWidth="320" TextAlignment="Right" VerticalAlignment="Center"/>
                 <WrapPanel>
                     <Button Content="Отменить изменения" Style="{StaticResource Primary}" Click="Restore_Click"/>
                     <Button Content="Удалить запись" Click="Delete_Click"/>

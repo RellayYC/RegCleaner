@@ -5,12 +5,12 @@
         <StackPanel DockPanel.Dock="Top">
             <TextBlock Text="Удаление программ" Style="{StaticResource Title}"/>
             <TextBlock Style="{StaticResource Lead}" Text="Запускает штатный деинсталлятор, затем ищет оставшиеся папки и ключи реестра. Ключи уходят в Центр отмены, папки в корзину."/>
-            <DockPanel Margin="{StaticResource Toolbar}">
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                    <TextBlock x:Name="Status" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
-                </StackPanel>
-                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" Width="420" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск по названию и издателю"/>
-            </DockPanel>
+            <!-- the search box gives way to the counters in a narrow window -->
+            <Grid Margin="{StaticResource Toolbar}">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="3*" MaxWidth="420"/><ColumnDefinition Width="*" MinWidth="16"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" TextChanged="Search_TextChanged" ToolTip="Поиск по названию и издателю"/>
+                <TextBlock x:Name="Status" Grid.Column="2" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
+            </Grid>
             <WrapPanel Margin="0,0,0,6">
                 <Button Content="Удалить" Style="{StaticResource Primary}" Click="Uninstall_Click"/>
                 <Button Content="Тихое удаление" Click="Quiet_Click" ToolTip="QuietUninstallString / msiexec /qb, если есть"/>
@@ -43,7 +43,7 @@
                             <DockPanel>
                                 <TextBlock x:Name="star" Text="&#xE735;" FontFamily="{StaticResource Icons}" FontSize="12" Margin="0,0,6,0"
                                            VerticalAlignment="Center" Visibility="Collapsed"/>
-                                <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="0,8" VerticalAlignment="Center"/>
                             </DockPanel>
                             <DataTemplate.Triggers>
                                 <DataTrigger Binding="{Binding Favorite}" Value="True"><Setter TargetName="star" Property="Visibility" Value="Visible"/></DataTrigger>

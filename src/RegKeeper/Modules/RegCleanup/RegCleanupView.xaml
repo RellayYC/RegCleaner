@@ -5,10 +5,12 @@
         <StackPanel DockPanel.Dock="Top">
             <TextBlock Text="Чистка реестра" Style="{StaticResource Title}"/>
             <TextBlock Style="{StaticResource Lead}" Text="Ищет записи, ссылающиеся на удалённые файлы: деинсталляция, пути приложений, общие DLL, COM, библиотеки типов, автозагрузка, брандмауэр. Всё исправленное возвращается из Центра отмены."/>
-            <DockPanel Margin="{StaticResource Toolbar}">
-                <TextBlock x:Name="Status" DockPanel.Dock="Right" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
-                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" Width="420" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск по категории, ключу и проблеме"/>
-            </DockPanel>
+            <!-- the search box gives way to the counters in a narrow window -->
+            <Grid Margin="{StaticResource Toolbar}">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="3*" MaxWidth="420"/><ColumnDefinition Width="*" MinWidth="16"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" TextChanged="Search_TextChanged" ToolTip="Поиск по категории, ключу и проблеме"/>
+                <TextBlock x:Name="Status" Grid.Column="2" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
+            </Grid>
             <WrapPanel Margin="0,0,0,6">
                 <Button Content="Сканировать" Style="{StaticResource Primary}" Click="Scan_Click"/>
                 <Button Content="Исправить отмеченное" Style="{StaticResource DangerBtn}" Click="Fix_Click"/>

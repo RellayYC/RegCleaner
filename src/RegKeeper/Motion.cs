@@ -163,9 +163,17 @@ public static class Motion
         tt.BeginAnimation(TranslateTransform.YProperty, A(0, "TBase", "EaseEnter", 8, delay));
     }
 
-    /// <summary>DataGridCheckBoxColumn brings its own element styles, which skip the implicit CheckBox; swap in the themed ones.</summary>
+    /// <summary>DataGridCheckBoxColumn brings its own element styles, which skip the implicit CheckBox; swap in the themed ones.
+    /// Plain text columns get GridText, which wraps, so a narrow window grows the row instead of cutting the text;
+    /// star columns get at least ColumnMin, so wrapping never comes down to a letter per line, and fixed ones keep their width
+    /// (short of room the grid would squeeze them to 20 px rather than scroll).</summary>
     static void ThemeChecks(DataGrid g)
     {
+        foreach (var c in g.Columns.Where(c => c.ReadLocalValue(DataGridColumn.MinWidthProperty) == DependencyProperty.UnsetValue))
+            if (c.Width.IsStar) c.MinWidth = D("ColumnMin", 150);
+            else if (c.Width.IsAbsolute) c.MinWidth = c.Width.Value;
+        foreach (var c in g.Columns.OfType<DataGridTextColumn>())
+            if (c.ElementStyle == DataGridTextColumn.DefaultElementStyle && g.TryFindResource("GridText") is Style t) c.ElementStyle = t;
         foreach (var c in g.Columns.OfType<DataGridCheckBoxColumn>())
         {
             if (c.ElementStyle == DataGridCheckBoxColumn.DefaultElementStyle && g.TryFindResource("GridCheck") is Style s) c.ElementStyle = s;
