@@ -37,6 +37,9 @@
                     <StackPanel>
                         <DockPanel>
                             <Ellipse Width="8" Height="8" Fill="{DynamicResource DangerBrush}" Effect="{DynamicResource GlowHot}" Margin="0,1,10,0" VerticalAlignment="Center"/>
+                            <Button DockPanel.Dock="Right" Content="&#xE711;" FontFamily="{StaticResource Icons}" FontSize="10" Padding="0" Margin="6,-4,-6,-4"
+                                    MinHeight="24" Width="24" BorderBrush="Transparent" Foreground="{DynamicResource MutedBrush}"
+                                    ToolTip="Скрыть (вернуть можно в настройках)" AutomationProperties.Name="Скрыть" Click="HideBackup_Click"/>
                             <TextBlock Text="Резервная копия реестра" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
                         </DockPanel>
                         <TextBlock Text="Точка восстановления Windows перед чисткой" Foreground="{DynamicResource MutedBrush}" FontSize="13"

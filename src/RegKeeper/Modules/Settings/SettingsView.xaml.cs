@@ -20,6 +20,7 @@ public partial class SettingsView : UserControl
         Loaded += (_, _) => Motion.Slide(ScalePill, ScaleChoices.Children.OfType<RadioButton>().FirstOrDefault(r => r.IsChecked == true));
         (L.Saved switch { L.Ru => LangRu, L.En => LangEn, _ => LangAuto }).IsChecked = true;
         (MainWindow.CloseToTray ? CloseTray : CloseExit).IsChecked = true;
+        Loaded += (_, _) => BackupCard.IsChecked = MainWindow.ShowBackupCard; // the cross on the card may have hidden it since
         ShellVerb.IsChecked = Integration.ShellVerb;
         Watcher.IsChecked = Integration.WatcherAutostart;
         Watcher.IsEnabled = File.Exists(Integration.WatcherExe);
@@ -91,6 +92,8 @@ public partial class SettingsView : UserControl
         Motion.Slide(ClosePill, (FrameworkElement)s);
         if (MainWindow.CloseToTray != (s == CloseTray)) MainWindow.CloseToTray = s == CloseTray;
     }
+
+    void BackupCard_Changed(object s, RoutedEventArgs e) => MainWindow.ShowBackupCard = BackupCard.IsChecked == true;
 
     void Lang_Checked(object s, RoutedEventArgs e)
     {

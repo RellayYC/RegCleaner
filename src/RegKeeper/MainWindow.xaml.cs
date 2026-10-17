@@ -58,6 +58,7 @@ public partial class MainWindow : Window
         L.Apply(this);
         Nav.ItemsSource = _items;
         Nav.Items.GroupDescriptions.Add(new PropertyGroupDescription(nameof(NavItem.Group)));
+        BackupCard.Visibility = ShowBackupCard ? Visibility.Visible : Visibility.Collapsed;
         Loaded += (_, _) => { SlideNav(); _ = LoadBadges(); };
         // --uninstall "<file>" from the shell menu, --startup from the watcher toast
         if (args.Length >= 2 && args[0] == "--uninstall") Loaded += (_, _) => Show<UninstallerView>().FocusOn(args[1]);
@@ -117,6 +118,19 @@ public partial class MainWindow : Window
         var ok = await Task.Run(() => Compaction.CreateRestorePoint(L.T("RegKeeper: резервная копия")));
         Ui.Info(ok ? L.T("Точка восстановления создана.") : L.T("Не удалось создать точку восстановления. Включите защиту системы для диска C:."));
     });
+
+    void HideBackup_Click(object sender, RoutedEventArgs e) => ShowBackupCard = false;
+
+    /// <summary>The backup card at the bottom of the sidebar; its cross hides it, Settings brings it back. HKCU\Software\RegKeeper\BackupCard.</summary>
+    public static bool ShowBackupCard
+    {
+        get => Reg.GetString(Key, "BackupCard") != "0";
+        set
+        {
+            Registry.SetValue(Key, "BackupCard", value ? "1" : "0");
+            if (Application.Current?.MainWindow is MainWindow w) w.BackupCard.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
 
     int _busy;
 

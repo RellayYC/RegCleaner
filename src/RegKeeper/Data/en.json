@@ -565,5 +565,8 @@
  "Вышла версия {0}. Скачать и установить? RegKeeper закроется примерно на минуту и откроется уже новым.": "Version {0} is out. Download and install it? RegKeeper will close for about a minute and reopen updated.",
  "Установить {0}? RegKeeper закроется примерно на минуту и откроется уже новым.": "Install {0}? RegKeeper will close for about a minute and reopen updated.",
  "RegKeeper обновлён до версии {0}.": "RegKeeper has been updated to version {0}.",
- "Обновление не установилось, работает прежняя версия {0}.": "The update did not install; the previous version {0} is still running."
+ "Обновление не установилось, работает прежняя версия {0}.": "The update did not install; the previous version {0} is still running.",
+ "Скрыть (вернуть можно в настройках)": "Hide (you can bring it back in Settings)",
+ "Скрыть": "Hide",
+ "Карточка «Резервная копия реестра» внизу боковой панели": "The “Registry backup” card at the bottom of the sidebar"
 }
