@@ -57,6 +57,7 @@ public class SmokeTests
                 var sw = Stopwatch.StartNew();
                 while (views.Any(v => !v.IsEnabled) && sw.Elapsed < TimeSpan.FromSeconds(120)) { Thread.Sleep(50); Pump(); }
                 Assert.True(views.All(v => v.IsEnabled), "still loading: " + string.Join(", ", views.Where(v => !v.IsEnabled).Select(v => v.GetType().Name)));
+                UpdateToastComesBack(win, $"{theme} {lang}");
                 if (lang == L.En && Russian(win, views) is { Count: > 0 } ru) Assert.Fail("untranslated:\n" + string.Join("\n", ru));
                 if (theme == Theme.Light) EditorNavigatesToNewSibling(views.OfType<RegEditorView>().Single());
                 if (theme == Theme.Light) FilterFollowsAutomationToggle(views.OfType<StartupView>().Single());
@@ -239,6 +240,48 @@ public class SmokeTests
         }
         finally { details.Close(); }
     }
+
+    // the update card sits top right, its cross hides it, and the next found update brings it back
+    static void UpdateToastComesBack(MainWindow win, string where)
+    {
+        var toast = (Border)win.FindName("UpdateToast");
+        Assert.False(toast.IsVisible, $"{where}: update card shown with nothing to offer");
+        for (var i = 0; i < 2; i++)
+        {
+            win.OfferUpdate($"9.9.{i}", null, @"C:\none.msi");
+            Pump();
+            Assert.True(toast.IsVisible, $"{where}: update card not shown on offer {i}");
+            Assert.Contains($"9.9.{i}", ((TextBlock)win.FindName("UpdateTitle")).Text);
+            var page = (FrameworkElement)win.Content;
+            var corner = toast.TranslatePoint(new Point(toast.ActualWidth, 0), page);
+            Assert.True(page.ActualWidth - corner.X < 40 && corner.Y < 40, $"{where}: update card at {corner}, not top right of {page.ActualWidth}");
+            ((IInvokeProvider)new ButtonAutomationPeer((Button)win.FindName("UpdateClose")).GetPattern(PatternInterface.Invoke)).Invoke();
+            Pump();
+            Assert.False(toast.IsVisible, $"{where}: the cross did not hide the update card");
+        }
+        win.OfferUpdate("9.9.9", null, @"C:\none.msi"); // left open: the English pass checks its texts are translated
+    }
+
+    // at 125-150 % the 1400x900 window outgrew the screen and centring put its title bar above the top edge
+    [Fact]
+    public void Fit_KeepsAnOversizedWindowOnScreen() => Sta(() =>
+    {
+        var work = System.Windows.Forms.Screen.PrimaryScreen!.WorkingArea;
+        var win = new Window { WindowStartupLocation = WindowStartupLocation.Manual, ShowActivated = false, ShowInTaskbar = false,
+            Left = work.Left - 200, Top = work.Top - 300, Width = 8000, Height = 6000, MinWidth = 980, MinHeight = 8000 };
+        win.Show();
+        try
+        {
+            var h = new System.Windows.Interop.WindowInteropHelper(win).Handle;
+            Theme.GetWindowRect(h, out var r);
+            Assert.True(r.Top < work.Top && r.Bottom - r.Top > work.Height, $"positive control: {r.Left},{r.Top},{r.Right},{r.Bottom} already fits {work}");
+            Theme.Fit(win);
+            Theme.GetWindowRect(h, out r);
+            Assert.True(r.Left >= work.Left && r.Top >= work.Top && r.Right <= work.Right && r.Bottom <= work.Bottom, $"{r.Left},{r.Top},{r.Right},{r.Bottom} outside {work}");
+            Assert.True(win.MinHeight < 8000, "MinHeight still forces the window past the screen");
+        }
+        finally { win.Close(); }
+    });
 
     [Fact]
     public void Busy_EscCancelsWithoutError() => Sta(() =>

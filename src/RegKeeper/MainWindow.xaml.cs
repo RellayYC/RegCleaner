@@ -60,6 +60,13 @@ public partial class MainWindow : Window
         Nav.Items.GroupDescriptions.Add(new PropertyGroupDescription(nameof(NavItem.Group)));
         BackupCard.Visibility = ShowBackupCard ? Visibility.Visible : Visibility.Collapsed;
         Loaded += (_, _) => { SlideNav(); _ = LoadBadges(); };
+        // a bare Application is the test host: no network from tests
+        if (Application.Current is App)
+        {
+            var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromHours(6) };
+            timer.Tick += (_, _) => _ = CheckUpdate();
+            Loaded += (_, _) => { _ = CheckUpdate(); timer.Start(); };
+        }
         // --uninstall "<file>" from the shell menu, --startup from the watcher toast
         if (args.Length >= 2 && args[0] == "--uninstall") Loaded += (_, _) => Show<UninstallerView>().FocusOn(args[1]);
         else if (args.Length >= 1 && args[0] == "--startup") Nav.SelectedIndex = 2;
@@ -130,6 +137,47 @@ public partial class MainWindow : Window
             Registry.SetValue(Key, "BackupCard", value ? "1" : "0");
             if (Application.Current?.MainWindow is MainWindow w) w.BackupCard.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
         }
+    }
+
+    Update.Release? _offer;
+    string? _offerMsi;
+
+    // on start and every 6 hours: the release channel, or the newest MSI in the saved folder when this build has no channel
+    async Task CheckUpdate()
+    {
+        if (!UpdateToast.IsEnabled) return; // already downloading the one on offer
+        try
+        {
+            if (Update.Online) { if (await Update.Check(default) is { } r) OfferUpdate(r.Version, r, null); }
+            else if (Update.Source is { } folder && await Task.Run(() => Update.Find(folder)) is { } msi) OfferUpdate(Update.VersionOf(msi)!.ToString(), null, msi);
+        }
+        catch { } // offline or the folder is gone: the next check, or the button in Settings, reports it
+    }
+
+    /// <summary>Shows the top-right card for a found update, again after its cross was used: every check that finds one offers it.</summary>
+    public void OfferUpdate(string version, Update.Release? release, string? msi)
+    {
+        (_offer, _offerMsi) = (release, msi);
+        UpdateTitle.Text = L.T($"Доступна версия {version}");
+        if (UpdateToast.Visibility == Visibility.Visible) return;
+        UpdateToast.Visibility = Visibility.Visible;
+        if (!Motion.On) return;
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        UpdateToast.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(260)) { EasingFunction = ease });
+        UpdateToast.RenderTransform.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(-12, 0, TimeSpan.FromMilliseconds(260)) { EasingFunction = ease });
+    }
+
+    void UpdateClose_Click(object sender, RoutedEventArgs e) => UpdateToast.Visibility = Visibility.Collapsed;
+
+    async void UpdateGo_Click(object sender, RoutedEventArgs e)
+    {
+        var hint = UpdateHint.Text;
+        await Ui.Busy(UpdateToast, async ct =>
+        {
+            var msi = _offerMsi ?? await Update.Download(_offer!, new Progress<int>(p => UpdateHint.Text = L.T($"Скачивание: {p} %")), ct);
+            SettingsView.Launch(msi);
+        });
+        UpdateHint.Text = hint;
     }
 
     int _busy;

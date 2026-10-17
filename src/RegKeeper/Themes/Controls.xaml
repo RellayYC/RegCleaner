@@ -288,6 +288,7 @@
         <Setter Property="Tag" Value="{DynamicResource HoverBrush}"/>
         <Setter Property="rk:Motion.Light" Value="{DynamicResource Spot}"/>
         <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -309,7 +310,7 @@
                                         rk:Motion.SpotSize="{StaticResource SpotRadius}" rk:Motion.Spot="{TemplateBinding rk:Motion.Light}"/>
                                 <Border Margin="-1" BorderThickness="1" CornerRadius="{StaticResource RControl}"
                                         rk:Motion.SpotSize="{StaticResource SpotRadius}" rk:Motion.Spot="{DynamicResource SpotEdge}"/>
-                                <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
                     </Grid>

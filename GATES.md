@@ -129,3 +129,11 @@ Scope: every module real and tested, the clone measured against Reg Organizer an
   CHECK: node scripts/gates/check.mjs admin
   EXPECT: ADMIN OK
   EVIDENCE: automatic-evidence=v1; definition-sha256=4132752470f9b7fe3d627c57181189d45bc6c6dce55643f32f31978840127cbf; exit=0; EXPECT=matched; output-sha256=b6fe76ad2731f9499edf04664ef399b7e95a16d28aa516f8adab67dd3ad1a26c; output-bytes=19; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
+- [x] G27: a window bigger than its monitor (125-150 % scaling) is fitted inside the work area, title bar on screen
+  CHECK: node scripts/gates/check.mjs tests Fit_KeepsAnOversizedWindowOnScreen 1
+  EXPECT: TESTS GREEN passed=1
+  EVIDENCE: automatic-evidence=v1; definition-sha256=c2b4757237951ebc8b1cd016e53c25df8272012c71b0e95c9bb2f66f0c4d9062; exit=0; EXPECT=matched; output-sha256=0350987bddcde7b3c57525d1719566be86c05536edc4e2f7c91b3defdacdfcf1; output-bytes=21; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries
+- [x] G28: a found update shows a top-right card "Нажмите, чтобы обновить"; its cross hides it and the next found update shows it again
+  CHECK: node scripts/gates/check.mjs tests EveryView_OpensInBothThemes 1
+  EXPECT: TESTS GREEN passed=1
+  EVIDENCE: automatic-evidence=v1; definition-sha256=192ae8eef4173b7111fae1ee60f88cbee02baec35f79067232e4150c25d71b7b; exit=0; EXPECT=matched; output-sha256=0350987bddcde7b3c57525d1719566be86c05536edc4e2f7c91b3defdacdfcf1; output-bytes=21; shell=C:\WINDOWS\system32\cmd.exe; cwd=W:\Cleaner; path=0e1dbb07d3aa/35 entries

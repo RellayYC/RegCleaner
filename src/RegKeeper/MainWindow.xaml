@@ -154,5 +154,26 @@
         <!-- the outgoing page as a picture while it fades (Motion.SwapPage) -->
         <Image x:Name="Ghost" Grid.Column="1" Margin="36,30,36,24" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Top"
                IsHitTestVisible="False" Visibility="Collapsed"/>
+
+        <!-- a new version found by the background check (MainWindow.CheckUpdate); the cross hides it until the next check -->
+        <Border x:Name="UpdateToast" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,16,20,0" Width="310"
+                CornerRadius="18" Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource CardEdgeBrush}" BorderThickness="1"
+                Effect="{DynamicResource CardShadow}" Visibility="Collapsed">
+            <Border.RenderTransform><TranslateTransform/></Border.RenderTransform>
+            <DockPanel>
+                <Button x:Name="UpdateClose" DockPanel.Dock="Right" VerticalAlignment="Top" Content="&#xE711;" FontFamily="{StaticResource Icons}" FontSize="10"
+                        Padding="0" Margin="0,10,10,0" MinHeight="24" Width="24" BorderBrush="Transparent" Foreground="{DynamicResource MutedBrush}"
+                        ToolTip="Не обновлять" AutomationProperties.Name="Не обновлять" Click="UpdateClose_Click"/>
+                <Button x:Name="UpdateGo" Margin="0" Padding="16,14,4,14" BorderBrush="Transparent" HorizontalContentAlignment="Stretch" Click="UpdateGo_Click">
+                    <DockPanel>
+                        <Ellipse Width="8" Height="8" Fill="{DynamicResource AccentBrush}" Effect="{DynamicResource GlowLight}" Margin="0,6,12,0" VerticalAlignment="Top"/>
+                        <StackPanel>
+                            <TextBlock x:Name="UpdateTitle" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock x:Name="UpdateHint" Text="Нажмите, чтобы обновить" Foreground="{DynamicResource MutedBrush}" FontSize="13" Margin="0,3,0,0"/>
+                        </StackPanel>
+                    </DockPanel>
+                </Button>
+            </DockPanel>
+        </Border>
     </Grid>
 </Window>

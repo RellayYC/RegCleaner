@@ -85,7 +85,7 @@ public partial class SettingsView : UserControl
             Launch(dlg.FileName);
     }
 
-    static void Launch(string msi)
+    internal static void Launch(string msi)
     {
         try
         {

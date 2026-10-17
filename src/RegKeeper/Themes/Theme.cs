@@ -60,6 +60,41 @@ public static class Theme
         DwmSetWindowAttribute(h, 20, ref dark, sizeof(int)); // DWMWA_USE_IMMERSIVE_DARK_MODE
     }
 
+    /// <summary>Keeps a window inside its monitor's work area. At 125 % and up the 1400x900 main window (or a tall dialog) is bigger
+    /// than the screen, and centring it pushed the title bar above the top edge where it could not be grabbed.
+    /// An axis that does not fit becomes the full work area; one that fits keeps its position, nudged inside.</summary>
+    public static void Fit(Window w)
+    {
+        var h = new WindowInteropHelper(w).Handle;
+        if (h == IntPtr.Zero || w.WindowState != WindowState.Normal) return;
+        var work = global::System.Windows.Forms.Screen.FromHandle(h).WorkingArea; // device pixels: the app is per-monitor DPI aware
+        var dpi = VisualTreeHelper.GetDpi(w);
+        w.MinWidth = Math.Min(w.MinWidth, work.Width / dpi.DpiScaleX);
+        w.MinHeight = Math.Min(w.MinHeight, work.Height / dpi.DpiScaleY);
+        GetWindowRect(h, out var r);
+        int width = Math.Min(r.Right - r.Left, work.Width), height = Math.Min(r.Bottom - r.Top, work.Height);
+        int x = Math.Clamp(r.Left, work.Left, work.Right - width), y = Math.Clamp(r.Top, work.Top, work.Bottom - height);
+        if (x != r.Left || y != r.Top || width != r.Right - r.Left || height != r.Bottom - r.Top)
+            SetWindowPos(h, IntPtr.Zero, x, y, width, height, 0x14); // SWP_NOZORDER | SWP_NOACTIVATE
+    }
+
+    /// <summary>Every window, on open and when it lands on a monitor with another scale (or the scale is changed while it is open).</summary>
+    public static void FitAll()
+    {
+        EventManager.RegisterClassHandler(typeof(Window), FrameworkElement.LoadedEvent, new RoutedEventHandler((s, _) => Fit((Window)s)));
+        EventManager.RegisterClassHandler(typeof(Window), Window.DpiChangedEvent,
+            new DpiChangedEventHandler((s, _) => ((Window)s).Dispatcher.BeginInvoke(() => Fit((Window)s)))); // after Windows applies its new size
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct Rect { public int Left, Top, Right, Bottom; }
+
+    [DllImport("user32.dll")]
+    internal static extern bool GetWindowRect(IntPtr hwnd, out Rect rect);
+
+    [DllImport("user32.dll")]
+    static extern bool SetWindowPos(IntPtr hwnd, IntPtr after, int x, int y, int cx, int cy, uint flags);
+
     [DllImport("dwmapi.dll")]
     static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
 }
