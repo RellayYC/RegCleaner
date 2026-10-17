@@ -552,14 +552,15 @@
  "Системный пакет: удаление заблокировано.": "System package: removal is blocked.",
  "Удалённое приложение можно вернуть только переустановкой из Microsoft Store.": "A removed app can only be brought back by reinstalling it from Microsoft Store.",
  "Проверить обновления": "Check for updates",
- "Папка обновлений": "Update folder",
- "Сетевая или облачная папка, куда вы кладёте новые RegKeeper-x.y.z-x64.msi": "A network or cloud folder where you put new RegKeeper-x.y.z-x64.msi files",
  "Обновить из файла": "Update from file",
- "Папка обновлений: {0}": "Update folder: {0}",
- "Папка обновлений не выбрана. Обновления ищутся только там, в интернет RegKeeper не ходит.": "No update folder chosen. Updates are looked for only there, RegKeeper never goes online.",
- "Папка с новыми версиями RegKeeper": "Folder with new RegKeeper versions",
- "Обновлений нет: в папке нет версии новее {0}.": "No updates: the folder has nothing newer than {0}.",
  "Установщик RegKeeper (*.msi)|*.msi": "RegKeeper installer (*.msi)|*.msi",
  "Установить {0}? RegKeeper закроется, мастер установки заменит текущую версию {1}.": "Install {0}? RegKeeper will close and the setup wizard will replace the current version {1}.",
- "Эта копия портативная: новая версия встанет в выбранную в мастере папку, а эта останется.": "This is a portable copy: the new version goes to the folder chosen in the wizard and this one stays."
+ "Эта копия портативная: новая версия встанет в выбранную в мастере папку, а эта останется.": "This is a portable copy: the new version goes to the folder chosen in the wizard and this one stays.",
+ "Обновления приходят с сервера RegKeeper, перед установкой проверяется подпись.": "Updates come from the RegKeeper server; the signature is checked before installing.",
+ "В этой сборке нет канала обновлений, можно обновить только из файла.": "This build has no update channel; you can only update from a file.",
+ "Установлена последняя версия {0}.": "You have the latest version {0}.",
+ "Вышла версия {0}. Скачать и установить? RegKeeper закроется, мастер установки заменит текущую версию {1}.": "Version {0} is out. Download and install it? RegKeeper will close and the setup wizard will replace the current version {1}.",
+ "Скачивание: {0} %": "Downloading: {0} %",
+ "Подпись обновления не сходится, обновление отклонено.": "The update signature does not match; the update was rejected.",
+ "Скачанный файл повреждён: контрольная сумма не совпала.": "The downloaded file is damaged: its checksum does not match."
 }

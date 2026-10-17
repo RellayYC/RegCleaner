@@ -30,46 +30,41 @@ public partial class SettingsView : UserControl
         }
         DataInfo.Text = L.T($"{AppPaths.Data}\nЦентр отмены, снимки и трассы установок: {Sys.Size(Sys.DirSize(AppPaths.Data))}");
         About.Text = $"RegKeeper {Update.Current}, .NET {Environment.Version}";
-        ShowUpdateSource();
+        UpdateBtn.IsEnabled = Update.Online;
+        UpdateInfo.Text = Update.Online
+            ? L.T("Обновления приходят с сервера RegKeeper, перед установкой проверяется подпись.")
+            : L.T("В этой сборке нет канала обновлений, можно обновить только из файла.");
     }
 
-    void ShowUpdateSource() => UpdateInfo.Text = Update.Source is { } s
-        ? L.T($"Папка обновлений: {s}")
-        : L.T("Папка обновлений не выбрана. Обновления ищутся только там, в интернет RegKeeper не ходит.");
-
-    bool PickUpdateFolder()
+    async void Update_Click(object s, RoutedEventArgs e)
     {
-        var dlg = new Microsoft.Win32.OpenFolderDialog { Title = L.T("Папка с новыми версиями RegKeeper"), InitialDirectory = Update.Source ?? "" };
-        if (dlg.ShowDialog() != true) return false;
-        Update.Source = dlg.FolderName;
-        ShowUpdateSource();
-        return true;
-    }
-
-    void UpdateFolder_Click(object s, RoutedEventArgs e) => PickUpdateFolder();
-
-    void Update_Click(object s, RoutedEventArgs e)
-    {
-        if (Update.Source == null && !PickUpdateFolder()) return;
-        try
+        var info = UpdateInfo.Text;
+        await Ui.Busy(UpdateBtn, async ct =>
         {
-            if (Update.Find(Update.Source!) is { } msi) Install(msi);
-            else Ui.Info(L.T($"Обновлений нет: в папке нет версии новее {Update.Current}."));
-        }
-        catch (Exception ex) { Ui.Error(ex); }
+            if (await Update.Check(ct) is not { } r)
+            {
+                Ui.Info(L.T($"Установлена последняя версия {Update.Current}."));
+                return;
+            }
+            if (!Ui.Confirm(Question(L.T($"Вышла версия {r.Version}. Скачать и установить? RegKeeper закроется, мастер установки заменит текущую версию {Update.Current}.")))) return;
+            var msi = await Update.Download(r, new Progress<int>(p => UpdateInfo.Text = L.T($"Скачивание: {p} %")), ct);
+            Launch(msi);
+        });
+        UpdateInfo.Text = info;
     }
 
     void UpdateFile_Click(object s, RoutedEventArgs e)
     {
         var dlg = new Microsoft.Win32.OpenFileDialog { Filter = L.T("Установщик RegKeeper (*.msi)|*.msi") };
-        if (dlg.ShowDialog() == true) Install(dlg.FileName);
+        if (dlg.ShowDialog() == true && Ui.Confirm(Question(L.T($"Установить {Path.GetFileName(dlg.FileName)}? RegKeeper закроется, мастер установки заменит текущую версию {Update.Current}."))))
+            Launch(dlg.FileName);
     }
 
-    void Install(string msi)
+    static string Question(string text) =>
+        Update.Installed ? text : text + "\n\n" + L.T("Эта копия портативная: новая версия встанет в выбранную в мастере папку, а эта останется.");
+
+    static void Launch(string msi)
     {
-        var text = L.T($"Установить {Path.GetFileName(msi)}? RegKeeper закроется, мастер установки заменит текущую версию {Update.Current}.");
-        if (!Update.Installed) text += "\n\n" + L.T("Эта копия портативная: новая версия встанет в выбранную в мастере папку, а эта останется.");
-        if (!Ui.Confirm(text)) return;
         try
         {
             Update.Run(msi);
@@ -77,6 +72,7 @@ public partial class SettingsView : UserControl
         }
         catch (Exception ex) { Ui.Error(ex); }
     }
+
 
     void Theme_Checked(object s, RoutedEventArgs e)
     {

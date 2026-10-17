@@ -36,21 +36,15 @@ public class SettingsTests
         finally { Integration.SetWatcherAutostart(was); }
     }
 
+    // signed by Node the way installer/release.mjs signs (P-256, IEEE P1363), so the two formats stay in step
     [Fact]
-    public void Update_FindsNewestNewerMsi()
+    public void Update_AcceptsOnlySignedManifest()
     {
-        var dir = Directory.CreateTempSubdirectory("RegKeeperUpdate").FullName;
-        try
-        {
-            var cur = Update.Current;
-            Assert.Null(Update.Find(dir));
-            foreach (var n in new[] { $"RegKeeper-{cur}-x64.msi", "RegKeeper-0.9.0-x64.msi", "RegKeeper-junk-x64.msi" })
-                File.WriteAllText(Path.Combine(dir, n), "");
-            Assert.Null(Update.Find(dir)); // same, older and unparsable are not updates
-            foreach (var n in new[] { $"RegKeeper-{cur.Major}.{cur.Minor}.{cur.Build + 1}-x64.msi", $"RegKeeper-{cur.Major}.{cur.Minor + 1}.0-x64.msi" })
-                File.WriteAllText(Path.Combine(dir, n), "");
-            Assert.Equal($"RegKeeper-{cur.Major}.{cur.Minor + 1}.0-x64.msi", Path.GetFileName(Update.Find(dir)));
-        }
-        finally { Directory.Delete(dir, true); }
+        const string pub = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEZdhov6nLyV1tgq4opwt+xzHQ6oDMl8OKQCSc2LmpVKipB7YLGSTL8f9T7ZVTQotEJ+e/FbsgWxaI0Zp++nFLnA==";
+        var sig = Convert.FromBase64String("g8DVpG3iAOkfRS4umZ3+UCWg03LRK1aubdtgtBp+bGMmkfVkP/yAzCULhE2czew8N9+Kqq08Dwg81hIk0/SbrA==");
+        var json = "{\"version\":\"9.9.9\",\"file\":\"RegKeeper-9.9.9-x64.msi\",\"sha256\":\"ab12\"}"u8.ToArray();
+        Assert.Equal(new Update.Release("9.9.9", "RegKeeper-9.9.9-x64.msi", "ab12"), Update.Verify(json, sig, pub));
+        json[13] = (byte)'8'; // 9.8.9
+        Assert.Null(Update.Verify(json, sig, pub));
     }
 }

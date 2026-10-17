@@ -22,6 +22,13 @@
     <Using Remove="System.Drawing" />
   </ItemGroup>
 
+  <!-- update channel, passed by installer\build.ps1; a build without it has no online updates -->
+  <ItemGroup Condition="'$(UpdateUrl)' != ''">
+    <AssemblyMetadata Include="UpdateUrl" Value="$(UpdateUrl)" />
+    <AssemblyMetadata Include="UpdateKey" Value="$(UpdateKey)" />
+    <AssemblyMetadata Include="UpdatePub" Value="$(UpdatePub)" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Update="Data\**" CopyToOutputDirectory="PreserveNewest" />
     <Resource Include="Assets\RegKeeper.ico" />
