@@ -75,6 +75,12 @@
                 <StackPanel>
                     <TextBlock Text="О программе" Style="{StaticResource Section}" Margin="0,0,0,10"/>
                     <TextBlock x:Name="About" Style="{StaticResource Hint}" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="UpdateInfo" Style="{StaticResource Hint}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                    <WrapPanel Margin="0,8,0,0">
+                        <Button Content="Проверить обновления" Style="{StaticResource Primary}" Click="Update_Click"/>
+                        <Button Content="Папка обновлений" Click="UpdateFolder_Click" ToolTip="Сетевая или облачная папка, куда вы кладёте новые RegKeeper-x.y.z-x64.msi"/>
+                        <Button Content="Обновить из файла" Click="UpdateFile_Click"/>
+                    </WrapPanel>
                 </StackPanel>
             </ContentControl>
         </StackPanel>

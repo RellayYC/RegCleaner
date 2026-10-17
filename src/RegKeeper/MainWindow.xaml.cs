@@ -142,6 +142,9 @@ public partial class MainWindow : Window
     System.Windows.Forms.NotifyIcon? _tray;
     bool _quit;
 
+    /// <summary>Closes for real, past the close-to-tray setting.</summary>
+    public void Quit() { _quit = true; Close(); }
+
     protected override void OnClosing(CancelEventArgs e)
     {
         // a bare Application is the test host: it must really close
@@ -161,7 +164,7 @@ public partial class MainWindow : Window
         if (_tray != null) return _tray;
         var menu = new System.Windows.Forms.ContextMenuStrip();
         menu.Items.Add(L.T("Открыть"), null, (_, _) => Restore());
-        menu.Items.Add(L.T("Выход"), null, (_, _) => { _quit = true; Close(); });
+        menu.Items.Add(L.T("Выход"), null, (_, _) => Quit());
         _tray = new() { Icon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath!), Text = "RegKeeper", ContextMenuStrip = menu };
         _tray.MouseClick += (_, e) => { if (e.Button == System.Windows.Forms.MouseButtons.Left) Restore(); };
         return _tray;

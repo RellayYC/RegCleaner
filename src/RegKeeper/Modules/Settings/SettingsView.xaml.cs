@@ -29,7 +29,53 @@ public partial class SettingsView : UserControl
             ToolTipService.SetShowOnDisabled(Watcher, true);
         }
         DataInfo.Text = L.T($"{AppPaths.Data}\nЦентр отмены, снимки и трассы установок: {Sys.Size(Sys.DirSize(AppPaths.Data))}");
-        About.Text = $"RegKeeper {typeof(SettingsView).Assembly.GetName().Version?.ToString(3)}, .NET {Environment.Version}";
+        About.Text = $"RegKeeper {Update.Current}, .NET {Environment.Version}";
+        ShowUpdateSource();
+    }
+
+    void ShowUpdateSource() => UpdateInfo.Text = Update.Source is { } s
+        ? L.T($"Папка обновлений: {s}")
+        : L.T("Папка обновлений не выбрана. Обновления ищутся только там, в интернет RegKeeper не ходит.");
+
+    bool PickUpdateFolder()
+    {
+        var dlg = new Microsoft.Win32.OpenFolderDialog { Title = L.T("Папка с новыми версиями RegKeeper"), InitialDirectory = Update.Source ?? "" };
+        if (dlg.ShowDialog() != true) return false;
+        Update.Source = dlg.FolderName;
+        ShowUpdateSource();
+        return true;
+    }
+
+    void UpdateFolder_Click(object s, RoutedEventArgs e) => PickUpdateFolder();
+
+    void Update_Click(object s, RoutedEventArgs e)
+    {
+        if (Update.Source == null && !PickUpdateFolder()) return;
+        try
+        {
+            if (Update.Find(Update.Source!) is { } msi) Install(msi);
+            else Ui.Info(L.T($"Обновлений нет: в папке нет версии новее {Update.Current}."));
+        }
+        catch (Exception ex) { Ui.Error(ex); }
+    }
+
+    void UpdateFile_Click(object s, RoutedEventArgs e)
+    {
+        var dlg = new Microsoft.Win32.OpenFileDialog { Filter = L.T("Установщик RegKeeper (*.msi)|*.msi") };
+        if (dlg.ShowDialog() == true) Install(dlg.FileName);
+    }
+
+    void Install(string msi)
+    {
+        var text = L.T($"Установить {Path.GetFileName(msi)}? RegKeeper закроется, мастер установки заменит текущую версию {Update.Current}.");
+        if (!Update.Installed) text += "\n\n" + L.T("Эта копия портативная: новая версия встанет в выбранную в мастере папку, а эта останется.");
+        if (!Ui.Confirm(text)) return;
+        try
+        {
+            Update.Run(msi);
+            ((MainWindow)Application.Current.MainWindow).Quit();
+        }
+        catch (Exception ex) { Ui.Error(ex); }
     }
 
     void Theme_Checked(object s, RoutedEventArgs e)

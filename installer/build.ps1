@@ -7,7 +7,7 @@ $pub = Join-Path $root 'artifacts\msi-publish'
 if (Test-Path $pub) { Remove-Item $pub -Recurse -Force }
 foreach ($p in 'RegKeeper', 'RegKeeper.Watcher') {
     dotnet publish "$root\src\$p" -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
-        -p:EnableCompressionInSingleFile=true -p:DebugType=none -p:SatelliteResourceLanguages=en -o $pub -nologo -v q
+        -p:EnableCompressionInSingleFile=true -p:DebugType=none -p:Version=$Version -p:SatelliteResourceLanguages=en -o $pub -nologo -v q
     if ($LASTEXITCODE) { throw "publish $p failed" }
 }
 New-Item -ItemType Directory -Force $Out | Out-Null

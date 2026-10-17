@@ -550,5 +550,16 @@
  "Системное": "System",
  "Стороннее": "Third-party",
  "Системный пакет: удаление заблокировано.": "System package: removal is blocked.",
- "Удалённое приложение можно вернуть только переустановкой из Microsoft Store.": "A removed app can only be brought back by reinstalling it from Microsoft Store."
+ "Удалённое приложение можно вернуть только переустановкой из Microsoft Store.": "A removed app can only be brought back by reinstalling it from Microsoft Store.",
+ "Проверить обновления": "Check for updates",
+ "Папка обновлений": "Update folder",
+ "Сетевая или облачная папка, куда вы кладёте новые RegKeeper-x.y.z-x64.msi": "A network or cloud folder where you put new RegKeeper-x.y.z-x64.msi files",
+ "Обновить из файла": "Update from file",
+ "Папка обновлений: {0}": "Update folder: {0}",
+ "Папка обновлений не выбрана. Обновления ищутся только там, в интернет RegKeeper не ходит.": "No update folder chosen. Updates are looked for only there, RegKeeper never goes online.",
+ "Папка с новыми версиями RegKeeper": "Folder with new RegKeeper versions",
+ "Обновлений нет: в папке нет версии новее {0}.": "No updates: the folder has nothing newer than {0}.",
+ "Установщик RegKeeper (*.msi)|*.msi": "RegKeeper installer (*.msi)|*.msi",
+ "Установить {0}? RegKeeper закроется, мастер установки заменит текущую версию {1}.": "Install {0}? RegKeeper will close and the setup wizard will replace the current version {1}.",
+ "Эта копия портативная: новая версия встанет в выбранную в мастере папку, а эта останется.": "This is a portable copy: the new version goes to the folder chosen in the wizard and this one stays."
 }
