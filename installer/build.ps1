@@ -18,7 +18,8 @@ if (Test-Path $cfg) {
 if (Test-Path $pub) { Remove-Item $pub -Recurse -Force }
 foreach ($p in 'RegKeeper', 'RegKeeper.Watcher') {
     dotnet publish "$root\src\$p" -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
-        -p:EnableCompressionInSingleFile=true -p:DebugType=none -p:Version=$Version -p:SatelliteResourceLanguages=en @channel -o $pub -nologo -v q
+        -p:EnableCompressionInSingleFile=true -p:DebugType=none -p:Version=$Version -p:SatelliteResourceLanguages=en @channel `
+        -p:BaseOutputPath="$root\artifacts\msi-bin\$p\" -o $pub -nologo -v q # own bin: a running dev build in src\*\bin locks its files
     if ($LASTEXITCODE) { throw "publish $p failed" }
 }
 New-Item -ItemType Directory -Force $Out | Out-Null
