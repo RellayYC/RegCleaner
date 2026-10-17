@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -10,11 +9,10 @@ using RegKeeper.Core;
 namespace RegKeeper.Modules;
 
 /// <summary>
-/// Online updates without a public download: a Cloudflare Worker (installer\worker.js) hands the files of a private
-/// Backblaze B2 bucket only to requests signed with the key built into the app (HMAC of time and file name, so the key
-/// itself never crosses the wire). latest.txt holds the release JSON (version, MSI name, SHA-256) and its ECDSA P-256
-/// signature made by installer\release.mjs; nothing the signature does not cover is run.
-/// URL, masked key and public key come from build.ps1 (%USERPROFILE%\.regkeeper\update.json); a build without them has no channel.
+/// Online updates from GitHub Releases: UpdateUrl is .../releases/latest/download, where installer\release.mjs puts the MSI
+/// and latest.txt, the release JSON (version, MSI name, SHA-256) plus its ECDSA P-256 signature. The files are public;
+/// the signature is the guard, and nothing it does not cover is run.
+/// URL and public key come from build.ps1 (%USERPROFILE%\.regkeeper\update.json); a build without them has no channel.
 /// </summary>
 public static class Update
 {
@@ -49,37 +47,15 @@ public static class Update
     public static bool Installed =>
         Reg.GetString(@"HKEY_LOCAL_MACHINE\Software\RegKeeper\Setup", "InstallDir") is { } d && d.TrimEnd('\\').Equals(Dir, StringComparison.OrdinalIgnoreCase);
 
-    // ponytail: the key is masked, not secret; anything the app can read, a disassembler can. It keeps it out of strings and traffic.
-    internal static byte[] Unmask(string seed, string publicKey)
-    {
-        var key = Convert.FromBase64String(seed);
-        var mask = SHA256.HashData(Encoding.UTF8.GetBytes(publicKey));
-        for (var i = 0; i < key.Length; i++) key[i] ^= mask[i % mask.Length];
-        return key;
-    }
-
-    internal static string Auth(byte[] key, string name, long unix) =>
-        $"{unix}.{Convert.ToHexString(HMACSHA256.HashData(key, Encoding.UTF8.GetBytes($"{unix}/{name}"))).ToLowerInvariant()}";
-
-    static TimeSpan _skew; // the Worker accepts 10 minutes either way; a PC clock off by more borrows the server's
-
     static async Task<HttpResponseMessage> Get(string name, CancellationToken ct)
     {
-        var key = Unmask(Meta("UpdateSeed")!, Meta("UpdatePub")!);
-        using var http = new HttpClient { BaseAddress = new Uri(Meta("UpdateUrl")!.TrimEnd('/') + "/"), Timeout = Timeout.InfiniteTimeSpan };
-        for (var retry = 0; ; retry++)
-        {
-            var req = new HttpRequestMessage(HttpMethod.Get, name);
-            req.Headers.Add("X-RegKeeper-Auth", Auth(key, name, DateTimeOffset.UtcNow.Add(_skew).ToUnixTimeSeconds()));
-            HttpResponseMessage res;
-            try { res = await http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct); }
-            catch (HttpRequestException e) { throw new IOException(L.T("Не удалось связаться с сервером обновлений. Проверьте подключение к интернету."), e); }
-            if (res.IsSuccessStatusCode) return res;
-            var (code, date) = (res.StatusCode, res.Headers.Date);
-            res.Dispose();
-            if (code == HttpStatusCode.Forbidden && retry == 0 && date != null) { _skew = date.Value - DateTimeOffset.UtcNow; continue; }
-            throw new IOException(L.T($"Сервер обновлений ответил ошибкой {(int)code}. Попробуйте позже."));
-        }
+        using var http = new HttpClient { Timeout = Timeout.InfiniteTimeSpan }; // follows GitHub's redirect to its file storage
+        HttpResponseMessage res;
+        try { res = await http.GetAsync(Meta("UpdateUrl")!.TrimEnd('/') + "/" + name, HttpCompletionOption.ResponseHeadersRead, ct); }
+        catch (HttpRequestException e) { throw new IOException(L.T("Не удалось связаться с сервером обновлений. Проверьте подключение к интернету."), e); }
+        if (res.IsSuccessStatusCode) return res;
+        res.Dispose();
+        throw new IOException(L.T($"Сервер обновлений ответил ошибкой {(int)res.StatusCode}. Попробуйте позже."));
     }
 
     /// <summary>The signed release if it is newer than this build, else null.</summary>
