@@ -1,0 +1,98 @@
+<!-- RegKeeper MSI (WiX 5). Built by build.ps1, which publishes both exes into $(Pub) first. -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+    <Package Name="RegKeeper" Manufacturer="RegKeeper" Version="$(Version)" UpgradeCode="5ADA3351-48CB-4023-B736-C41980A4CAF4"
+             Scope="perMachine" Language="1049" Codepage="1251" Compressed="yes">
+        <SummaryInformation Description="Установщик RegKeeper" Codepage="1251"/>
+        <MajorUpgrade DowngradeErrorMessage="Уже установлена более новая версия RegKeeper. Сначала удалите её."/>
+        <MediaTemplate EmbedCab="yes" CompressionLevel="high"/>
+        <Launch Condition="Installed OR VersionNT &gt;= 603" Message="RegKeeper работает на Windows 10 и новее."/>
+
+        <!-- Programs and Features entry -->
+        <Icon Id="RegKeeper.ico" SourceFile="..\src\RegKeeper\Assets\RegKeeper.ico"/>
+        <Property Id="ARPPRODUCTICON" Value="RegKeeper.ico"/>
+        <Property Id="ARPCOMMENTS" Value="Удаление программ, автозагрузка, очистка диска и реестра, твики."/>
+        <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLFOLDER]" After="CostFinalize"/>
+
+        <!-- a repair or an upgrade goes to the folder picked the first time -->
+        <Property Id="INSTALLFOLDER">
+            <RegistrySearch Id="PrevFolder" Root="HKLM" Key="Software\RegKeeper\Setup" Name="InstallDir" Type="raw"/>
+        </Property>
+
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="INSTALLFOLDER" Name="RegKeeper">
+                <Directory Id="DataFolder" Name="Data"/>
+            </Directory>
+        </StandardDirectory>
+
+        <Feature Id="Main" Title="RegKeeper" Description="Программа и её данные (база твиков, перевод)." AllowAbsent="no"
+                 ConfigurableDirectory="INSTALLFOLDER" Display="expand">
+            <Component Directory="INSTALLFOLDER">
+                <File Id="RegKeeperExe" Source="$(Pub)\RegKeeper.exe" KeyPath="yes"/>
+            </Component>
+            <Component Directory="INSTALLFOLDER">
+                <File Source="..\LICENSE" Name="LICENSE.txt" KeyPath="yes"/>
+            </Component>
+            <Component Directory="INSTALLFOLDER">
+                <RegistryValue Root="HKLM" Key="Software\RegKeeper\Setup" Name="InstallDir" Type="string" Value="[INSTALLFOLDER]" KeyPath="yes"/>
+            </Component>
+            <Files Include="$(Pub)\Data\**" Directory="DataFolder"/>
+            <!-- whatever the app itself switched on for this user goes away with it; backups in ProgramData stay for the Undo center -->
+            <Component Id="UserCleanup" Directory="INSTALLFOLDER">
+                <RegistryValue Root="HKCU" Key="Software\RegKeeper\Setup" Name="Installed" Type="integer" Value="1" KeyPath="yes"/>
+                <RemoveRegistryValue Root="HKCU" Key="Software\Microsoft\Windows\CurrentVersion\Run" Name="RegKeeper Watcher"/>
+                <RemoveRegistryKey Root="HKCU" Key="Software\Classes\exefile\shell\RegKeeperUninstall" Action="removeOnUninstall"/>
+                <RemoveRegistryKey Root="HKCU" Key="Software\Classes\lnkfile\shell\RegKeeperUninstall" Action="removeOnUninstall"/>
+                <RemoveRegistryKey Root="HKCU" Key="Software\RegKeeper\Setup" Action="removeOnUninstall"/>
+            </Component>
+
+            <Feature Id="StartMenu" Title="Ярлык в меню Пуск" Description="RegKeeper в списке программ меню Пуск.">
+                <Component Directory="ProgramMenuFolder">
+                    <Shortcut Id="StartMenuLnk" Name="RegKeeper" Description="Удаление программ, автозагрузка и чистка реестра"
+                              Target="[INSTALLFOLDER]RegKeeper.exe" WorkingDirectory="INSTALLFOLDER"/>
+                    <RegistryValue Root="HKCU" Key="Software\RegKeeper\Setup" Name="StartMenu" Type="integer" Value="1" KeyPath="yes"/>
+                </Component>
+            </Feature>
+            <Feature Id="Desktop" Title="Ярлык на рабочем столе" Description="Ярлык RegKeeper на общем рабочем столе.">
+                <Component Directory="DesktopFolder">
+                    <Shortcut Id="DesktopLnk" Name="RegKeeper" Description="Удаление программ, автозагрузка и чистка реестра"
+                              Target="[INSTALLFOLDER]RegKeeper.exe" WorkingDirectory="INSTALLFOLDER"/>
+                    <RegistryValue Root="HKCU" Key="Software\RegKeeper\Setup" Name="Desktop" Type="integer" Value="1" KeyPath="yes"/>
+                </Component>
+            </Feature>
+            <Feature Id="ShellVerb" Title="Пункт «Удалить с RegKeeper»" Description="Пункт в контекстном меню exe-файлов и ярлыков. В Windows 11 он в «Показать дополнительные параметры».">
+                <Component Directory="INSTALLFOLDER">
+                    <RegistryValue Root="HKCU" Key="Software\Classes\exefile\shell\RegKeeperUninstall" Value="Удалить с RegKeeper" Type="string" KeyPath="yes"/>
+                    <RegistryValue Root="HKCU" Key="Software\Classes\exefile\shell\RegKeeperUninstall" Name="Icon" Value="[INSTALLFOLDER]RegKeeper.exe" Type="string"/>
+                    <RegistryValue Root="HKCU" Key="Software\Classes\exefile\shell\RegKeeperUninstall\command" Value="&quot;[INSTALLFOLDER]RegKeeper.exe&quot; --uninstall &quot;%1&quot;" Type="string"/>
+                    <RegistryValue Root="HKCU" Key="Software\Classes\lnkfile\shell\RegKeeperUninstall" Value="Удалить с RegKeeper" Type="string"/>
+                    <RegistryValue Root="HKCU" Key="Software\Classes\lnkfile\shell\RegKeeperUninstall" Name="Icon" Value="[INSTALLFOLDER]RegKeeper.exe" Type="string"/>
+                    <RegistryValue Root="HKCU" Key="Software\Classes\lnkfile\shell\RegKeeperUninstall\command" Value="&quot;[INSTALLFOLDER]RegKeeper.exe&quot; --uninstall &quot;%1&quot;" Type="string"/>
+                </Component>
+            </Feature>
+            <Feature Id="Watcher" Title="Наблюдатель за автозагрузкой" Description="RegKeeper.Watcher: значок в трее, предупреждает о новых программах в автозагрузке.">
+                <Component Directory="INSTALLFOLDER">
+                    <File Id="WatcherExe" Source="$(Pub)\RegKeeper.Watcher.exe" KeyPath="yes"/>
+                </Component>
+                <!-- off by default (level 2), the same switch as in Settings -->
+                <Feature Id="WatcherRun" Level="2" Title="Запускать при входе в Windows" Description="Наблюдатель стартует вместе с Windows.">
+                    <Component Directory="INSTALLFOLDER">
+                        <RegistryValue Root="HKCU" Key="Software\Microsoft\Windows\CurrentVersion\Run" Name="RegKeeper Watcher" Value="&quot;[INSTALLFOLDER]RegKeeper.Watcher.exe&quot;" Type="string" KeyPath="yes"/>
+                    </Component>
+                </Feature>
+            </Feature>
+        </Feature>
+
+        <!-- wizard: welcome, licence, features with the folder picker, ready, progress, finish with "launch" -->
+        <WixVariable Id="WixUILicenseRtf" Value="License.rtf"/>
+        <WixVariable Id="WixUIBannerBmp" Value="banner.bmp"/>
+        <WixVariable Id="WixUIDialogBmp" Value="dialog.bmp"/>
+        <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Запустить RegKeeper"/>
+        <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1"/>
+        <Property Id="WixShellExecTarget" Value="[#RegKeeperExe]"/>
+        <CustomAction Id="LaunchApp" BinaryRef="Wix4UtilCA_X64" DllEntry="WixShellExec" Impersonate="yes"/>
+        <UI>
+            <ui:WixUI Id="WixUI_FeatureTree"/>
+            <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApp" Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed"/>
+        </UI>
+    </Package>
+</Wix>
