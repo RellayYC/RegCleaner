@@ -276,7 +276,8 @@ public static class Motion
         return null;
     }
 
-    // ---- count-up: when a loaded status line gets new numbers, they run up from zero
+    // ---- count-up: when a loaded status line gets new numbers, they run up from the ones on screen (from zero the first time,
+    // or when the line has a different count of numbers), so a line updated many times a second, like a download, only climbs
 
     public static readonly DependencyProperty CountUpProperty = DependencyProperty.RegisterAttached(
         "CountUp", typeof(bool), typeof(Motion), new PropertyMetadata(false, OnCountUp));
@@ -286,6 +287,14 @@ public static class Motion
     static readonly Regex Digits = new(@"\d{1,15}");
     static readonly Dictionary<TextBlock, EventHandler> Counting = new();
     static readonly HashSet<TextBlock> Writing = new();
+    static readonly System.Runtime.CompilerServices.ConditionalWeakTable<TextBlock, long[]> Shown = new();
+
+    /// <summary>The numbers of target as they stand at k (0..1) on the way from the numbers in from.</summary>
+    internal static string Between(string target, long[] from, double k)
+    {
+        var i = 0;
+        return Digits.Replace(target, m => { var f = from[i++]; return Math.Round(f + (long.Parse(m.Value) - f) * k).ToString(); });
+    }
 
     static void OnCountUp(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -298,7 +307,9 @@ public static class Motion
         if (Writing.Contains(tb)) return;
         if (Counting.Remove(tb, out var old)) CompositionTarget.Rendering -= old; // a newer text wins
         var target = tb.Text;
-        if (!On || !tb.IsLoaded || !Digits.IsMatch(target)) return;
+        var count = Digits.Matches(target).Count;
+        var from = Shown.TryGetValue(tb, out var s) && s.Length == count ? s : new long[count];
+        if (!On || !tb.IsLoaded || count == 0) { Shown.Remove(tb); return; }
         var dur = T("TCount");
         var ease = S("EaseEnter");
         var start = DateTime.UtcNow;
@@ -306,8 +317,8 @@ public static class Motion
         tick = (_, _) =>
         {
             var p = dur <= TimeSpan.Zero ? 1 : Math.Min(1, (DateTime.UtcNow - start) / dur);
-            var k = ease.GetSplineProgress(p);
-            var text = p >= 1 ? target : Digits.Replace(target, m => Math.Round(long.Parse(m.Value) * k).ToString());
+            var text = p >= 1 ? target : Between(target, from, ease.GetSplineProgress(p));
+            Shown.AddOrUpdate(tb, Digits.Matches(text).Select(m => long.Parse(m.Value)).ToArray());
             Writing.Add(tb);
             tb.SetCurrentValue(TextBlock.TextProperty, text); // SetCurrentValue keeps a binding on Text alive
             Writing.Remove(tb);

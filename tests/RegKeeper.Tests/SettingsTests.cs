@@ -48,6 +48,15 @@ public class SettingsTests
         Assert.Null(Update.Verify(json, sig, pub));
     }
 
+    // the download line is updated many times a second; each update must climb from what is shown, not from zero
+    [Fact]
+    public void CountUp_RunsFromTheShownNumbers()
+    {
+        Assert.Equal("Скачивание: 40 %", Motion.Between("Скачивание: 50 %", [40], 0));
+        Assert.Equal("Скачивание: 45 %", Motion.Between("Скачивание: 50 %", [40], 0.5));
+        Assert.Equal("3 из 10", Motion.Between("3 из 10", [0, 0], 1));
+    }
+
     [Fact]
     public void Update_FindsTheNewestMsiAboveThisBuild()
     {
