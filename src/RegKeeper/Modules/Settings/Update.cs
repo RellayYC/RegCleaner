@@ -27,6 +27,22 @@ public static class Update
 
     public static Version Current => Version.Parse(typeof(Update).Assembly.GetName().Version!.ToString(3));
 
+    /// <summary>Without a channel the button looks in a folder the user picked (W:\RegMsi, a share, OneDrive...).</summary>
+    public static string? Source
+    {
+        get => Reg.GetString(MainWindow.Key, "UpdateSource") is { Length: > 0 } s && Directory.Exists(s) ? s : null;
+        set => Microsoft.Win32.Registry.SetValue(MainWindow.Key, "UpdateSource", value ?? "");
+    }
+
+    /// <summary>"RegKeeper-1.2.3-x64.msi" gives 1.2.3.</summary>
+    internal static Version? VersionOf(string msi) =>
+        Path.GetFileNameWithoutExtension(msi).Split('-') is [_, var v, _] && Version.TryParse(v, out var ver) ? ver : null;
+
+    /// <summary>The newest MSI in the folder that is newer than this build, or null.</summary>
+    public static string? Find(string folder) => Directory.EnumerateFiles(folder, "RegKeeper-*-x64.msi")
+        .Select(f => (File: f, Version: VersionOf(f))).Where(m => m.Version > Current)
+        .OrderByDescending(m => m.Version).Select(m => m.File).FirstOrDefault();
+
     static string Dir => AppContext.BaseDirectory.TrimEnd('\\');
 
     /// <summary>This copy is the one the MSI put in place (HKLM\Software\RegKeeper\Setup); any other is portable.</summary>

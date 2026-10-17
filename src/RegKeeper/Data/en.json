@@ -555,7 +555,6 @@
  "Обновить из файла": "Update from file",
  "Установщик RegKeeper (*.msi)|*.msi": "RegKeeper installer (*.msi)|*.msi",
  "Обновления приходят с сервера RegKeeper, перед установкой проверяется подпись.": "Updates come from the RegKeeper server; the signature is checked before installing.",
- "В этой сборке нет канала обновлений, можно обновить только из файла.": "This build has no update channel; you can only update from a file.",
  "Установлена последняя версия {0}.": "You have the latest version {0}.",
  "Скачивание: {0} %": "Downloading: {0} %",
  "Подпись обновления не сходится, обновление отклонено.": "The update signature does not match; the update was rejected.",
@@ -568,5 +567,13 @@
  "Обновление не установилось, работает прежняя версия {0}.": "The update did not install; the previous version {0} is still running.",
  "Скрыть (вернуть можно в настройках)": "Hide (you can bring it back in Settings)",
  "Скрыть": "Hide",
- "Карточка «Резервная копия реестра» внизу боковой панели": "The “Registry backup” card at the bottom of the sidebar"
+ "Карточка «Резервная копия реестра» внизу боковой панели": "The “Registry backup” card at the bottom of the sidebar",
+ "Лёгкий режим: без анимаций, подсветки и теней": "Light mode: no animations, highlights or shadows",
+ "Для слабых компьютеров и удалённого рабочего стола. Включается после перезапуска RegKeeper.": "For slow PCs and Remote Desktop. Takes effect after RegKeeper restarts.",
+ "Лёгкий режим сменится после перезапуска. Перезапустить RegKeeper сейчас?": "Light mode changes after a restart. Restart RegKeeper now?",
+ "Обновления берутся из папки с установщиками RegKeeper-x.y.z-x64.msi: ": "Updates come from a folder of RegKeeper-x.y.z-x64.msi installers: ",
+ "папка ещё не выбрана": "no folder chosen yet",
+ "Папка с установщиками RegKeeper": "Folder with RegKeeper installers",
+ "Есть версия {0}. Установить? RegKeeper закроется примерно на минуту и откроется уже новым.": "Version {0} is available. Install it? RegKeeper will close for about a minute and reopen updated.",
+ "В папке {0} нет версии новее {1}. Выбрать другую папку?": "There is no version newer than {1} in {0}. Choose another folder?"
 }

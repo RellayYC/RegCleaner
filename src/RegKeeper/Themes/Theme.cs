@@ -28,8 +28,9 @@ public static class Theme
     public static void Apply(string mode)
     {
         Current = Resolve(mode);
-        Application.Current.Resources.MergedDictionaries[0] =
-            new ResourceDictionary { Source = new Uri($"pack://application:,,,/RegKeeper;component/Themes/{Current}.xaml") };
+        var theme = new ResourceDictionary { Source = new Uri($"pack://application:,,,/RegKeeper;component/Themes/{Current}.xaml") };
+        if (Motion.Lite) Motion.Strip(theme);
+        Application.Current.Resources.MergedDictionaries[0] = theme;
         foreach (Window w in Application.Current.Windows) TitleBar(w);
     }
 

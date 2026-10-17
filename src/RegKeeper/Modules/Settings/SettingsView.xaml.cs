@@ -20,6 +20,7 @@ public partial class SettingsView : UserControl
         Loaded += (_, _) => Motion.Slide(ScalePill, ScaleChoices.Children.OfType<RadioButton>().FirstOrDefault(r => r.IsChecked == true));
         (L.Saved switch { L.Ru => LangRu, L.En => LangEn, _ => LangAuto }).IsChecked = true;
         (MainWindow.CloseToTray ? CloseTray : CloseExit).IsChecked = true;
+        Lite.IsChecked = Motion.LiteSaved;
         Loaded += (_, _) => BackupCard.IsChecked = MainWindow.ShowBackupCard; // the cross on the card may have hidden it since
         ShellVerb.IsChecked = Integration.ShellVerb;
         Watcher.IsChecked = Integration.WatcherAutostart;
@@ -31,14 +32,14 @@ public partial class SettingsView : UserControl
         }
         DataInfo.Text = L.T($"{AppPaths.Data}\nЦентр отмены, снимки и трассы установок: {Sys.Size(Sys.DirSize(AppPaths.Data))}");
         About.Text = $"RegKeeper {Update.Current}, .NET {Environment.Version}";
-        UpdateBtn.IsEnabled = Update.Online;
         UpdateInfo.Text = Update.Online
             ? L.T("Обновления приходят с сервера RegKeeper, перед установкой проверяется подпись.")
-            : L.T("В этой сборке нет канала обновлений, можно обновить только из файла.");
+            : L.T("Обновления берутся из папки с установщиками RegKeeper-x.y.z-x64.msi: ") + (Update.Source ?? L.T("папка ещё не выбрана"));
     }
 
     async void Update_Click(object s, RoutedEventArgs e)
     {
+        if (!Update.Online) { UpdateFromFolder(); return; }
         var info = UpdateInfo.Text;
         await Ui.Busy(UpdateBtn, async ct =>
         {
@@ -52,6 +53,29 @@ public partial class SettingsView : UserControl
             Launch(msi);
         });
         UpdateInfo.Text = info;
+    }
+
+    // no channel in this build: the newest MSI in the saved folder, asking for a folder when there is none or nothing new in it
+    void UpdateFromFolder()
+    {
+        var folder = Update.Source;
+        while (true)
+        {
+            if (folder == null)
+            {
+                var dlg = new Microsoft.Win32.OpenFolderDialog { Title = L.T("Папка с установщиками RegKeeper") };
+                if (dlg.ShowDialog() != true) return;
+                Update.Source = folder = dlg.FolderName;
+                UpdateInfo.Text = L.T("Обновления берутся из папки с установщиками RegKeeper-x.y.z-x64.msi: ") + folder;
+            }
+            if (Update.Find(folder) is { } msi)
+            {
+                if (Ui.Confirm(L.T($"Есть версия {Update.VersionOf(msi)}. Установить? RegKeeper закроется примерно на минуту и откроется уже новым."))) Launch(msi);
+                return;
+            }
+            if (!Ui.Confirm(L.T($"В папке {folder} нет версии новее {Update.Current}. Выбрать другую папку?"))) return;
+            folder = null;
+        }
     }
 
     void UpdateFile_Click(object s, RoutedEventArgs e)
@@ -94,6 +118,17 @@ public partial class SettingsView : UserControl
     }
 
     void BackupCard_Changed(object s, RoutedEventArgs e) => MainWindow.ShowBackupCard = BackupCard.IsChecked == true;
+
+    void Lite_Changed(object s, RoutedEventArgs e)
+    {
+        if (Lite.IsChecked == Motion.LiteSaved) return; // the initial IsChecked from the constructor
+        Motion.LiteSaved = Lite.IsChecked == true;
+        if (Ui.Confirm(L.T("Лёгкий режим сменится после перезапуска. Перезапустить RegKeeper сейчас?")))
+        {
+            System.Diagnostics.Process.Start(Environment.ProcessPath!);
+            ((MainWindow)Application.Current.MainWindow).Quit();
+        }
+    }
 
     void Lang_Checked(object s, RoutedEventArgs e)
     {

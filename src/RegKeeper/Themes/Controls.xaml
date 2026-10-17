@@ -207,7 +207,7 @@
                 <ControlTemplate TargetType="ContentControl">
                     <Grid>
                         <Border Margin="16,24,16,0" CornerRadius="{StaticResource RCard}" Background="{DynamicResource BgBrush}"
-                                Effect="{Binding (rk:Ui.Glow), RelativeSource={RelativeSource TemplatedParent}}"/>
+                                Effect="{TemplateBinding rk:Ui.Glow}"/>
                         <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
                                 CornerRadius="{StaticResource RCard}" Padding="{TemplateBinding Padding}" ClipToBounds="True">
                             <ContentPresenter/>
@@ -296,17 +296,17 @@
                         <Grid.RenderTransform><TranslateTransform/></Grid.RenderTransform>
                         <Border x:Name="ring" Margin="-3" CornerRadius="{StaticResource RRing}" BorderThickness="2" BorderBrush="{DynamicResource RingBrush}" Opacity="0"/>
                         <!-- cursor light (Motion.Spot): an optional blurred halo behind the body, a spotlight under the label, the lit border ring -->
-                        <Border CornerRadius="{StaticResource RControl}" Effect="{StaticResource SpotBlur}" SnapsToDevicePixels="False"
-                                rk:Motion.SpotSize="{StaticResource SpotRadius}" rk:Motion.Spot="{Binding (rk:Motion.Halo), RelativeSource={RelativeSource TemplatedParent}}"/>
+                        <Border CornerRadius="{StaticResource RControl}" Effect="{DynamicResource SpotBlur}" SnapsToDevicePixels="False"
+                                rk:Motion.SpotSize="{StaticResource SpotRadius}" rk:Motion.Spot="{TemplateBinding rk:Motion.Halo}"/>
                         <Border Background="{TemplateBinding Background}" CornerRadius="{StaticResource RControl}"
-                                Effect="{Binding (rk:Ui.Glow), RelativeSource={RelativeSource TemplatedParent}}"/>
+                                Effect="{TemplateBinding rk:Ui.Glow}"/>
                         <Border x:Name="b" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="1" CornerRadius="{StaticResource RControl}" RenderTransformOrigin="0.5,0.5">
                             <Border.RenderTransform><ScaleTransform/></Border.RenderTransform>
                             <Grid>
                                 <Border x:Name="h" Background="{TemplateBinding Tag}" CornerRadius="{StaticResource RControlIn}" Opacity="0"/>
                                 <Border CornerRadius="{StaticResource RControlIn}"
-                                        rk:Motion.SpotSize="{StaticResource SpotRadius}" rk:Motion.Spot="{Binding (rk:Motion.Light), RelativeSource={RelativeSource TemplatedParent}}"/>
+                                        rk:Motion.SpotSize="{StaticResource SpotRadius}" rk:Motion.Spot="{TemplateBinding rk:Motion.Light}"/>
                                 <Border Margin="-1" BorderThickness="1" CornerRadius="{StaticResource RControl}"
                                         rk:Motion.SpotSize="{StaticResource SpotRadius}" rk:Motion.Spot="{DynamicResource SpotEdge}"/>
                                 <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>

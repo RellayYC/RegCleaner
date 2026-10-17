@@ -49,6 +49,20 @@ public class SettingsTests
     }
 
     [Fact]
+    public void Update_FindsTheNewestMsiAboveThisBuild()
+    {
+        var dir = Directory.CreateTempSubdirectory().FullName;
+        try
+        {
+            Assert.Null(Update.Find(dir));
+            foreach (var n in new[] { "RegKeeper-0.0.1-x64.msi", "RegKeeper-99.0.0-x64.msi", "RegKeeper-100.0.0-x64.msi", "RegKeeper-x-x64.msi", "Other-200.0.0-x64.msi" })
+                File.WriteAllText(Path.Combine(dir, n), "");
+            Assert.Equal("RegKeeper-100.0.0-x64.msi", Path.GetFileName(Update.Find(dir)));
+        }
+        finally { Directory.Delete(dir, true); }
+    }
+
+    [Fact]
     public void Update_UnmasksTheBuildSeed_AndSignsLikeTheWorker()
     {
         // seed made by build.ps1's masking, HMAC by node's crypto.createHmac (what worker.js verifies)

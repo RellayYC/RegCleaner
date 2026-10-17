@@ -14,6 +14,7 @@ public partial class App : Application
             ex.Handled = true;
         };
         if (!Motion.On) Motion.Reduce(Resources.MergedDictionaries[1]);
+        if (Motion.Lite) Motion.Strip(Resources.MergedDictionaries[1]);
         Motion.SmoothWheel();
         Theme.ApplyScale(Theme.Scale);
         Theme.Apply(Theme.Saved);

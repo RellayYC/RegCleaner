@@ -53,6 +53,8 @@
                     </Border>
                     <CheckBox x:Name="BackupCard" Content="Карточка «Резервная копия реестра» внизу боковой панели" Margin="0,14,0,0"
                               Checked="BackupCard_Changed" Unchecked="BackupCard_Changed"/>
+                    <CheckBox x:Name="Lite" Content="Лёгкий режим: без анимаций, подсветки и теней" Margin="0,8,0,0" Checked="Lite_Changed" Unchecked="Lite_Changed"/>
+                    <TextBlock Style="{StaticResource Hint}" Margin="24,2,0,0" Text="Для слабых компьютеров и удалённого рабочего стола. Включается после перезапуска RegKeeper."/>
                 </StackPanel>
             </ContentControl>
             <ContentControl Style="{StaticResource Card}" Margin="0,24,0,0">

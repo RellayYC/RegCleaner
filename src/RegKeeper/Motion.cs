@@ -16,8 +16,23 @@ public static class Motion
 {
     static readonly string[] Times = { "TPress", "THover", "TFast", "TBase", "TSlow", "TCount", "TStagger", "TSpotIn", "TSpotOut" };
 
-    /// <summary>Off when Windows animations are off (the reduced-motion switch) and in headless runs.</summary>
-    public static bool On => SystemParameters.ClientAreaAnimation && Ui.Headless == null;
+    /// <summary>Off when Windows animations are off (the reduced-motion switch), in light mode and in headless runs.</summary>
+    public static bool On => SystemParameters.ClientAreaAnimation && Ui.Headless == null && !Lite;
+
+    /// <summary>Light mode (Settings): no animation, cursor light, glows or shadows. Read once: it takes effect on the next start.</summary>
+    public static readonly bool Lite = LiteSaved;
+    public static bool LiteSaved
+    {
+        get => Core.Reg.GetString(MainWindow.Key, "Lite") == "1";
+        set => Microsoft.Win32.Registry.SetValue(MainWindow.Key, "Lite", value ? "1" : "0");
+    }
+
+    /// <summary>Drops the effect and glow resources from a dictionary (Controls once, each theme in Theme.Apply): a missing
+    /// DynamicResource leaves the property empty, while a null value would just fall through to the next dictionary.</summary>
+    public static void Strip(ResourceDictionary d)
+    {
+        foreach (var k in new[] { "GlowLight", "GlowHot", "CardShadow", "HotCardShadow", "DangerShadow", "SpotBlur", "BgGlowBrush" }) d.Remove(k);
+    }
 
     /// <summary>Zeroes the duration tokens so template storyboards jump to their end; call before any window exists.</summary>
     public static void Reduce(ResourceDictionary controls)
@@ -328,7 +343,7 @@ public static class Motion
 
     static void OnSpot(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is not Border b) return;
+        if (d is not Border b || Lite) return;
         if ((b.BorderThickness.Left > 0 ? b.BorderBrush : b.Background) is RadialGradientBrush old) { Tint(old, (Color)e.NewValue, 1); return; }
         var br = new RadialGradientBrush { MappingMode = BrushMappingMode.Absolute };
         br.GradientStops.Add(new GradientStop(default, 0));
