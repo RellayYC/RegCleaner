@@ -46,7 +46,7 @@ public partial class SettingsView : UserControl
                 Ui.Info(L.T($"Установлена последняя версия {Update.Current}."));
                 return;
             }
-            if (!Ui.Confirm(Question(L.T($"Вышла версия {r.Version}. Скачать и установить? RegKeeper закроется, мастер установки заменит текущую версию {Update.Current}.")))) return;
+            if (!Ui.Confirm(L.T($"Вышла версия {r.Version}. Скачать и установить? RegKeeper закроется примерно на минуту и откроется уже новым."))) return;
             var msi = await Update.Download(r, new Progress<int>(p => UpdateInfo.Text = L.T($"Скачивание: {p} %")), ct);
             Launch(msi);
         });
@@ -56,12 +56,9 @@ public partial class SettingsView : UserControl
     void UpdateFile_Click(object s, RoutedEventArgs e)
     {
         var dlg = new Microsoft.Win32.OpenFileDialog { Filter = L.T("Установщик RegKeeper (*.msi)|*.msi") };
-        if (dlg.ShowDialog() == true && Ui.Confirm(Question(L.T($"Установить {Path.GetFileName(dlg.FileName)}? RegKeeper закроется, мастер установки заменит текущую версию {Update.Current}."))))
+        if (dlg.ShowDialog() == true && Ui.Confirm(L.T($"Установить {Path.GetFileName(dlg.FileName)}? RegKeeper закроется примерно на минуту и откроется уже новым.")))
             Launch(dlg.FileName);
     }
-
-    static string Question(string text) =>
-        Update.Installed ? text : text + "\n\n" + L.T("Эта копия портативная: новая версия встанет в выбранную в мастере папку, а эта останется.");
 
     static void Launch(string msi)
     {

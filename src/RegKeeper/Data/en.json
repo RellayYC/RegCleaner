@@ -554,13 +554,16 @@
  "Проверить обновления": "Check for updates",
  "Обновить из файла": "Update from file",
  "Установщик RegKeeper (*.msi)|*.msi": "RegKeeper installer (*.msi)|*.msi",
- "Установить {0}? RegKeeper закроется, мастер установки заменит текущую версию {1}.": "Install {0}? RegKeeper will close and the setup wizard will replace the current version {1}.",
- "Эта копия портативная: новая версия встанет в выбранную в мастере папку, а эта останется.": "This is a portable copy: the new version goes to the folder chosen in the wizard and this one stays.",
  "Обновления приходят с сервера RegKeeper, перед установкой проверяется подпись.": "Updates come from the RegKeeper server; the signature is checked before installing.",
  "В этой сборке нет канала обновлений, можно обновить только из файла.": "This build has no update channel; you can only update from a file.",
  "Установлена последняя версия {0}.": "You have the latest version {0}.",
- "Вышла версия {0}. Скачать и установить? RegKeeper закроется, мастер установки заменит текущую версию {1}.": "Version {0} is out. Download and install it? RegKeeper will close and the setup wizard will replace the current version {1}.",
  "Скачивание: {0} %": "Downloading: {0} %",
  "Подпись обновления не сходится, обновление отклонено.": "The update signature does not match; the update was rejected.",
- "Скачанный файл повреждён: контрольная сумма не совпала.": "The downloaded file is damaged: its checksum does not match."
+ "Скачанный файл повреждён: контрольная сумма не совпала.": "The downloaded file is damaged: its checksum does not match.",
+ "Не удалось связаться с сервером обновлений. Проверьте подключение к интернету.": "Could not reach the update server. Check your internet connection.",
+ "Сервер обновлений ответил ошибкой {0}. Попробуйте позже.": "The update server returned error {0}. Try again later.",
+ "Вышла версия {0}. Скачать и установить? RegKeeper закроется примерно на минуту и откроется уже новым.": "Version {0} is out. Download and install it? RegKeeper will close for about a minute and reopen updated.",
+ "Установить {0}? RegKeeper закроется примерно на минуту и откроется уже новым.": "Install {0}? RegKeeper will close for about a minute and reopen updated.",
+ "RegKeeper обновлён до версии {0}.": "RegKeeper has been updated to version {0}.",
+ "Обновление не установилось, работает прежняя версия {0}.": "The update did not install; the previous version {0} is still running."
 }

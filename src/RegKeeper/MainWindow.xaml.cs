@@ -63,6 +63,9 @@ public partial class MainWindow : Window
         if (args.Length >= 2 && args[0] == "--uninstall") Loaded += (_, _) => Show<UninstallerView>().FocusOn(args[1]);
         else if (args.Length >= 1 && args[0] == "--startup") Nav.SelectedIndex = 2;
         else Nav.SelectedIndex = 0;
+        // from the update script in Update.Run
+        if (args is ["--updated", ..]) Loaded += (_, _) => { Update.Finish(); Ui.Info(L.T($"RegKeeper обновлён до версии {Update.Current}.")); };
+        else if (args is ["--update-failed", ..]) Loaded += (_, _) => { Update.Finish(); Ui.Info(L.T($"Обновление не установилось, работает прежняя версия {Update.Current}.")); };
     }
 
     void Nav_SelectionChanged(object sender, SelectionChangedEventArgs e)

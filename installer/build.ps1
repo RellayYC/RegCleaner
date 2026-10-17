@@ -9,7 +9,11 @@ $channel = @()
 $cfg = Join-Path $env:USERPROFILE '.regkeeper\update.json'
 if (Test-Path $cfg) {
     $c = Get-Content $cfg -Raw | ConvertFrom-Json
-    $channel = "-p:UpdateUrl=$($c.url)", "-p:UpdateKey=$($c.key)", "-p:UpdatePub=$($c.pub)"
+    # the key goes in XOR-masked with SHA-256 of the public key (Update.Unmask): not secret, just not a readable string
+    $mask = [Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($c.pub))
+    $key = [Text.Encoding]::UTF8.GetBytes($c.key)
+    for ($i = 0; $i -lt $key.Length; $i++) { $key[$i] = $key[$i] -bxor $mask[$i % $mask.Length] }
+    $channel = "-p:UpdateUrl=$($c.url)", "-p:UpdateSeed=$([Convert]::ToBase64String($key))", "-p:UpdatePub=$($c.pub)"
 } else { Write-Warning "no $cfg, this build has no update channel" }
 if (Test-Path $pub) { Remove-Item $pub -Recurse -Force }
 foreach ($p in 'RegKeeper', 'RegKeeper.Watcher') {

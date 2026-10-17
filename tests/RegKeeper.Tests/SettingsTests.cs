@@ -47,4 +47,14 @@ public class SettingsTests
         json[13] = (byte)'8'; // 9.8.9
         Assert.Null(Update.Verify(json, sig, pub));
     }
+
+    [Fact]
+    public void Update_UnmasksTheBuildSeed_AndSignsLikeTheWorker()
+    {
+        // seed made by build.ps1's masking, HMAC by node's crypto.createHmac (what worker.js verifies)
+        const string pub = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEZdhov6nLyV1tgq4opwt+xzHQ6oDMl8OKQCSc2LmpVKipB7YLGSTL8f9T7ZVTQotEJ+e/FbsgWxaI0Zp++nFLnA==";
+        var key = Update.Unmask("JMMMQTkW+sGCVAFgieghxSWMMDDn7i5BowemSgdK6kUkwwxBORb6wYJUAWCJ6CHF", pub);
+        Assert.Equal("0123456789abcdef0123456789abcdef0123456789abcdef", System.Text.Encoding.UTF8.GetString(key));
+        Assert.Equal("1700000000.13f610556385980b034cfb1fca98554bbf358de995306e1c8c3cebe67de29bbf", Update.Auth(key, "latest.txt", 1700000000));
+    }
 }

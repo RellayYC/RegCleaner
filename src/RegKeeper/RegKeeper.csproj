@@ -25,7 +25,7 @@
   <!-- update channel, passed by installer\build.ps1; a build without it has no online updates -->
   <ItemGroup Condition="'$(UpdateUrl)' != ''">
     <AssemblyMetadata Include="UpdateUrl" Value="$(UpdateUrl)" />
-    <AssemblyMetadata Include="UpdateKey" Value="$(UpdateKey)" />
+    <AssemblyMetadata Include="UpdateSeed" Value="$(UpdateSeed)" />
     <AssemblyMetadata Include="UpdatePub" Value="$(UpdatePub)" />
   </ItemGroup>
 

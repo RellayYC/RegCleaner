@@ -1,7 +1,9 @@
 using System.Diagnostics;
+using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using RegKeeper.Core;
 
@@ -9,9 +11,10 @@ namespace RegKeeper.Modules;
 
 /// <summary>
 /// Online updates without a public download: a Cloudflare Worker (installer\worker.js) hands the files of a private
-/// Backblaze B2 bucket only to requests carrying the key built into the app. latest.json names the MSI and its SHA-256
-/// and is signed (ECDSA P-256) by installer\release.mjs; the app takes nothing the signature does not cover.
-/// URL, key and public key come from build.ps1 (%USERPROFILE%\.regkeeper\update.json); a build without them has no channel.
+/// Backblaze B2 bucket only to requests signed with the key built into the app (HMAC of time and file name, so the key
+/// itself never crosses the wire). latest.txt holds the release JSON (version, MSI name, SHA-256) and its ECDSA P-256
+/// signature made by installer\release.mjs; nothing the signature does not cover is run.
+/// URL, masked key and public key come from build.ps1 (%USERPROFILE%\.regkeeper\update.json); a build without them has no channel.
 /// </summary>
 public static class Update
 {
@@ -24,23 +27,52 @@ public static class Update
 
     public static Version Current => Version.Parse(typeof(Update).Assembly.GetName().Version!.ToString(3));
 
-    /// <summary>Set by the MSI (HKLM\Software\RegKeeper\Setup); a portable copy has none, so the MSI installs beside it.</summary>
-    public static bool Installed => Reg.GetString(@"HKEY_LOCAL_MACHINE\Software\RegKeeper\Setup", "InstallDir") != null;
+    static string Dir => AppContext.BaseDirectory.TrimEnd('\\');
 
-    static HttpClient Http()
+    /// <summary>This copy is the one the MSI put in place (HKLM\Software\RegKeeper\Setup); any other is portable.</summary>
+    public static bool Installed =>
+        Reg.GetString(@"HKEY_LOCAL_MACHINE\Software\RegKeeper\Setup", "InstallDir") is { } d && d.TrimEnd('\\').Equals(Dir, StringComparison.OrdinalIgnoreCase);
+
+    // ponytail: the key is masked, not secret; anything the app can read, a disassembler can. It keeps it out of strings and traffic.
+    internal static byte[] Unmask(string seed, string publicKey)
     {
-        var http = new HttpClient { BaseAddress = new Uri(Meta("UpdateUrl")!.TrimEnd('/') + "/"), Timeout = Timeout.InfiniteTimeSpan };
-        http.DefaultRequestHeaders.Add("X-RegKeeper-Key", Meta("UpdateKey"));
-        return http;
+        var key = Convert.FromBase64String(seed);
+        var mask = SHA256.HashData(Encoding.UTF8.GetBytes(publicKey));
+        for (var i = 0; i < key.Length; i++) key[i] ^= mask[i % mask.Length];
+        return key;
+    }
+
+    internal static string Auth(byte[] key, string name, long unix) =>
+        $"{unix}.{Convert.ToHexString(HMACSHA256.HashData(key, Encoding.UTF8.GetBytes($"{unix}/{name}"))).ToLowerInvariant()}";
+
+    static TimeSpan _skew; // the Worker accepts 10 minutes either way; a PC clock off by more borrows the server's
+
+    static async Task<HttpResponseMessage> Get(string name, CancellationToken ct)
+    {
+        var key = Unmask(Meta("UpdateSeed")!, Meta("UpdatePub")!);
+        using var http = new HttpClient { BaseAddress = new Uri(Meta("UpdateUrl")!.TrimEnd('/') + "/"), Timeout = Timeout.InfiniteTimeSpan };
+        for (var retry = 0; ; retry++)
+        {
+            var req = new HttpRequestMessage(HttpMethod.Get, name);
+            req.Headers.Add("X-RegKeeper-Auth", Auth(key, name, DateTimeOffset.UtcNow.Add(_skew).ToUnixTimeSeconds()));
+            HttpResponseMessage res;
+            try { res = await http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct); }
+            catch (HttpRequestException e) { throw new IOException(L.T("Не удалось связаться с сервером обновлений. Проверьте подключение к интернету."), e); }
+            if (res.IsSuccessStatusCode) return res;
+            var (code, date) = (res.StatusCode, res.Headers.Date);
+            res.Dispose();
+            if (code == HttpStatusCode.Forbidden && retry == 0 && date != null) { _skew = date.Value - DateTimeOffset.UtcNow; continue; }
+            throw new IOException(L.T($"Сервер обновлений ответил ошибкой {(int)code}. Попробуйте позже."));
+        }
     }
 
     /// <summary>The signed release if it is newer than this build, else null.</summary>
     public static async Task<Release?> Check(CancellationToken ct)
     {
-        using var http = Http();
-        var json = await http.GetByteArrayAsync("latest.json", ct);
-        var sig = Convert.FromBase64String(await http.GetStringAsync("latest.sig", ct));
-        var r = Verify(json, sig, Meta("UpdatePub")!) ?? throw new InvalidDataException(L.T("Подпись обновления не сходится, обновление отклонено."));
+        using var res = await Get("latest.txt", ct);
+        var lines = (await res.Content.ReadAsStringAsync(ct)).Split('\n');
+        var r = lines.Length >= 2 ? Verify(Encoding.UTF8.GetBytes(lines[0]), Convert.FromBase64String(lines[1].Trim()), Meta("UpdatePub")!) : null;
+        if (r == null) throw new InvalidDataException(L.T("Подпись обновления не сходится, обновление отклонено."));
         return Version.Parse(r.Version) > Current ? r : null;
     }
 
@@ -53,35 +85,77 @@ public static class Update
             : null;
     }
 
-    /// <summary>Downloads the MSI into ProgramData (users cannot swap it there before the elevated msiexec runs) and checks its hash.</summary>
+    /// <summary>Where the MSI waits: ProgramData, so users cannot swap it before the elevated msiexec runs. Emptied on every start after an update.</summary>
+    public static string Cache => Path.Combine(AppPaths.Data, "Update");
+
+    /// <summary>Downloads the MSI and checks its hash; nothing is left behind if that fails.</summary>
     public static async Task<string> Download(Release r, IProgress<int> percent, CancellationToken ct)
     {
-        var path = Path.Combine(Directory.CreateDirectory(Path.Combine(AppPaths.Data, "Update")).FullName, Path.GetFileName(r.File));
-        using var http = Http();
-        using (var res = await http.GetAsync(r.File, HttpCompletionOption.ResponseHeadersRead, ct))
+        if (Directory.Exists(Cache)) Directory.Delete(Cache, true);
+        var path = Path.Combine(Directory.CreateDirectory(Cache).FullName, Path.GetFileName(r.File));
+        try
         {
-            res.EnsureSuccessStatusCode();
-            var total = res.Content.Headers.ContentLength ?? 0;
-            await using var src = await res.Content.ReadAsStreamAsync(ct);
-            await using var dst = File.Create(path);
-            var buf = new byte[1 << 16];
-            for (int n; (n = await src.ReadAsync(buf, ct)) > 0;)
+            using (var res = await Get(r.File, ct))
             {
-                await dst.WriteAsync(buf.AsMemory(0, n), ct);
-                if (total > 0) percent.Report((int)(dst.Length * 100 / total));
+                var total = res.Content.Headers.ContentLength ?? 0;
+                await using var src = await res.Content.ReadAsStreamAsync(ct);
+                await using var dst = File.Create(path);
+                var buf = new byte[1 << 16];
+                for (int n; (n = await src.ReadAsync(buf, ct)) > 0;)
+                {
+                    await dst.WriteAsync(buf.AsMemory(0, n), ct);
+                    if (total > 0) percent.Report((int)(dst.Length * 100 / total));
+                }
             }
+            string hash;
+            await using (var f = File.OpenRead(path)) hash = Convert.ToHexString(await SHA256.HashDataAsync(f, ct));
+            if (!hash.Equals(r.Sha256, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException(L.T("Скачанный файл повреждён: контрольная сумма не совпала."));
+            return path;
         }
-        string hash;
-        await using (var f = File.OpenRead(path)) hash = Convert.ToHexString(await SHA256.HashDataAsync(f, ct));
-        if (hash.Equals(r.Sha256, StringComparison.OrdinalIgnoreCase)) return path;
-        File.Delete(path);
-        throw new InvalidDataException(L.T("Скачанный файл повреждён: контрольная сумма не совпала."));
+        catch
+        {
+            File.Delete(path);
+            throw;
+        }
     }
 
-    /// <summary>Starts the MSI wizard; the caller quits so its files are free. The watcher is stopped for the same reason.</summary>
+    // waits for RegKeeper to exit, then: installed copy - MSI upgrade with a progress bar only; portable copy - files pulled
+    // out of the MSI (administrative install) over the old ones. Either way RegKeeper starts again and is told how it went.
+    // Paths reach the script through the environment, never through its text.
+    const string Script = """
+        Wait-Process -Id $env:RK_PID -ErrorAction SilentlyContinue
+        $msi = '"' + $env:RK_MSI + '"'
+        if ($env:RK_PORTABLE) {
+            $t = Join-Path $env:TEMP ('RegKeeper-' + [guid]::NewGuid())
+            $p = Start-Process msiexec.exe -ArgumentList '/a', $msi, '/qb', ('TARGETDIR="' + $t + '"') -Wait -PassThru
+            $exe = Get-ChildItem $t -Recurse -Filter RegKeeper.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+            $ok = $false
+            if ($p.ExitCode -eq 0 -and $exe) { robocopy $exe.DirectoryName $env:RK_DIR /E /R:5 /W:1 /NP /NFL /NDL /NJH /NJS | Out-Null; $ok = $LASTEXITCODE -lt 8 }
+            Remove-Item $t -Recurse -Force -ErrorAction SilentlyContinue
+        } else {
+            $p = Start-Process msiexec.exe -ArgumentList '/i', $msi, '/passive', '/norestart' -Wait -PassThru
+            $ok = $p.ExitCode -in 0, 3010
+        }
+        Start-Process (Join-Path $env:RK_DIR 'RegKeeper.exe') -ArgumentList $(if ($ok) { '--updated' } else { '--update-failed' })
+        """;
+
+    /// <summary>Hands the MSI to the script above; the caller quits right after. The watcher goes too, its exe is replaced.</summary>
     public static void Run(string msi)
     {
         foreach (var p in Process.GetProcessesByName("RegKeeper.Watcher")) using (p) p.Kill();
-        Process.Start(new ProcessStartInfo("msiexec.exe") { ArgumentList = { "/i", msi } });
+        var psi = new ProcessStartInfo("powershell.exe") { UseShellExecute = false, CreateNoWindow = true, ArgumentList = { "-NoProfile", "-NonInteractive", "-Command", Script } };
+        psi.Environment["RK_MSI"] = msi;
+        psi.Environment["RK_DIR"] = Dir;
+        psi.Environment["RK_PID"] = Environment.ProcessId.ToString();
+        psi.Environment["RK_PORTABLE"] = Installed ? "" : "1";
+        Process.Start(psi);
+    }
+
+    /// <summary>First start after the script: drop the downloaded MSI, bring the watcher back if it is meant to run.</summary>
+    public static void Finish()
+    {
+        try { if (Directory.Exists(Cache)) Directory.Delete(Cache, true); } catch (IOException) { }
+        if (Integration.WatcherAutostart) Integration.StartWatcher();
     }
 }
