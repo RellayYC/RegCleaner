@@ -12,11 +12,13 @@ public partial class StoreAppsView : UserControl
 {
     List<StoreApp> _all = new();
     List<StoreApp> _shown = new();
+    readonly Action _bar;
 
     public StoreAppsView()
     {
         InitializeComponent();
         L.Apply(this);
+        _bar = Ui.Bar(Grid, Bar, BarText, () => Targets.Count);
         Loaded += async (_, _) => { if (_all.Count == 0) await Reload(); };
     }
 
@@ -68,6 +70,7 @@ public partial class StoreAppsView : UserControl
         if (selected != null && _shown.Contains(selected)) Grid.SelectedItem = selected;
         UpdateFigures(basis);
         UpdateDetails();
+        _bar?.Invoke();
     }
 
     void UpdateFigures(List<StoreApp> basis)
@@ -77,76 +80,14 @@ public partial class StoreAppsView : UserControl
 
         AppsFigure.Text = basis.Count.ToString();
         var hidden = _all.Count - basis.Count;
-        AppsNote.Text = hidden > 0 ? L.T($"ещё {hidden} системных скрыто") : L.T("включая системные");
-
-        SetFigure(SpaceFigure, total);
-        var top = bySize.Take(5).Sum(a => a.SizeBytes);
-        var share = total > 0 ? (double)top / total : 0;
-        DrawRing(share);
-        RingText.Text = $"{share * 100:0}%";
-        SpaceNote.Text = L.T("доля 5 крупнейших");
-
-        var heavy = bySize.Where(a => a.Heavy).ToList();
-        HeavyFigure.Text = heavy.Count.ToString();
-        HeavyBars.Children.Clear();
-        for (var i = 0; i < 2; i++) HeavyBars.Children.Add(Bar(i < heavy.Count ? heavy[i] : null));
-
-        if (long.TryParse(Reg.GetString(Key, "LastFreeable"), out var free) && free > 0)
-        {
-            SetFigure(FreeFigure, free);
-            FreeNote.Text = L.T("по последнему анализу «Очистки диска»");
-        }
-        else
-        {
-            FreeFigure.Text = "-";
-            FreeNote.Text = L.T("Запустите анализ в «Очистке диска»");
-        }
+        AppsFigure.ToolTip = hidden > 0 ? L.T($"ещё {hidden} системных скрыто") : L.T("включая системные");
+        SpaceFigure.Text = Sys.Size(total);
+        var known = long.TryParse(Reg.GetString(Key, "LastFreeable"), out var free) && free > 0;
+        FreeFigure.Text = known ? Sys.Size(free) : "-";
+        FreeFigure.ToolTip = known ? L.T("по последнему анализу «Очистки диска»") : L.T("Запустите анализ в «Очистке диска»");
 
         SpaceTotal.Text = L.T($"всего {Sys.Size(total)}");
         DrawSegments(bySize, total);
-    }
-
-    // the unit goes smaller and grey next to the number, as on the other figures
-    static void SetFigure(TextBlock t, long bytes)
-    {
-        var text = Sys.Size(bytes);
-        var cut = text.LastIndexOf(' ');
-        t.Inlines.Clear();
-        t.Inlines.Add(new Run(cut > 0 ? text[..cut] : text));
-        if (cut <= 0) return;
-        var unit = new Run(" " + text[(cut + 1)..]) { FontSize = 20 };
-        unit.SetResourceReference(TextElement.ForegroundProperty, "MutedBrush");
-        t.Inlines.Add(unit);
-    }
-
-    void DrawRing(double share)
-    {
-        const double c = 28, r = 25; // 56 box, 6 stroke
-        if (share >= 0.999) { Ring.Data = new EllipseGeometry(new Point(c, c), r, r); return; }
-        if (share <= 0) { Ring.Data = null; return; }
-        var a = share * 2 * Math.PI;
-        var end = new Point(c + r * Math.Sin(a), c - r * Math.Cos(a));
-        var fig = new PathFigure { StartPoint = new Point(c, c - r) };
-        fig.Segments.Add(new ArcSegment(end, new Size(r, r), 0, share > 0.5, SweepDirection.Clockwise, true));
-        Ring.Data = new PathGeometry(new[] { fig });
-    }
-
-    // one red bar per heavy app, empty track when there is none
-    static FrameworkElement Bar(StoreApp? app)
-    {
-        var g = new System.Windows.Controls.Grid { Height = 6, Margin = new Thickness(0, 0, 0, 8), ToolTip = app == null ? null : $"{app.Title} - {app.SizeText}" };
-        g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(app == null ? 0 : Math.Max(app.Rel, 0.04), GridUnitType.Star) });
-        g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(app == null ? 1 : 1 - Math.Max(app.Rel, 0.04), GridUnitType.Star) });
-        var track = new Border { CornerRadius = new CornerRadius(3) };
-        track.SetResourceReference(Border.BackgroundProperty, "TrackBrush");
-        System.Windows.Controls.Grid.SetColumnSpan(track, 2);
-        g.Children.Add(track);
-        if (app == null) return g;
-        var bar = new Border { CornerRadius = new CornerRadius(3) };
-        bar.SetResourceReference(Border.BackgroundProperty, "HotBarBrush");
-        bar.SetResourceReference(EffectProperty, "GlowHot");
-        g.Children.Add(bar);
-        return g;
     }
 
     // largest first: white, red, three greys, then everything else in one dark segment
@@ -165,9 +106,8 @@ public partial class StoreAppsView : UserControl
         {
             var (name, size, brush) = parts[i];
             Segments.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(Math.Max(size, total / 200.0), GridUnitType.Star) });
-            var seg = new Border { CornerRadius = new CornerRadius(6), Margin = new Thickness(0, 0, i < parts.Count - 1 ? 4 : 0, 0), ToolTip = $"{name} - {Sys.Size(size)}" };
+            var seg = new Border { CornerRadius = new CornerRadius(4), Margin = new Thickness(0, 0, i < parts.Count - 1 ? 4 : 0, 0), ToolTip = $"{name} - {Sys.Size(size)}" };
             seg.SetResourceReference(Border.BackgroundProperty, brush);
-            if (i < 2) seg.SetResourceReference(EffectProperty, i == 0 ? "GlowLight" : "GlowHot");
             System.Windows.Controls.Grid.SetColumn(seg, i);
             Segments.Children.Add(seg);
 
@@ -211,24 +151,8 @@ public partial class StoreAppsView : UserControl
             : L.T("Удалённое приложение можно вернуть только переустановкой из Microsoft Store.");
     }
 
-    // widgets wrap to two columns and the details go under the table on a narrow window
-    void Page_ScrollChanged(object s, ScrollChangedEventArgs e)
-    {
-        // the grid's own scroller bubbles this event too
-        if (e.OriginalSource != Page || (e.ViewportHeightChange == 0 && e.ViewportWidthChange == 0)) return;
-        var w = Page.ViewportWidth - Body.Margin.Right;
-        Widgets.Columns = w >= 974 ? 4 : 2;
-        var under = w < 980;
-        System.Windows.Controls.Grid.SetColumn(Details, under ? 0 : 1);
-        System.Windows.Controls.Grid.SetRow(Details, under ? 1 : 0);
-        Details.Width = under ? double.NaN : Math.Clamp(w * 0.3, 340, 420);
-        Details.Margin = under ? new Thickness(0, 18, 0, 0) : new Thickness(18, 0, 0, 0);
-        // and the buttons go under the search box, which would otherwise shrink to nothing
-        DockPanel.SetDock(Actions, under ? Dock.Bottom : Dock.Right);
-        Actions.Margin = new Thickness(0, under ? 14 : 0, 0, 0);
-        // the table keeps a fixed height so the grid virtualizes its rows inside the scrolling page
-        Grid.Height = Math.Max(360, Page.ViewportHeight - 24);
-    }
+    // the details give the table their room on a narrow window; "Подробнее..." brings them back
+    void Main_SizeChanged(object s, SizeChangedEventArgs e) => Details.Visibility = Main.ActualWidth >= 860 ? Visibility.Visible : Visibility.Collapsed;
 
     void Search_TextChanged(object s, RoutedEventArgs e) => ApplyFilter();
     // Checked/Unchecked, not Click: UI Automation toggles do not raise Click
@@ -250,6 +174,7 @@ public partial class StoreAppsView : UserControl
         if (Selected is not { } app) return;
         app.Checked = !app.Checked;
         Grid.Items.Refresh();
+        _bar();
     }
 
     void Fav_Click(object s, RoutedEventArgs e)
@@ -269,10 +194,9 @@ public partial class StoreAppsView : UserControl
         if (Selected is { } app && StoreApps.Aumid(app) is { } id) Process.Start("explorer.exe", $"shell:AppsFolder\\{id}");
     }
 
-    void Details_Click(object s, RoutedEventArgs e) => Details.BringIntoView();
+    void Details_Click(object s, RoutedEventArgs e) => Details.Visibility = Visibility.Visible;
 
     async void Remove_Click(object s, RoutedEventArgs e) => await Remove(Targets);
-    async void RemoveSelected_Click(object s, RoutedEventArgs e) { if (Selected is { } app) await Remove(new() { app }); }
 
     async Task Remove(List<StoreApp> apps)
     {

@@ -8,11 +8,13 @@ public partial class DiskCleanupView : UserControl
 {
     List<CleanRule> _all = new();
     List<CleanRule> _visible = new();
+    readonly Action _bar;
 
     public DiskCleanupView()
     {
         InitializeComponent();
         L.Apply(this);
+        _bar = Ui.Bar(Grid, Bar, BarText, () => _all.Count(r => r.Checked));
         Loaded += async (_, _) => { if (_all.Count == 0) await Reload(); };
     }
 
@@ -20,7 +22,7 @@ public partial class DiskCleanupView : UserControl
     {
         _all = await Task.Run(Winapp2.Load);
         ApplyFilter();
-        if (!File.Exists(Winapp2.IniPath)) Status.Text += L.T("   База winapp2.ini не загружена");
+        Status.Visibility = File.Exists(Winapp2.IniPath) ? Visibility.Collapsed : Visibility.Visible;
     });
 
     void ApplyFilter()
@@ -35,8 +37,9 @@ public partial class DiskCleanupView : UserControl
     void UpdateStatus()
     {
         var done = _all.Where(r => r.Analyzed && r.Checked).ToList();
-        Status.Text = L.T($"Правил: {_visible.Count}   Отмечено: {_all.Count(r => r.Checked)}") +
-                      (done.Count > 0 ? L.T($"   Найдено: {Sys.Size(done.Sum(r => r.Size))}") : "");
+        CountText.Text = _visible.Count.ToString();
+        FoundText.Text = done.Count > 0 ? Sys.Size(done.Sum(r => r.Size)) : "-";
+        _bar?.Invoke();
         if (!_all.Any(r => r.Analyzed)) return;
         // the sidebar counter and the Windows Apps "can be freed" card read this
         var free = done.Sum(r => r.Size);

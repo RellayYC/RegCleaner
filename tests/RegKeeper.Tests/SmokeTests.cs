@@ -76,10 +76,10 @@ public class SmokeTests
                 {
                     for (var i = 0; i < views.Count; i++) { nav.SelectedIndex = i; Pump(); Shot(win, Path.Combine(dir, $"{lang}-{theme}-{i:00}-{views[i].GetType().Name}.png")); }
                     nav.SelectedIndex = views.IndexOf(store); Pump();
-                    ((ScrollViewer)store.FindName("Page")).ScrollToEnd(); Pump();
+                    Pump();
                     Shot(win, Path.Combine(dir, $"{lang}-{theme}-01b-StoreAppsView-details.png"));
                     // the narrowest window: text wraps, nothing is cut
-                    win.Width = win.MinWidth; Pump(); ((ScrollViewer)store.FindName("Page")).ScrollToTop();
+                    win.Width = win.MinWidth; Pump();
                     for (var i = 0; i < views.Count; i++) { nav.SelectedIndex = i; Pump(); Shot(win, Path.Combine(dir, $"narrow-{lang}-{theme}-{i:00}-{views[i].GetType().Name}.png")); }
                     win.Width = 1400; Pump();
                 }
@@ -174,7 +174,7 @@ public class SmokeTests
     }
 
     /// <summary>Hovering a plain button, the delete button and a sidebar item lights their overlays (reduced motion: at once,
-    /// in the middle); leaving puts them out. The delete button also lights its halo.</summary>
+    /// in the middle); leaving puts them out.</summary>
     static void CursorLight(MainWindow win, ListBox nav, int index, string theme)
     {
         nav.SelectedIndex = index;
@@ -190,11 +190,11 @@ public class SmokeTests
         }
         static List<Border> Lights(DependencyObject host) => Down(host).OfType<Border>().Where(b => Motion.GetSpot(b).A > 0).ToList();
         var buttons = Down(win).OfType<Button>().Where(b => b.IsVisible && b.IsEnabled).ToList();
-        var danger = buttons.First(b => b.Style == win.FindResource("DangerBtn"));
+        var danger = buttons.First(b => b.Style?.BasedOn == win.FindResource("DangerBtn")); // SmallDanger in the selection bar
         var plain = buttons.First(b => b.Style == win.FindResource(typeof(Button)));
         var item = (ListBoxItem)nav.ItemContainerGenerator.ContainerFromIndex(1);
         var hosts = new UIElement[] { plain, danger, item };
-        Assert.Equal(new[] { 2, 3, 1 }, hosts.Select(h => Lights(h).Count));
+        Assert.Equal(new[] { 2, 2, 1 }, hosts.Select(h => Lights(h).Count));
         // even a zero-length fade lands on a render tick, which an offscreen window gets late
         bool Settle(double to)
         {
@@ -253,8 +253,8 @@ public class SmokeTests
             Assert.True(toast.IsVisible, $"{where}: update card not shown on offer {i}");
             Assert.Contains($"9.9.{i}", ((TextBlock)win.FindName("UpdateTitle")).Text);
             var page = (FrameworkElement)win.Content;
-            var corner = toast.TranslatePoint(new Point(toast.ActualWidth, 0), page);
-            Assert.True(page.ActualWidth - corner.X < 40 && corner.Y < 40, $"{where}: update card at {corner}, not top right of {page.ActualWidth}");
+            var corner = toast.TranslatePoint(new Point(toast.ActualWidth, 0), page); // under the 34px title bar
+            Assert.True(page.ActualWidth - corner.X < 40 && corner.Y < 60, $"{where}: update card at {corner}, not top right of {page.ActualWidth}");
             ((IInvokeProvider)new ButtonAutomationPeer((Button)win.FindName("UpdateClose")).GetPattern(PatternInterface.Invoke)).Invoke();
             Pump();
             Assert.False(toast.IsVisible, $"{where}: the cross did not hide the update card");

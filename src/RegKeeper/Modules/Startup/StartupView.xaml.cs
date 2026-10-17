@@ -12,6 +12,7 @@ public partial class StartupView : UserControl
     {
         InitializeComponent();
         L.Apply(this);
+        Ui.Bar(Grid, Bar, BarText, () => Grid.SelectedItems.Count);
         Loaded += async (_, _) => { if (_all.Count == 0) await Reload(); };
     }
 
@@ -30,7 +31,9 @@ public partial class StartupView : UserControl
                                                || i.Command.Contains(q, StringComparison.OrdinalIgnoreCase)
                                                || i.Publisher.Contains(q, StringComparison.OrdinalIgnoreCase))).ToList();
         Grid.ItemsSource = list;
-        Status.Text = L.T($"Записей: {list.Count}   Включено: {list.Count(i => i.Enabled)}   Битых: {list.Count(i => i.Missing)}");
+        CountText.Text = list.Count.ToString();
+        OnText.Text = list.Count(i => i.Enabled).ToString();
+        MissingText.Text = list.Count(i => i.Missing).ToString();
     }
 
     void Search_TextChanged(object s, TextChangedEventArgs e) => ApplyFilter();
@@ -38,6 +41,13 @@ public partial class StartupView : UserControl
     void Filter_Changed(object s, RoutedEventArgs e) { if (IsInitialized) ApplyFilter(); }
 
     List<StartupItem> Selected => Grid.SelectedItems.Cast<StartupItem>().ToList();
+
+    /// <summary>The switch in a row toggles that row alone.</summary>
+    void Switch_Click(object s, RoutedEventArgs e)
+    {
+        Grid.SelectedItem = ((FrameworkElement)s).DataContext;
+        Toggle_Click(s, e);
+    }
 
     void Toggle_Click(object s, RoutedEventArgs e)
     {

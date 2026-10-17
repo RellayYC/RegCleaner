@@ -12,10 +12,13 @@ public partial class SnapshotsView : UserControl
     string _source = "";
     DataGrid? _lastList;
 
+    readonly Action _bar;
+
     public SnapshotsView()
     {
         InitializeComponent();
         L.Apply(this);
+        _bar = Ui.Bar(Changes, Bar, BarText, () => _changes.Count(c => c.Checked));
         Roots.Text = string.Join("; ", Snapshot.RegRoots.Select(Reg.Short).Concat(Snapshot.FileRoots));
         Load();
     }
@@ -29,6 +32,8 @@ public partial class SnapshotsView : UserControl
             .OfType<SnapInfo>().OrderByDescending(i => i.Date).ToList();
         SnapList.ItemsSource = Infos(AppPaths.Snapshots, ".rksnap");
         TraceList.ItemsSource = Infos(AppPaths.Traces, ".rktrace");
+        SnapCount.Text = SnapList.Items.Count.ToString();
+        TraceCount.Text = TraceList.Items.Count.ToString();
     }
 
     string[] RootList() => Roots.Text.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -45,6 +50,7 @@ public partial class SnapshotsView : UserControl
         var q = Search.Text.Trim();
         var list = q == "" ? _changes : _changes.Where(c => c.Display.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
         Changes.ItemsSource = list;
+        _bar?.Invoke();
         Status.Text = _source == "" ? "" : L.T($"{_source}: изменений {_changes.Count}") + (list.Count != _changes.Count ? L.T($", показано {list.Count}") : "");
     }
 
@@ -137,6 +143,7 @@ public partial class SnapshotsView : UserControl
     {
         foreach (SnapChange c in Changes.Items) c.Checked = v; // only the filtered rows
         Changes.Items.Refresh();
+        _bar();
     }
 
     void Open_Click(object s, RoutedEventArgs e)

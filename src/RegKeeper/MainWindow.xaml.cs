@@ -16,7 +16,7 @@ public sealed class NavItem(string title, string glyph, Type view, string group,
     public string Title { get; } = title;
     public string Glyph { get; } = glyph;
     public Type View { get; } = view;
-    /// <summary>Sidebar section; the header shows it as is, upper-cased by the caller (WPF has no text-transform).</summary>
+    /// <summary>Sidebar section; the header shows it as is. The unnamed one sits at the bottom of the sidebar.</summary>
     public string Group { get; } = group;
     /// <summary>Counter colour: light, hot or plain (grey).</summary>
     public string Tone { get; } = tone;
@@ -38,7 +38,7 @@ public partial class MainWindow : Window
     public MainWindow(string[] args)
     {
         // section titles per window: the language can change between windows (tests run ru and en)
-        string programs = L.T("Программы").ToUpper(), cleaning = L.T("Очистка").ToUpper(), registry = L.T("Реестр").ToUpper(), system = L.T("Система").ToUpper();
+        string programs = L.T("Программы"), cleaning = L.T("Очистка"), registry = L.T("Реестр"), system = L.T("Система");
         _items = new()
         {
             new(L.T("Деинсталлятор"), "", typeof(UninstallerView), programs),
@@ -51,8 +51,8 @@ public partial class MainWindow : Window
             new(L.T("Поиск и замена"), "", typeof(RegSearchView), registry),
             new(L.T("Снимки и трассы"), "", typeof(SnapshotsView), registry),
             new(L.T("Твики"), "", typeof(TweaksView), system),
-            new(L.T("Центр отмены"), "", typeof(UndoView), system),
-            new(L.T("Настройки"), "", typeof(SettingsView), system),
+            new(L.T("Центр отмены"), "", typeof(UndoView), ""),
+            new(L.T("Настройки"), "", typeof(SettingsView), ""),
         };
         InitializeComponent();
         L.Apply(this);
@@ -60,6 +60,7 @@ public partial class MainWindow : Window
         Nav.Items.GroupDescriptions.Add(new PropertyGroupDescription(nameof(NavItem.Group)));
         BackupCard.Visibility = ShowBackupCard ? Visibility.Visible : Visibility.Collapsed;
         Loaded += (_, _) => { SlideNav(); _ = LoadBadges(); };
+        StateChanged += (_, _) => Chrome();
         // a bare Application is the test host: no network from tests
         if (Application.Current is App)
         {
@@ -74,6 +75,20 @@ public partial class MainWindow : Window
         // from the update script in Update.Run
         if (args is ["--updated", ..]) Loaded += (_, _) => { Update.Finish(); Ui.Info(L.T($"RegKeeper обновлён до версии {Update.Current}.")); };
         else if (args is ["--update-failed", ..]) Loaded += (_, _) => { Update.Finish(); Ui.Info(L.T($"Обновление не установилось, работает прежняя версия {Update.Current}.")); };
+    }
+
+    void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+    void Maximize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+    void Close_Click(object sender, RoutedEventArgs e) => Close();
+
+    // a maximized custom-chrome window hangs past the screen by its resize border; the padding pulls the content back in
+    void Chrome()
+    {
+        var max = WindowState == WindowState.Maximized;
+        Padding = max ? SystemParameters.WindowResizeBorderThickness : new Thickness();
+        MaxBtn.Content = max ? "\uE923" : "\uE922";
+        MaxBtn.ToolTip = max ? L.T("Восстановить") : L.T("Развернуть");
+        System.Windows.Automation.AutomationProperties.SetName(MaxBtn, (string)MaxBtn.ToolTip);
     }
 
     void Nav_SelectionChanged(object sender, SelectionChangedEventArgs e)

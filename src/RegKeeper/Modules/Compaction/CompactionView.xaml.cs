@@ -17,9 +17,9 @@ public partial class CompactionView : UserControl
         catch (Exception e) { Ui.Error(e); }
         Grid.ItemsSource = _hives;
         AnalyzeBtn.IsEnabled = Compaction.IsAdmin;
-        Status.Text = Compaction.IsAdmin
-            ? L.T($"Разделов: {_hives.Count}   Всего: {Sys.Size(_hives.Sum(h => h.Size))}")
-            : L.T("Нужны права администратора: перезапустите RegKeeper от имени администратора.");
+        Status.Visibility = Compaction.IsAdmin ? Visibility.Collapsed : Visibility.Visible;
+        CountText.Text = _hives.Count.ToString();
+        SizeText.Text = Sys.Size(_hives.Sum(h => h.Size));
     }
 
     async void Analyze_Click(object s, RoutedEventArgs e)
@@ -28,8 +28,9 @@ public partial class CompactionView : UserControl
         catch (Exception ex) { Ui.Error(ex); }
         Grid.Items.Refresh();
         var gain = _hives.Sum(h => h.Gain);
-        Status.Text = L.T($"Можно освободить: {Sys.Size(gain)}");
+        GainText.Text = Sys.Size(gain);
         CompactBtn.IsEnabled = _hives.Any(h => h.Gain > 0);
+        Steps(CompactBtn.IsEnabled ? 2 : 1);
     }
 
     async void Compact_Click(object s, RoutedEventArgs e)
@@ -55,9 +56,17 @@ public partial class CompactionView : UserControl
             return;
         }
         CompactBtn.IsEnabled = false;
+        Steps(3);
         if (errors.Count > 0) Ui.Info(L.T("Не удалось:\n") + string.Join("\n", errors));
         if (errors.Count < todo.Count && Ui.Confirm(L.T("Сжатие применится после перезагрузки. Перезагрузить сейчас?")))
             Process.Start(new ProcessStartInfo("shutdown", "/r /t 0") { CreateNoWindow = true });
+    }
+
+    /// <summary>Marks the current step; the ones before it are done.</summary>
+    void Steps(int current)
+    {
+        var dots = new[] { Step1, Step2, Step3 };
+        for (var i = 0; i < 3; i++) dots[i].Tag = i + 1 == current ? "on" : i + 1 < current ? "done" : null;
     }
 
     void Folder_Click(object s, RoutedEventArgs e)

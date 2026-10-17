@@ -31,7 +31,7 @@ public static class Motion
     /// DynamicResource leaves the property empty, while a null value would just fall through to the next dictionary.</summary>
     public static void Strip(ResourceDictionary d)
     {
-        foreach (var k in new[] { "GlowLight", "GlowHot", "CardShadow", "HotCardShadow", "DangerShadow", "SpotBlur", "BgGlowBrush" }) d.Remove(k);
+        foreach (var k in new[] { "GlowLight", "GlowHot", "CardShadow", "HotCardShadow", "DangerShadow", "BarShadow", "SpotBlur", "BgGlowBrush", "BgHotBrush" }) d.Remove(k);
     }
 
     /// <summary>Zeroes the duration tokens so template storyboards jump to their end; call before any window exists.</summary>

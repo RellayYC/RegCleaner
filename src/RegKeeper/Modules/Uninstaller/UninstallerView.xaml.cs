@@ -11,11 +11,13 @@ public partial class UninstallerView : UserControl
 {
     List<InstalledApp> _all = new();
     string? _pendingFocus;
+    readonly Action _bar;
 
     public UninstallerView()
     {
         InitializeComponent();
         L.Apply(this);
+        _bar = Ui.Bar(Grid, Bar, BarText, () => Targets.Count);
         Loaded += async (_, _) => { if (_all.Count == 0) await Reload(); };
     }
 
@@ -46,7 +48,8 @@ public partial class UninstallerView : UserControl
                                           || a.Publisher.Contains(q, StringComparison.OrdinalIgnoreCase))
                        .OrderByDescending(a => a.Favorite).ToList(); // stable: favourites first, each part keeps name order
         Grid.ItemsSource = list;
-        Status.Text = L.T($"Программ: {list.Count}   Общий размер: {Sys.Size(list.Sum(a => a.SizeBytes))}");
+        CountText.Text = list.Count.ToString();
+        SizeText.Text = Sys.Size(list.Sum(a => a.SizeBytes));
     }
 
     void Search_TextChanged(object s, TextChangedEventArgs e) => ApplyFilter();
@@ -86,6 +89,7 @@ public partial class UninstallerView : UserControl
         if (Selected is not { } app) return;
         app.Checked = !app.Checked;
         Grid.Items.Refresh();
+        _bar();
     }
 
     void Fav_Click(object s, RoutedEventArgs e)

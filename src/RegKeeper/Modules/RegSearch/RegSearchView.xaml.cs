@@ -10,6 +10,7 @@ namespace RegKeeper.Modules;
 public partial class RegSearchView : UserControl
 {
     readonly ObservableCollection<SearchHit> _hits = new();
+    readonly Action _bar;
     CancellationTokenSource? _cts;
     SearchOptions? _last;
 
@@ -17,6 +18,7 @@ public partial class RegSearchView : UserControl
     {
         InitializeComponent();
         L.Apply(this);
+        _bar = Ui.Bar(Grid, Bar, BarText, () => _hits.Count(h => h.Checked));
         Grid.ItemsSource = _hits;
         Roots.Text = string.Join("; ", RegSearch.DefaultRoots.Select(Reg.Short));
     }
@@ -44,7 +46,9 @@ public partial class RegSearchView : UserControl
         void Flush()
         {
             lock (buffer) { buffer.ForEach(_hits.Add); buffer.Clear(); }
-            Status.Text = L.T($"Разделов: {search.Scanned:N0}   Найдено: {_hits.Count:N0}");
+            ScannedText.Text = search.Scanned.ToString("N0");
+            FoundText.Text = _hits.Count.ToString("N0");
+            _bar();
         }
         var timer = new DispatcherTimer(TimeSpan.FromMilliseconds(300), DispatcherPriority.Background, (_, _) => Flush(), Dispatcher);
         SearchBtn.Content = L.T("Стоп");
@@ -63,7 +67,7 @@ public partial class RegSearchView : UserControl
         {
             timer.Stop();
             Flush();
-            if (cancelled) Status.Text += L.T("   (остановлено)");
+            Stopped.Visibility = cancelled ? Visibility.Visible : Visibility.Collapsed;
             SearchBtn.Content = L.T("Искать");
             _cts.Dispose();
             _cts = null;
@@ -101,6 +105,7 @@ public partial class RegSearchView : UserControl
         }
         catch (Exception ex) { Ui.Error(ex); }
         done.ForEach(h => _hits.Remove(h));
+        _bar();
     }
 
     void All_Click(object s, RoutedEventArgs e) => SetAll(true);
@@ -110,6 +115,7 @@ public partial class RegSearchView : UserControl
     {
         foreach (var h in _hits) h.Checked = v;
         Grid.Items.Refresh();
+        _bar();
     }
 
     void Open_Click(object s, RoutedEventArgs e)

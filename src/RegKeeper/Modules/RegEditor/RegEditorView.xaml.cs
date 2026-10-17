@@ -22,6 +22,7 @@ public partial class RegEditorView : UserControl
     {
         InitializeComponent();
         L.Apply(this);
+        Ui.Bar(Values, Bar, BarText, () => Values.SelectedItems.Count);
         foreach (var root in Reg.RootNames) Tree.Items.Add(Node(root, root));
         LoadFavorites();
     }
@@ -51,6 +52,8 @@ public partial class RegEditorView : UserControl
     {
         if (Current is not { } path) return;
         Address.Text = path;
+        var parts = path.Split('\\');
+        Crumbs.ItemsSource = parts.Select((p, i) => new KeyValuePair<string, string>(string.Join('\\', parts.Take(i + 1)), p)).ToList();
         using var k = Reg.Open(path);
         Values.ItemsSource = k == null ? null : Reg.Values(k).OrderBy(v => v.Name != "").ThenBy(v => v.Name, StringComparer.OrdinalIgnoreCase)
             .Select(v => new ValueRow(v)).ToList();
@@ -108,6 +111,7 @@ public partial class RegEditorView : UserControl
     }
 
     void Address_KeyDown(object s, KeyEventArgs e) { if (e.Key == Key.Enter) Navigate(Address.Text); }
+    void Crumb_Click(object s, RoutedEventArgs e) => Navigate((string)((Button)s).Tag);
     void Go_Click(object s, RoutedEventArgs e) => Navigate(Address.Text);
     void Clipboard_Click(object s, RoutedEventArgs e) { if (Clipboard.ContainsText()) Navigate(Clipboard.GetText().Trim().Trim('[', ']')); }
     void CopyPath_Click(object s, RoutedEventArgs e) { if (Current != null) Clipboard.SetText(Current); }

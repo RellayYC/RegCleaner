@@ -7,11 +7,13 @@ namespace RegKeeper.Modules;
 public partial class RegCleanupView : UserControl
 {
     List<RegIssue> _all = new();
+    readonly Action _bar;
 
     public RegCleanupView()
     {
         InitializeComponent();
         L.Apply(this);
+        _bar = Ui.Bar(Grid, Bar, BarText, () => _all.Count(i => i.Checked));
     }
 
     async Task Scan() => await Ui.Busy(this, async () =>
@@ -29,7 +31,8 @@ public partial class RegCleanupView : UserControl
                                                    || i.Key.Contains(q, StringComparison.OrdinalIgnoreCase)
                                                    || i.Problem.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
         Grid.ItemsSource = list;
-        Status.Text = L.T($"Проблем: {_all.Count}") + (list.Count != _all.Count ? L.T($"   Показано: {list.Count}") : "");
+        CountText.Text = list.Count != _all.Count ? $"{list.Count} / {_all.Count}" : _all.Count.ToString();
+        _bar();
     }
 
     void Search_TextChanged(object s, TextChangedEventArgs e) => ApplyFilter();
@@ -54,6 +57,7 @@ public partial class RegCleanupView : UserControl
     {
         _all.ForEach(i => i.Checked = v);
         Grid.Items.Refresh();
+        _bar();
     }
 
     void Ignore_Click(object s, RoutedEventArgs e)

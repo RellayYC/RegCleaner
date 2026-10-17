@@ -10,6 +10,7 @@ public partial class UndoView : UserControl
     {
         InitializeComponent();
         L.Apply(this);
+        Ui.Bar(Grid, Bar, BarText, () => Grid.SelectedItems.Count);
         IsVisibleChanged += (_, _) => { if (IsVisible) Reload(); };
         Reload();
     }
@@ -18,7 +19,8 @@ public partial class UndoView : UserControl
     {
         var list = UndoCenter.List();
         Grid.ItemsSource = list;
-        Status.Text = L.T($"Записей: {list.Count}   Размер: {Sys.Size(Sys.DirSize(AppPaths.Undo))}");
+        CountText.Text = list.Count.ToString();
+        SizeText.Text = Sys.Size(Sys.DirSize(AppPaths.Undo));
     }
 
     List<UndoInfo> Selected => Grid.SelectedItems.Cast<UndoInfo>().ToList();

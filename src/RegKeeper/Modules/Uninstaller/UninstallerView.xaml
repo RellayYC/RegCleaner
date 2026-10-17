@@ -2,26 +2,45 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel>
-        <StackPanel DockPanel.Dock="Top">
-            <TextBlock Text="Удаление программ" Style="{StaticResource Title}"/>
-            <TextBlock Style="{StaticResource Lead}" Text="Запускает штатный деинсталлятор, затем ищет оставшиеся папки и ключи реестра. Ключи уходят в Центр отмены, папки в корзину."/>
-            <!-- the search box gives way to the counters in a narrow window -->
-            <Grid Margin="{StaticResource Toolbar}">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="3*" MaxWidth="420"/><ColumnDefinition Width="*" MinWidth="16"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" TextChanged="Search_TextChanged" ToolTip="Поиск по названию и издателю"/>
-                <TextBlock x:Name="Status" Grid.Column="2" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
-            </Grid>
-            <WrapPanel Margin="0,0,0,6">
+        <!-- header: title and description, the counters on the right -->
+        <DockPanel DockPanel.Dock="Top">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <ContentControl Style="{StaticResource Metric}">
+                    <StackPanel><TextBlock Text="Программы" Style="{StaticResource MetricLabel}"/><TextBlock x:Name="CountText" Style="{StaticResource MetricValue}"/></StackPanel>
+                </ContentControl>
+                <ContentControl Style="{StaticResource Metric}">
+                    <StackPanel><TextBlock Text="Занимают" Style="{StaticResource MetricLabel}"/><TextBlock x:Name="SizeText" Style="{StaticResource MetricValue}"/></StackPanel>
+                </ContentControl>
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Удаление программ" Style="{StaticResource Title}"/>
+                <TextBlock Style="{StaticResource Lead}" Text="Запускает штатный деинсталлятор, затем ищет оставшиеся папки и ключи реестра. Ключи уходят в Центр отмены, папки в корзину."/>
+            </StackPanel>
+        </DockPanel>
+        <!-- toolbar: one row; the rarer commands are under "⋯", the irreversible one in the selection bar -->
+        <DockPanel DockPanel.Dock="Top" Margin="{StaticResource Toolbar}">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="12,0,0,0">
                 <Button Content="Удалить" Style="{StaticResource Primary}" Click="Uninstall_Click"/>
                 <Button Content="Тихое удаление" Click="Quiet_Click" ToolTip="QuietUninstallString / msiexec /qb, если есть"/>
-                <Button Content="Принудительно" Style="{StaticResource DangerBtn}" Click="Force_Click" ToolTip="Без деинсталлятора: сразу поиск и удаление следов"/>
-                <Button Content="Убрать запись" Click="RemoveEntry_Click" ToolTip="Удалить только запись из списка (ключ Uninstall)"/>
-                <Button Content="Папка" Click="Folder_Click"/>
-                <Button Content="Ключ в редакторе" Click="Key_Click"/>
-                <Button Content="Экспорт" Click="Export_Click"/>
-                <Button Content="Обновить" Click="Refresh_Click"/>
-            </WrapPanel>
-        </StackPanel>
+                <Button Content="&#xE72C;" Style="{StaticResource IconBtn}" ToolTip="Обновить" AutomationProperties.Name="Обновить" Click="Refresh_Click"/>
+                <Button Style="{StaticResource More}" Margin="0">
+                    <Button.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Убрать запись" Tag="&#xE894;" ToolTip="Удалить только запись из списка (ключ Uninstall)" Click="RemoveEntry_Click"/>
+                            <MenuItem Header="Папка" Tag="&#xE838;" Click="Folder_Click"/>
+                            <MenuItem Header="Ключ в редакторе" Tag="&#xE8A7;" Click="Key_Click"/>
+                            <Separator/>
+                            <MenuItem Header="Экспорт" Tag="&#xEDE1;" Click="Export_Click"/>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
+            </StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition MaxWidth="420"/></Grid.ColumnDefinitions>
+                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" TextChanged="Search_TextChanged" ToolTip="Поиск по названию и издателю"/>
+            </Grid>
+        </DockPanel>
+        <Grid>
         <DataGrid x:Name="Grid" SelectionMode="Single" MouseDoubleClick="Grid_DoubleClick" ContextMenuOpening="Grid_ContextMenuOpening">
             <DataGrid.ContextMenu>
                 <ContextMenu>
@@ -58,5 +77,16 @@
                 <DataGridTemplateColumn IsReadOnly="True" Header="Для" SortMemberPath="Scope" Width="180"><DataGridTemplateColumn.CellTemplate><DataTemplate><ContentPresenter Content="{Binding Scope}" ContentTemplate="{StaticResource Badge}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
+            <TextBlock Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=Grid}" Text="Ничего не найдено. Измените запрос."/>
+            <!-- ticked or selected programs -->
+            <ContentControl x:Name="Bar" Style="{StaticResource SelectionBar}" Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock x:Name="BarText" Style="{StaticResource BarCount}"/>
+                    <TextBlock Style="{StaticResource Reversible}"><Run Text="&#xE7A7;" FontFamily="{StaticResource Icons}"/> <Run Text="Ключи можно вернуть из Центра отмены"/></TextBlock>
+                    <Button Content="Удалить" Style="{StaticResource SmallPrimary}" Click="Uninstall_Click"/>
+                    <Button Content="Принудительно" Style="{StaticResource SmallDanger}" Margin="0" Click="Force_Click" ToolTip="Без деинсталлятора: сразу поиск и удаление следов"/>
+                </StackPanel>
+            </ContentControl>
+        </Grid>
     </DockPanel>
 </UserControl>

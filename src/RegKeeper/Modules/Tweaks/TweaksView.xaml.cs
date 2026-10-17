@@ -14,6 +14,8 @@ public partial class TweaksView : UserControl
     {
         InitializeComponent();
         L.Apply(this);
+        Resources["WillOn"] = L.T("включится");
+        Resources["WillOff"] = L.T("выключится");
         Load();
     }
 
@@ -31,7 +33,8 @@ public partial class TweaksView : UserControl
         var view = new ListCollectionView(list);
         view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(Tweak.Category)));
         Grid.ItemsSource = view;
-        Status.Text = L.T($"Включено: {_all.Count(t => t.IsOn)} из {_all.Count}");
+        OnText.Text = _all.Count(t => t.IsOn).ToString();
+        TotalText.Text = _all.Count.ToString();
     }
 
     void Search_TextChanged(object s, TextChangedEventArgs e) => ApplyFilter();

@@ -4,26 +4,50 @@
     <DockPanel>
         <StackPanel DockPanel.Dock="Top">
             <TextBlock Text="Редактор реестра" Style="{StaticResource Title}"/>
-            <!-- the address keeps most of the room in a narrow window, favourites give way first -->
+            <!-- toolbar: one row; the address keeps most of the room, favourites give way first; key commands under "⋯" and on the tree -->
             <Grid Margin="{StaticResource Toolbar}">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*" MinWidth="120" MaxWidth="232"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <TextBox x:Name="Address" Style="{StaticResource SearchBox}" Tag="&#xE8B7;" KeyDown="Address_KeyDown"/>
+                <TextBox x:Name="Address" Style="{StaticResource SearchBox}" Tag="&#xE8B7;" Margin="0,0,6,0" ToolTip="Путь к разделу, Enter - перейти" KeyDown="Address_KeyDown"/>
                 <Button Grid.Column="1" Content="Перейти" Click="Go_Click"/>
                 <Button Grid.Column="2" Content="★" Click="AddFavorite_Click" ToolTip="Добавить текущий ключ в избранное (повторно - убрать)"/>
-                <ComboBox x:Name="Favorites" Grid.Column="3" Margin="6,0" SelectionChanged="Favorites_SelectionChanged" ToolTip="Избранное"/>
-                <Button Grid.Column="4" Content="Из буфера" Click="Clipboard_Click" ToolTip="Перейти к пути из буфера обмена"/>
+                <ComboBox x:Name="Favorites" Grid.Column="3" Margin="0,0,6,0" SelectionChanged="Favorites_SelectionChanged" ToolTip="Избранное"/>
+                <StackPanel Grid.Column="4" Orientation="Horizontal">
+                    <Button Content="Из буфера" Click="Clipboard_Click" ToolTip="Перейти к пути из буфера обмена"/>
+                    <Button Content="&#xE72C;" Style="{StaticResource IconBtn}" ToolTip="Обновить" AutomationProperties.Name="Обновить" Click="Refresh_Click"/>
+                    <Button Style="{StaticResource More}" Margin="0">
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                            <MenuItem Header="Создать раздел" Tag="&#xE710;" Click="NewKey_Click"/>
+                            <MenuItem Header="Переименовать" Tag="&#xE8AC;" Click="RenameKey_Click"/>
+                            <MenuItem Header="Копировать" Tag="&#xE8C8;" ToolTip="Копия раздела со всем содержимым в другое место" Click="CopyKey_Click"/>
+                            <MenuItem Header="Копировать путь" Tag="&#xE71B;" Click="CopyPath_Click"/>
+                            <Separator/>
+                            <MenuItem Header="Экспорт .reg" Tag="&#xEDE1;" Click="Export_Click"/>
+                            <MenuItem Header="Импорт .reg" Tag="&#xE8B5;" Click="Import_Click"/>
+                            <Separator/>
+                            <MenuItem Header="Удалить раздел" Tag="&#xE74D;" Click="DeleteKey_Click"/>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+                </StackPanel>
             </Grid>
-            <WrapPanel Margin="0,0,0,14">
-                <TextBlock Text="Раздел:" Style="{StaticResource Hint}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                <Button Content="Создать" Click="NewKey_Click"/>
-                <Button Content="Переименовать" Click="RenameKey_Click"/>
-                <Button Content="Копировать" Click="CopyKey_Click" ToolTip="Копия раздела со всем содержимым в другое место"/>
-                <Button Content="Удалить" Style="{StaticResource DangerBtn}" Click="DeleteKey_Click"/>
-                <Button Content="Экспорт .reg" Click="Export_Click"/>
-                <Button Content="Импорт .reg" Click="Import_Click"/>
-                <Button Content="Копировать путь" Click="CopyPath_Click"/>
-                <Button Content="Обновить" Click="Refresh_Click"/>
-            </WrapPanel>
+            <!-- breadcrumbs: every level of the current key, a click goes there -->
+            <ItemsControl x:Name="Crumbs" Margin="0,0,0,10" ClipToBounds="True">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="sep" Text="&#xE76C;" FontFamily="{StaticResource Icons}" FontSize="10" Foreground="{DynamicResource FaintBrush}" VerticalAlignment="Center" Margin="2,0"/>
+                            <Button Content="{Binding Value}" Tag="{Binding Key}" Style="{StaticResource Ghost}" Height="{StaticResource SmallHeight}" Padding="8,0" Margin="0" FontSize="12" Click="Crumb_Click"/>
+                        </StackPanel>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource PreviousData}}" Value="{x:Null}">
+                                <Setter TargetName="sep" Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </StackPanel>
         <Grid>
             <Grid.ColumnDefinitions>
@@ -31,12 +55,25 @@
                 <ColumnDefinition Width="18"/>
                 <ColumnDefinition Width="3*"/>
             </Grid.ColumnDefinitions>
-            <TreeView x:Name="Tree" SelectedItemChanged="Tree_SelectedItemChanged"/>
+            <TreeView x:Name="Tree" SelectedItemChanged="Tree_SelectedItemChanged">
+                <TreeView.ContextMenu>
+                    <ContextMenu>
+                            <MenuItem Header="Создать раздел" Tag="&#xE710;" Click="NewKey_Click"/>
+                            <MenuItem Header="Переименовать" Tag="&#xE8AC;" Click="RenameKey_Click"/>
+                            <MenuItem Header="Копировать" Tag="&#xE8C8;" ToolTip="Копия раздела со всем содержимым в другое место" Click="CopyKey_Click"/>
+                            <MenuItem Header="Копировать путь" Tag="&#xE71B;" Click="CopyPath_Click"/>
+                            <Separator/>
+                            <MenuItem Header="Экспорт .reg" Tag="&#xEDE1;" Click="Export_Click"/>
+                            <Separator/>
+                            <MenuItem Header="Удалить раздел" Tag="&#xE74D;" Click="DeleteKey_Click"/>
+                    </ContextMenu>
+                </TreeView.ContextMenu>
+            </TreeView>
             <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" Background="Transparent"/>
             <DockPanel Grid.Column="2">
-                <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,14">
-                    <TextBlock Text="Значение:" Style="{StaticResource Hint}" VerticalAlignment="Center" Margin="6,0"/>
-                    <ComboBox x:Name="NewType" Width="150" SelectedIndex="0">
+                <!-- new value: type and Create; editing a selected value is in the selection bar -->
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,10">
+                    <ComboBox x:Name="NewType" Width="150" SelectedIndex="0" ToolTip="Тип нового значения">
                         <ComboBoxItem Content="REG_SZ" Tag="1"/>
                         <ComboBoxItem Content="REG_EXPAND_SZ" Tag="2"/>
                         <ComboBoxItem Content="REG_MULTI_SZ" Tag="7"/>
@@ -44,18 +81,43 @@
                         <ComboBoxItem Content="REG_QWORD" Tag="11"/>
                         <ComboBoxItem Content="REG_BINARY" Tag="3"/>
                     </ComboBox>
-                    <Button Content="Создать" Click="NewValue_Click"/>
-                    <Button Content="Изменить" Style="{StaticResource Primary}" Click="EditValue_Click"/>
-                    <Button Content="Переименовать" Click="RenameValue_Click"/>
-                    <Button Content="Удалить" Style="{StaticResource DangerBtn}" Click="DeleteValue_Click"/>
-                </WrapPanel>
-                <DataGrid x:Name="Values" IsReadOnly="True" SelectionMode="Extended" MouseDoubleClick="EditValue_Click">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Имя" Binding="{Binding Name}" Width="*"/>
-                        <DataGridTextColumn Header="Тип" Binding="{Binding Type}" Width="130"/>
-                        <DataGridTextColumn Header="Значение" Binding="{Binding Data}" Width="2*"/>
-                    </DataGrid.Columns>
-                </DataGrid>
+                    <Button Content="Создать значение" Margin="6,0,0,0" Click="NewValue_Click"/>
+                </StackPanel>
+                <!-- the selected value in full -->
+                <ContentControl DockPanel.Dock="Bottom" Margin="0,10,0,0" Padding="16,12" DataContext="{Binding SelectedItem, ElementName=Values}">
+                    <ContentControl.Style>
+                        <Style TargetType="ContentControl" BasedOn="{StaticResource Card}">
+                            <Style.Triggers><DataTrigger Binding="{Binding}" Value="{x:Null}"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers>
+                        </Style>
+                    </ContentControl.Style>
+                    <StackPanel>
+                        <DockPanel>
+                            <ContentPresenter DockPanel.Dock="Right" Content="{Binding Type}" ContentTemplate="{StaticResource Badge}"/>
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <ScrollViewer MaxHeight="120" Margin="0,8,0,0" VerticalScrollBarVisibility="Auto">
+                            <TextBlock Text="{Binding Data}" Style="{StaticResource MonoText}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+                        </ScrollViewer>
+                    </StackPanel>
+                </ContentControl>
+                <Grid>
+                    <DataGrid x:Name="Values" IsReadOnly="True" SelectionMode="Extended" MouseDoubleClick="EditValue_Click">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Имя" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="Тип" Binding="{Binding Type}" Width="130"/>
+                            <DataGridTextColumn Header="Значение" Binding="{Binding Data}" Width="2*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=Values}" Text="В этом разделе нет значений."/>
+                    <ContentControl x:Name="Bar" Style="{StaticResource SelectionBar}" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="BarText" Style="{StaticResource BarCount}"/>
+                            <Button Content="Изменить" Style="{StaticResource SmallPrimary}" Click="EditValue_Click"/>
+                            <Button Content="Переименовать" Style="{StaticResource Small}" Click="RenameValue_Click"/>
+                            <Button Content="Удалить" Style="{StaticResource SmallDanger}" Margin="0" Click="DeleteValue_Click"/>
+                        </StackPanel>
+                    </ContentControl>
+                </Grid>
             </DockPanel>
         </Grid>
     </DockPanel>

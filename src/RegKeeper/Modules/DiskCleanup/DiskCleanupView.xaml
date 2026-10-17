@@ -2,25 +2,45 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel>
-        <StackPanel DockPanel.Dock="Top">
-            <TextBlock Text="Очистка диска" Style="{StaticResource Title}"/>
-            <TextBlock Style="{StaticResource Lead}" Text="Встроенные пункты Windows плюс база winapp2.ini (CC-BY-SA, проект Winapp2). Показаны только правила для программ, найденных на этом ПК. Сначала анализ, потом очистка."/>
-            <!-- the search box gives way to the counters in a narrow window -->
-            <Grid Margin="{StaticResource Toolbar}">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="3*" MaxWidth="420"/><ColumnDefinition Width="*" MinWidth="16"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" TextChanged="Search_TextChanged" ToolTip="Поиск по названию и категории"/>
-                <TextBlock x:Name="Status" Grid.Column="2" Style="{StaticResource Hint}" VerticalAlignment="Center"/>
-            </Grid>
-            <WrapPanel Margin="0,0,0,6">
+        <!-- header: title and description, the counters on the right -->
+        <DockPanel DockPanel.Dock="Top">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <ContentControl Style="{StaticResource Metric}">
+                    <StackPanel><TextBlock Text="Правил" Style="{StaticResource MetricLabel}"/><TextBlock x:Name="CountText" Style="{StaticResource MetricValue}"/></StackPanel>
+                </ContentControl>
+                <ContentControl Style="{StaticResource Metric}">
+                    <StackPanel><TextBlock Text="Найдено" Style="{StaticResource MetricLabel}"/><TextBlock x:Name="FoundText" Text="-" Style="{StaticResource MetricValue}"/></StackPanel>
+                </ContentControl>
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Очистка диска" Style="{StaticResource Title}"/>
+                <TextBlock Style="{StaticResource Lead}" Text="Встроенные пункты Windows плюс база winapp2.ini (CC-BY-SA, проект Winapp2). Показаны только правила для программ, найденных на этом ПК. Сначала анализ, потом очистка."/>
+                <TextBlock x:Name="Status" Style="{StaticResource DangerText}" TextWrapping="Wrap" Margin="0,6,0,0" Visibility="Collapsed" Text="База winapp2.ini не загружена. Скачайте её в меню «⋯»."/>
+            </StackPanel>
+        </DockPanel>
+        <!-- toolbar: one row; rarer commands under "⋯", cleaning in the selection bar -->
+        <DockPanel DockPanel.Dock="Top" Margin="{StaticResource Toolbar}">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="12,0,0,0">
                 <Button Content="Анализ" Style="{StaticResource Primary}" Click="Analyze_Click"/>
-                <Button Content="Очистить" Style="{StaticResource DangerBtn}" Click="Clean_Click"/>
                 <Button Content="Подробно" Click="Details_Click" ToolTip="Найденные файлы выбранного правила, можно снять галочки"/>
-                <Button Content="Отметить видимые" Click="All_Click"/>
-                <Button Content="Снять все" Click="None_Click"/>
-                <Button Content="Обновить winapp2.ini" Click="Download_Click"/>
-                <Button Content="Исключения" Click="Ignore_Click" ToolTip="Папки и файлы, которые никогда не удаляются"/>
-            </WrapPanel>
-        </StackPanel>
+                <Button Style="{StaticResource More}" Margin="0">
+                    <Button.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Отметить видимые" Tag="&#xE73A;" Click="All_Click"/>
+                            <MenuItem Header="Снять все" Tag="&#xE739;" Click="None_Click"/>
+                            <Separator/>
+                            <MenuItem Header="Обновить winapp2.ini" Tag="&#xE896;" Click="Download_Click"/>
+                            <MenuItem Header="Исключения" Tag="&#xE8F8;" ToolTip="Папки и файлы, которые никогда не удаляются" Click="Ignore_Click"/>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
+            </StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition MaxWidth="420"/></Grid.ColumnDefinitions>
+                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" TextChanged="Search_TextChanged" ToolTip="Поиск по названию и категории"/>
+            </Grid>
+        </DockPanel>
+        <Grid>
         <DataGrid x:Name="Grid" SelectionMode="Single" MouseDoubleClick="Details_Click">
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="48"/>
@@ -36,5 +56,15 @@
                 </DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
+            <TextBlock Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=Grid}" Text="Ничего не найдено. Измените запрос."/>
+            <ContentControl x:Name="Bar" Style="{StaticResource SelectionBar}" Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock x:Name="BarText" Style="{StaticResource BarCount}"/>
+                    <TextBlock Style="{StaticResource Reversible}"><Run Text="&#xE7BA;" FontFamily="{StaticResource Icons}"/> <Run Text="Файлы удаляются без корзины"/></TextBlock>
+                    <Button Content="Снять все" Style="{StaticResource Small}" Click="None_Click"/>
+                    <Button Content="Очистить" Style="{StaticResource SmallDanger}" Margin="0" Click="Clean_Click"/>
+                </StackPanel>
+            </ContentControl>
+        </Grid>
     </DockPanel>
 </UserControl>

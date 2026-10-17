@@ -61,7 +61,7 @@ public static class L
             case Window w: w.Title = T(w.Title); break;
             case TextBlock t when !BindingOperations.IsDataBound(t, TextBlock.TextProperty):
                 if (t.Inlines.Count == 1 || t.Inlines.Count == 0) t.Text = T(t.Text);
-                else foreach (var run in t.Inlines.OfType<System.Windows.Documents.Run>()) run.Text = T(run.Text);
+                else foreach (var run in t.Inlines.OfType<System.Windows.Documents.Run>().ToList()) run.Text = T(run.Text);
                 break;
             case DataGrid g:
                 foreach (var c in g.Columns) if (c.Header is string h) c.Header = T(h);
