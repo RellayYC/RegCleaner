@@ -101,11 +101,26 @@
         <CustomAction Id="PickFolder" BinaryRef="FolderPicker" ExeCommand="&quot;[TempFolder]RegKeeper-pick.txt&quot; &quot;[INSTALLFOLDER].&quot;" Return="ignore"/>
         <CustomAction Id="ApplyPick" Script="jscript" ScriptSourceFile="ApplyPick.js" Return="ignore"/>
 
-        <!-- WixUI_FeatureTree with its CustomizeDlg swapped for RkCustomizeDlg below -->
+        <!-- RkCustomizeDlg: its icons (build.ps1 draws them) and the start state of its ticks: what MSI is about to install
+             (defaults, or the old version's choice on an upgrade), or in maintenance what is installed and stays -->
+        <Binary Id="RkIcoStart" SourceFile="$(Icons)\start.ico"/>
+        <Binary Id="RkIcoDesktop" SourceFile="$(Icons)\desktop.ico"/>
+        <Binary Id="RkIcoShell" SourceFile="$(Icons)\shell.ico"/>
+        <Binary Id="RkIcoWatcher" SourceFile="$(Icons)\watcher.ico"/>
+        <Binary Id="RkIcoFolder" SourceFile="$(Icons)\folder.ico"/>
+        <SetProperty Id="RK_StartMenu" Value="1" Sequence="ui" After="MigrateFeatureStates" Condition="&amp;StartMenu = 3 OR (&amp;StartMenu = -1 AND !StartMenu = 3)"/>
+        <SetProperty Id="RK_Desktop" Value="1" Sequence="ui" After="MigrateFeatureStates" Condition="&amp;Desktop = 3 OR (&amp;Desktop = -1 AND !Desktop = 3)"/>
+        <SetProperty Id="RK_ShellVerb" Value="1" Sequence="ui" After="MigrateFeatureStates" Condition="&amp;ShellVerb = 3 OR (&amp;ShellVerb = -1 AND !ShellVerb = 3)"/>
+        <SetProperty Id="RK_Watcher" Value="1" Sequence="ui" After="MigrateFeatureStates" Condition="&amp;Watcher = 3 OR (&amp;Watcher = -1 AND !Watcher = 3)"/>
+        <SetProperty Id="RK_WatcherRun" Value="1" Sequence="ui" After="MigrateFeatureStates" Condition="&amp;WatcherRun = 3 OR (&amp;WatcherRun = -1 AND !WatcherRun = 3)"/>
+
+        <!-- WixUI_FeatureTree with its CustomizeDlg swapped for RkCustomizeDlg below, in Segoe UI instead of Tahoma -->
         <UI Id="RkUI">
-            <TextStyle Id="WixUI_Font_Normal" FaceName="Tahoma" Size="8"/>
-            <TextStyle Id="WixUI_Font_Bigger" FaceName="Tahoma" Size="12"/>
-            <TextStyle Id="WixUI_Font_Title" FaceName="Tahoma" Size="9" Bold="yes"/>
+            <TextStyle Id="WixUI_Font_Normal" FaceName="Segoe UI" Size="8"/>
+            <TextStyle Id="WixUI_Font_Bigger" FaceName="Segoe UI" Size="12"/>
+            <TextStyle Id="WixUI_Font_Title" FaceName="Segoe UI" Size="9" Bold="yes"/>
+            <TextStyle Id="RkStrong" FaceName="Segoe UI Semibold" Size="8" Red="17" Green="17" Blue="19"/>
+            <TextStyle Id="RkMuted" FaceName="Segoe UI" Size="8" Red="95" Green="95" Blue="103"/>
             <Property Id="DefaultUIFont" Value="WixUI_Font_Normal"/>
             <DialogRef Id="ErrorDlg"/>
             <DialogRef Id="FatalError"/>
@@ -138,48 +153,63 @@
             <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg"/>
             <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg"/>
 
-            <!-- the stock CustomizeDlg; the location line shows INSTALLFOLDER itself, "Browse" goes to FolderPicker -->
+            <!-- components as ticks with an icon each instead of the MSI feature tree (grey drive icons, nothing to restyle);
+                 a tick is an RK_* property, seeded below from what MSI plans for the feature and turned into AddLocal/Remove on "Next" -->
             <Dialog Id="RkCustomizeDlg" Width="370" Height="270" Title="!(loc.CustomizeDlg_Title)" TrackDiskSpace="yes">
-                <Control Id="Tree" Type="SelectionTree" X="25" Y="85" Width="175" Height="115" Property="_BrowseProperty" Sunken="yes" TabSkip="no" Text="!(loc.CustomizeDlgTree)"/>
-                <Control Id="Browse" Type="PushButton" X="294" Y="210" Width="66" Height="17" Text="!(loc.CustomizeDlgBrowse)" HideCondition="Installed" DisableCondition="Installed">
+                <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.CustomizeDlgBannerBitmap)"/>
+                <Control Id="Title" Type="Text" X="15" Y="6" Width="210" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}Компоненты"/>
+                <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="RegKeeper ставится всегда. Отметьте, что добавить к нему."/>
+                <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0"/>
+
+                <Control Id="StartIcon" Type="Icon" X="20" Y="54" Width="24" Height="24" IconSize="32" FixedSize="yes" Text="RkIcoStart"/>
+                <Control Id="StartBox" Type="CheckBox" X="52" Y="54" Width="290" Height="12" Property="RK_StartMenu" CheckBoxValue="1" Text="{\RkStrong}Ярлык в меню Пуск"/>
+                <Control Id="StartText" Type="Text" X="66" Y="66" Width="280" Height="10" NoPrefix="yes" Text="{\RkMuted}RegKeeper в списке программ меню Пуск."/>
+
+                <Control Id="DesktopIcon" Type="Icon" X="20" Y="84" Width="24" Height="24" IconSize="32" FixedSize="yes" Text="RkIcoDesktop"/>
+                <Control Id="DesktopBox" Type="CheckBox" X="52" Y="84" Width="290" Height="12" Property="RK_Desktop" CheckBoxValue="1" Text="{\RkStrong}Ярлык на рабочем столе"/>
+                <Control Id="DesktopText" Type="Text" X="66" Y="96" Width="280" Height="10" NoPrefix="yes" Text="{\RkMuted}На общем рабочем столе, для всех пользователей."/>
+
+                <Control Id="ShellIcon" Type="Icon" X="20" Y="114" Width="24" Height="24" IconSize="32" FixedSize="yes" Text="RkIcoShell"/>
+                <Control Id="ShellBox" Type="CheckBox" X="52" Y="114" Width="290" Height="12" Property="RK_ShellVerb" CheckBoxValue="1" Text="{\RkStrong}Пункт «Удалить с RegKeeper»"/>
+                <Control Id="ShellText" Type="Text" X="66" Y="126" Width="280" Height="20" NoPrefix="yes" Text="{\RkMuted}В меню exe-файлов и ярлыков по правой кнопке. В Windows 11 он в «Показать дополнительные параметры»."/>
+
+                <Control Id="WatcherIcon" Type="Icon" X="20" Y="150" Width="24" Height="24" IconSize="32" FixedSize="yes" Text="RkIcoWatcher"/>
+                <Control Id="WatcherBox" Type="CheckBox" X="52" Y="150" Width="290" Height="12" Property="RK_Watcher" CheckBoxValue="1" Text="{\RkStrong}Наблюдатель за автозагрузкой"/>
+                <Control Id="WatcherText" Type="Text" X="66" Y="162" Width="280" Height="10" NoPrefix="yes" Text="{\RkMuted}Значок в трее, предупреждает о новых программах в автозагрузке."/>
+                <Control Id="WatcherRunBox" Type="CheckBox" X="66" Y="175" Width="276" Height="12" Property="RK_WatcherRun" CheckBoxValue="1" Text="Запускать при входе в Windows" DisableCondition="NOT RK_Watcher" EnableCondition="RK_Watcher"/>
+
+                <Control Id="FolderIcon" Type="Icon" X="20" Y="201" Width="24" Height="24" IconSize="32" FixedSize="yes" Text="RkIcoFolder" HideCondition="Installed"/>
+                <Control Id="LocationLabel" Type="Text" X="52" Y="201" Width="200" Height="10" NoPrefix="yes" Text="{\RkMuted}Папка установки" HideCondition="Installed"/>
+                <Control Id="Location" Type="Text" X="52" Y="212" Width="236" Height="12" NoPrefix="yes" Text="{\RkStrong}[INSTALLFOLDER]" HideCondition="Installed"/>
+                <!-- "Browse" opens FolderPicker; the Property publish makes the location line above repaint -->
+                <Control Id="Browse" Type="PushButton" X="294" Y="205" Width="66" Height="17" Text="Изменить..." HideCondition="Installed" DisableCondition="Installed">
                     <Publish Event="DoAction" Value="PickFolder" Order="1"/>
                     <Publish Event="DoAction" Value="ApplyPick" Order="2"/>
                     <Publish Property="INSTALLFOLDER" Value="[INSTALLFOLDER]" Order="3"/>
                 </Control>
-                <Control Id="Reset" Type="PushButton" X="10" Y="243" Width="81" Height="17" Text="!(loc.CustomizeDlgReset)">
-                    <Publish Event="Reset" Value="0"/>
-                    <Subscribe Event="SelectionNoItems" Attribute="Enabled"/>
-                </Control>
-                <Control Id="DiskCost" Type="PushButton" X="91" Y="243" Width="100" Height="17" Text="!(loc.CustomizeDlgDiskCost)">
-                    <Publish Event="SpawnDialog" Value="DiskCostDlg"/>
-                    <Subscribe Event="SelectionNoItems" Attribute="Enabled"/>
-                </Control>
+
+                <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0"/>
                 <Control Id="Back" Type="PushButton" X="192" Y="243" Width="56" Height="17" Text="!(loc.WixUIBack)">
                     <Publish Event="NewDialog" Value="MaintenanceTypeDlg" Order="1" Condition="Installed"/>
                     <Publish Event="NewDialog" Value="LicenseAgreementDlg" Order="2" Condition="NOT Installed"/>
                 </Control>
                 <Control Id="Next" Type="PushButton" X="248" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUINext)">
-                    <Publish Event="NewDialog" Value="VerifyReadyDlg"/>
-                    <Subscribe Event="SelectionNoItems" Attribute="Enabled"/>
+                    <!-- a removed parent takes WatcherRun with it; adding WatcherRun alone would pull Watcher back in -->
+                    <Publish Event="AddLocal" Value="StartMenu" Order="1" Condition="RK_StartMenu"/>
+                    <Publish Event="Remove" Value="StartMenu" Order="2" Condition="NOT RK_StartMenu"/>
+                    <Publish Event="AddLocal" Value="Desktop" Order="3" Condition="RK_Desktop"/>
+                    <Publish Event="Remove" Value="Desktop" Order="4" Condition="NOT RK_Desktop"/>
+                    <Publish Event="AddLocal" Value="ShellVerb" Order="5" Condition="RK_ShellVerb"/>
+                    <Publish Event="Remove" Value="ShellVerb" Order="6" Condition="NOT RK_ShellVerb"/>
+                    <Publish Event="AddLocal" Value="Watcher" Order="7" Condition="RK_Watcher"/>
+                    <Publish Event="AddLocal" Value="WatcherRun" Order="8" Condition="RK_Watcher AND RK_WatcherRun"/>
+                    <Publish Event="Remove" Value="WatcherRun" Order="9" Condition="NOT RK_Watcher OR NOT RK_WatcherRun"/>
+                    <Publish Event="Remove" Value="Watcher" Order="10" Condition="NOT RK_Watcher"/>
+                    <Publish Event="NewDialog" Value="VerifyReadyDlg" Order="11"/>
                 </Control>
                 <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)">
                     <Publish Event="SpawnDialog" Value="CancelDlg"/>
                 </Control>
-                <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.CustomizeDlgBannerBitmap)"/>
-                <Control Id="Text" Type="Text" X="25" Y="55" Width="320" Height="20" Text="!(loc.CustomizeDlgText)"/>
-                <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0"/>
-                <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0"/>
-                <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="!(loc.CustomizeDlgDescription)"/>
-                <Control Id="Title" Type="Text" X="15" Y="6" Width="210" Height="15" Transparent="yes" NoPrefix="yes" Text="!(loc.CustomizeDlgTitle)"/>
-                <Control Id="Box" Type="GroupBox" X="210" Y="81" Width="150" Height="118"/>
-                <Control Id="ItemDescription" Type="Text" X="215" Y="90" Width="131" Height="50" Text="!(loc.CustomizeDlgItemDescription)">
-                    <Subscribe Event="SelectionDescription" Attribute="Text"/>
-                </Control>
-                <Control Id="ItemSize" Type="Text" X="215" Y="140" Width="131" Height="50" Text="!(loc.CustomizeDlgItemSize)">
-                    <Subscribe Event="SelectionSize" Attribute="Text"/>
-                </Control>
-                <Control Id="Location" Type="Text" X="90" Y="210" Width="200" Height="20" NoPrefix="yes" Text="[INSTALLFOLDER]" HideCondition="Installed"/>
-                <Control Id="LocationLabel" Type="Text" X="25" Y="210" Width="65" Height="10" Text="!(loc.CustomizeDlgLocationLabel)" HideCondition="Installed"/>
             </Dialog>
         </UI>
         <UIRef Id="WixUI_Common"/>
