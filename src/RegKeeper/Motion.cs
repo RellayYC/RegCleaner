@@ -160,6 +160,20 @@ public static class Motion
         });
         g.LoadingRow += (_, r) => Row(g, r.Row);
         g.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, e) => Stick(g, e)));
+        g.PreviewMouseLeftButtonDown += (_, e) => Tick(e);
+    }
+
+    /// <summary>A click anywhere in a tick cell flips the tick at once: the stock grid spends the first click on selecting the row
+    /// and only the second one on the box. The cell's CheckBox writes through its two-way binding; the row selection stays as it was.</summary>
+    static void Tick(MouseButtonEventArgs e)
+    {
+        for (var d = e.OriginalSource as DependencyObject; d != null && d is not DataGridRow; d = d is Visual ? VisualTreeHelper.GetParent(d) : LogicalTreeHelper.GetParent(d))
+        {
+            if (d is not DataGridCell { Column: DataGridCheckBoxColumn { IsReadOnly: false }, IsEditing: false, IsReadOnly: false, Content: CheckBox box }) continue;
+            box.IsChecked = box.IsChecked != true;
+            e.Handled = true;
+            return;
+        }
     }
 
     static void Row(DataGrid g, DataGridRow row)

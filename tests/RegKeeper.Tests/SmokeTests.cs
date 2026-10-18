@@ -68,6 +68,7 @@ public class SmokeTests
                 if (lang == L.En && Russian(win, views) is { Count: > 0 } ru) Assert.Fail("untranslated:\n" + string.Join("\n", ru));
                 if (theme == Theme.Light) EditorNavigatesToNewSibling(views.OfType<RegEditorView>().Single());
                 if (theme == Theme.Light) FilterFollowsAutomationToggle(views.OfType<StartupView>().Single());
+                if (theme == Theme.Light) TickTakesOneClick(nav, views);
                 if (theme == Theme.Light) StickyGroupTitle(nav, views.IndexOf(views.OfType<RegSearchView>().Single()), host);
                 if (lang == L.Ru) UninstallerMenuAndDetails(nav, host, $"{theme}");
                 if (lang == L.Ru) CursorLight(win, nav, views.IndexOf(views.OfType<DiskCleanupView>().Single()), $"{theme}");
@@ -494,6 +495,36 @@ public class SmokeTests
         typeof(SnapshotsView).GetMethod("Show", F)!.Invoke(view, [changes, "«v1.2» → «v1.3»"]);
         Pump();
         Assert.True(T<DataGrid>(view, "Changes").Items.Count >= 3, "snapshot diff found too little");
+    }
+
+    /// <summary>One click on a tick cell flips it, a second flips it back (the stock grid would spend the first on the row).</summary>
+    static void TickTakesOneClick(ListBox nav, List<UserControl> views)
+    {
+        var view = views.OfType<SnapshotsView>().Single();
+        nav.SelectedIndex = views.IndexOf(view);
+        Pump();
+        var grid = T<DataGrid>(view, "Changes");
+        var row = (DataGridRow)grid.ItemContainerGenerator.ContainerFromIndex(0);
+        var cell = Cells(row).First(c => c.Column is DataGridCheckBoxColumn);
+        var item = grid.Items[0];
+        bool Ticked() => (bool)item.GetType().GetProperty("Checked")!.GetValue(item)!;
+        var was = Ticked();
+        // PreviewMouseDown is the tunnelling event a real click raises; the grid sees its left-button form on the way down
+        void Click() => cell.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left) { RoutedEvent = Mouse.PreviewMouseDownEvent });
+        Click();
+        Assert.NotEqual(was, Ticked());
+        Click();
+        Assert.Equal(was, Ticked());
+    }
+
+    static IEnumerable<DataGridCell> Cells(DependencyObject d)
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(d); i++)
+        {
+            var c = VisualTreeHelper.GetChild(d, i);
+            if (c is DataGridCell cell) yield return cell;
+            foreach (var x in Cells(c)) yield return x;
+        }
     }
 
     /// <summary>Two switches flipped without applying, so the shot shows pending cards and the dock.</summary>
