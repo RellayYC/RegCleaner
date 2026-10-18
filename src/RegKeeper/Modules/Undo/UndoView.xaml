@@ -1,64 +1,135 @@
 <UserControl x:Class="RegKeeper.Modules.UndoView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:rk="clr-namespace:RegKeeper">
     <DockPanel>
-        <!-- header: title and description, the counters on the right -->
+        <!-- header: title and description; how long records live, as a dropdown with the housekeeping -->
         <DockPanel DockPanel.Dock="Top">
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                <ContentControl Style="{StaticResource Metric}">
-                    <StackPanel><TextBlock Text="Записей" Style="{StaticResource MetricLabel}"/><TextBlock x:Name="CountText" Style="{StaticResource MetricValue}"/></StackPanel>
-                </ContentControl>
-                <ContentControl Style="{StaticResource Metric}">
-                    <StackPanel><TextBlock Text="Занимают" Style="{StaticResource MetricLabel}"/><TextBlock x:Name="SizeText" Style="{StaticResource MetricValue}"/></StackPanel>
-                </ContentControl>
-            </StackPanel>
+            <Button DockPanel.Dock="Right" VerticalAlignment="Top" Margin="16,6,0,0" rk:Ui.Overflow="True" ToolTip="Хранение записей">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Хранить 30 дней" VerticalAlignment="Center"/>
+                    <TextBlock Text="&#xE70D;" FontFamily="{StaticResource Icons}" FontSize="11" VerticalAlignment="Center" Margin="8,1,0,0"/>
+                </StackPanel>
+                <Button.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Удалить старше 30 дней" Tag="&#xE74D;" Click="DeleteOld_Click"/>
+                        <MenuItem Header="Обновить" Tag="&#xE72C;" Click="Refresh_Click"/>
+                    </ContextMenu>
+                </Button.ContextMenu>
+            </Button>
             <StackPanel>
                 <TextBlock Text="Центр отмены" Style="{StaticResource Title}"/>
                 <TextBlock Style="{StaticResource Lead}" Text="Каждое изменение реестра и задач планировщика сохраняется здесь до применения. Отмена возвращает всё как было и убирает запись. Файлы и папки удаляются в корзину, восстанавливайте их оттуда."/>
             </StackPanel>
         </DockPanel>
-        <!-- toolbar: Undo on the right, housekeeping under "⋯"; deleting a record is in the selection bar -->
-        <DockPanel DockPanel.Dock="Top" Margin="{StaticResource Toolbar}">
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                <Button Content="Отменить изменения" Style="{StaticResource Primary}" Click="Restore_Click"/>
-                <Button Content="&#xE72C;" Style="{StaticResource IconBtn}" ToolTip="Обновить" AutomationProperties.Name="Обновить" Click="Refresh_Click"/>
-                <Button Style="{StaticResource More}" Margin="0">
-                    <Button.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Открыть .reg" Tag="&#xE8E5;" ToolTip="Резервная копия в формате regedit" Click="OpenReg_Click"/>
-                            <Separator/>
-                            <MenuItem Header="Удалить старше 30 дней" Tag="&#xE74D;" Click="DeleteOld_Click"/>
-                        </ContextMenu>
-                    </Button.ContextMenu>
-                </Button>
-            </StackPanel>
-            <TextBlock Style="{StaticResource Hint}" VerticalAlignment="Center" TextWrapping="Wrap" Text="Новые записи сверху. Отмена идёт от новых к старым."/>
-        </DockPanel>
-        <!-- what the selected record brings back -->
-        <DockPanel DockPanel.Dock="Bottom" Margin="0,16,0,0">
-            <DockPanel.Style>
-                <Style TargetType="DockPanel">
-                    <Style.Triggers><DataTrigger Binding="{Binding SelectedItem, ElementName=Grid}" Value="{x:Null}"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers>
-                </Style>
-            </DockPanel.Style>
-            <TextBlock DockPanel.Dock="Top" Text="Что вернёт отмена" Style="{StaticResource Caption}" Margin="0,0,0,6"/>
-            <ListBox x:Name="Items" Height="180" ItemsSource="{Binding SelectedItem.Items, ElementName=Grid}"/>
-        </DockPanel>
-        <Grid>
-            <DataGrid x:Name="Grid" IsReadOnly="True" MouseDoubleClick="Restore_Click">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Когда" Binding="{Binding Date, StringFormat=dd.MM.yyyy HH:mm:ss}" SortMemberPath="Date" Width="180"/>
-                    <DataGridTextColumn Header="Операция" Binding="{Binding Title}" Width="*"/>
-                    <DataGridTextColumn Header="Изменений" Binding="{Binding Count}" Width="120"/>
-                </DataGrid.Columns>
-            </DataGrid>
-            <TextBlock Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=Grid}" Text="Изменений пока нет. Всё, что меняет RegKeeper, появится здесь."/>
-            <ContentControl x:Name="Bar" Style="{StaticResource SelectionBar}" Visibility="Collapsed">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock x:Name="BarText" Style="{StaticResource BarCount}"/>
-                    <Button Content="Отменить" Style="{StaticResource SmallPrimary}" Click="Restore_Click"/>
-                    <Button Content="Удалить запись" Style="{StaticResource SmallDanger}" Margin="0" Click="Delete_Click" ToolTip="Эти изменения больше нельзя будет отменить"/>
-                </StackPanel>
+        <Grid Margin="0,16,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" MinWidth="260" MaxWidth="400"/><ColumnDefinition Width="16"/><ColumnDefinition Width="1.4*"/></Grid.ColumnDefinitions>
+            <!-- timeline: newest on top, undo goes from newer to older -->
+            <ContentControl Style="{StaticResource Card}" Padding="0">
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="20,16,16,8">
+                        <TextBlock Text="Записи" FontSize="15.5" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock x:Name="CountText" Style="{StaticResource Caption}" VerticalAlignment="Center"/>
+                        <TextBlock Text="·" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="6,0"/>
+                        <TextBlock x:Name="SizeText" Style="{StaticResource Caption}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <Grid>
+                        <ListBox x:Name="Timeline" SelectionMode="Extended" Background="Transparent" BorderThickness="0" Padding="8,0,8,8"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="Timeline_SelectionChanged">
+                            <ListBox.Template><ControlTemplate TargetType="ListBox"><ScrollViewer Padding="{TemplateBinding Padding}" Focusable="False"><ItemsPresenter/></ScrollViewer></ControlTemplate></ListBox.Template>
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Grid Background="Transparent">
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                                    <Rectangle Width="1" Fill="{DynamicResource LineBrush}" HorizontalAlignment="Center"/>
+                                                    <Ellipse x:Name="dot" Width="10" Height="10" VerticalAlignment="Top" Margin="0,20,0,0" StrokeThickness="1.5"
+                                                             Stroke="{DynamicResource MutedBrush}" Fill="{DynamicResource CardBrush}"/>
+                                                    <Border x:Name="card" Grid.Column="1" Padding="12,10" Margin="0,2" CornerRadius="{StaticResource RTile}" Background="Transparent">
+                                                        <DockPanel>
+                                                            <TextBlock DockPanel.Dock="Right" Text="{Binding Count}" Style="{StaticResource Caption}" VerticalAlignment="Top" Margin="10,0,0,0"/>
+                                                            <StackPanel>
+                                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                                <TextBlock Text="{Binding Date, StringFormat=dd.MM.yyyy HH:mm:ss}" Style="{StaticResource Caption}" Margin="0,2,0,0"/>
+                                                            </StackPanel>
+                                                        </DockPanel>
+                                                    </Border>
+                                                </Grid>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="card" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="card" Property="Background" Value="{DynamicResource RowSelBrush}"/>
+                                                        <Setter TargetName="dot" Property="Fill" Value="{DynamicResource PrimaryBrush}"/>
+                                                        <Setter TargetName="dot" Property="Stroke" Value="{DynamicResource PrimaryBrush}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
+                        <TextBlock Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=Timeline}" Text="Изменений пока нет. Всё, что меняет RegKeeper, появится здесь."/>
+                    </Grid>
+                </DockPanel>
+            </ContentControl>
+            <!-- what the selected records bring back -->
+            <ContentControl x:Name="Details" Grid.Column="2" Style="{StaticResource Card}" Visibility="Collapsed">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top">
+                        <WrapPanel DockPanel.Dock="Bottom" Margin="0,16,0,0">
+                            <Button Style="{StaticResource Primary}" Click="Restore_Click" ToolTip="Вернуть всё как было, от новых записей к старым">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE7A7;" FontFamily="{StaticResource Icons}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock x:Name="RestoreText" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Content="Открыть .reg" Click="OpenReg_Click" ToolTip="Резервная копия в формате regedit"/>
+                            <Button Content="Забыть" Style="{StaticResource DangerBtn}" Margin="0" Click="Delete_Click" ToolTip="Эти изменения больше нельзя будет отменить"/>
+                        </WrapPanel>
+                        <TextBlock x:Name="DetailDate" DockPanel.Dock="Bottom" Style="{StaticResource Caption}" Margin="0,4,0,0"/>
+                        <TextBlock x:Name="DetailTitle" FontSize="22" FontWeight="Bold" TextWrapping="Wrap"/>
+                    </DockPanel>
+                    <Rectangle DockPanel.Dock="Top" Height="1" Fill="{DynamicResource LineSoftBrush}" Margin="0,18"/>
+                    <!-- kinds of change as bars: what the undo touches, at a glance -->
+                    <TextBlock DockPanel.Dock="Top" Text="Что изменено" FontSize="15.5" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                    <ItemsControl x:Name="Kinds" DockPanel.Dock="Top" Margin="0,0,0,18" Grid.IsSharedSizeScope="True">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" SharedSizeGroup="label"/><ColumnDefinition/><ColumnDefinition Width="40"/></Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Label}" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                                    <Border Grid.Column="1" Height="8" CornerRadius="4" Background="{DynamicResource Surface3Brush}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="{Binding Fill}"/><ColumnDefinition Width="{Binding Rest}"/></Grid.ColumnDefinitions>
+                                            <Border CornerRadius="4" Background="{DynamicResource MutedBrush}"/>
+                                        </Grid>
+                                    </Border>
+                                    <TextBlock Grid.Column="2" Text="{Binding Count}" Style="{StaticResource Caption}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <ListBox x:Name="Items" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel Margin="0,3">
+                                    <TextBlock x:Name="sign" Text="{Binding Sign}" Width="18" FontFamily="{StaticResource Mono}" FontWeight="Bold" Foreground="{DynamicResource MutedBrush}"/>
+                                    <TextBlock Text="{Binding Text}" Style="{StaticResource MonoText}" TextTrimming="CharacterEllipsis"/>
+                                </DockPanel>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding Danger}" Value="True"><Setter TargetName="sign" Property="Foreground" Value="{DynamicResource DangerBrush}"/></DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
             </ContentControl>
         </Grid>
     </DockPanel>

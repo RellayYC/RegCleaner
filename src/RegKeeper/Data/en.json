@@ -749,5 +749,21 @@
  "Переключите нужное и нажмите «Применить». Тег на карточке показывает, что изменится. Каждое применение можно откатить в Центре отмены.": "Switch what you need and press Apply. The tag on a card shows what will change. Every apply can be rolled back in the Undo Center.",
  "Поиск": "Search",
  "Сбросить": "Reset",
- "{0} изменений не применены": "{0} changes not applied"
+ "{0} изменений не применены": "{0} changes not applied",
+ "Хранение записей": "Record retention",
+ "Хранить 30 дней": "Keep 30 days",
+ "Записи": "Records",
+ "Вернуть всё как было, от новых записей к старым": "Bring everything back, from newer records to older",
+ "Забыть": "Forget",
+ "Что изменено": "What changed",
+ "записей: {0}": "records: {0}",
+ "Выбрано записей: {0}": "Records selected: {0}",
+ "Восстановить всё {0}": "Restore all {0}",
+ "Другое": "Other",
+ "Удалённые ключи": "Deleted keys",
+ "Удалённые значения": "Deleted values",
+ "Изменённые значения": "Changed values",
+ "Созданные ключи": "Created keys",
+ "Созданные задачи": "Created tasks",
+ "Задачи планировщика": "Scheduler tasks"
 }
