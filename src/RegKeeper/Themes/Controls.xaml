@@ -505,6 +505,13 @@
         <Setter Property="rk:Motion.Light" Value="{DynamicResource SpotHot}"/>
         <Setter Property="FontWeight" Value="Medium"/>
     </Style>
+    <!-- filled red for the one irreversible action a screen leads with (disk cleanup) -->
+    <Style x:Key="DangerSolid" TargetType="Button" BasedOn="{StaticResource DangerBtn}">
+        <Setter Property="Background" Value="{DynamicResource DangerBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnDangerBrush}"/>
+        <Setter Property="Tag" Value="{DynamicResource DangerHoverBrush}"/>
+    </Style>
     <!-- 28px button for rows, cards and bars -->
     <Style x:Key="Small" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="MinHeight" Value="{StaticResource SmallHeight}"/>

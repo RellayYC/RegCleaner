@@ -2,15 +2,11 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel>
-        <!-- header: title and description, the counters on the right -->
+        <!-- header: title and description; analysis and cleaning on the right -->
         <DockPanel DockPanel.Dock="Top">
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                <ContentControl Style="{StaticResource Metric}">
-                    <StackPanel><TextBlock Text="Правил" Style="{StaticResource MetricLabel}"/><TextBlock x:Name="CountText" Style="{StaticResource MetricValue}"/></StackPanel>
-                </ContentControl>
-                <ContentControl Style="{StaticResource Metric}">
-                    <StackPanel><TextBlock Text="Найдено" Style="{StaticResource MetricLabel}"/><TextBlock x:Name="FoundText" Text="-" Style="{StaticResource MetricValue}"/></StackPanel>
-                </ContentControl>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                <Button Content="Анализ" Click="Analyze_Click" ToolTip="Посчитать, что найдут отмеченные правила"/>
+                <Button x:Name="CleanBtn" Content="Очистить" Style="{StaticResource DangerSolid}" Margin="0" Click="Clean_Click"/>
             </StackPanel>
             <StackPanel>
                 <TextBlock Text="Очистка диска" Style="{StaticResource Title}"/>
@@ -18,51 +14,117 @@
                 <TextBlock x:Name="Status" Style="{StaticResource DangerText}" TextWrapping="Wrap" Margin="0,6,0,0" Visibility="Collapsed" Text="База winapp2.ini не загружена. Скачайте её в меню «⋯»."/>
             </StackPanel>
         </DockPanel>
-        <!-- toolbar: one row; rarer commands under "⋯", cleaning in the selection bar -->
-        <DockPanel DockPanel.Dock="Top" Margin="{StaticResource Toolbar}">
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="12,0,0,0">
-                <Button Content="Анализ" Style="{StaticResource Primary}" Click="Analyze_Click"/>
-                <Button Content="Подробно" Click="Details_Click" ToolTip="Найденные файлы выбранного правила, можно снять галочки"/>
-                <Button Style="{StaticResource More}" Margin="0">
-                    <Button.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Отметить видимые" Tag="&#xE73A;" Click="All_Click"/>
-                            <MenuItem Header="Снять все" Tag="&#xE739;" Click="None_Click"/>
-                            <Separator/>
-                            <MenuItem Header="Обновить winapp2.ini" Tag="&#xE896;" Click="Download_Click"/>
-                            <MenuItem Header="Исключения" Tag="&#xE8F8;" ToolTip="Папки и файлы, которые никогда не удаляются" Click="Ignore_Click"/>
-                        </ContextMenu>
-                    </Button.ContextMenu>
-                </Button>
-            </StackPanel>
-            <Grid>
-                <Grid.ColumnDefinitions><ColumnDefinition MaxWidth="420"/></Grid.ColumnDefinitions>
-                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" TextChanged="Search_TextChanged" ToolTip="Поиск по названию и категории"/>
-            </Grid>
+        <!-- hero: what the ticked rules found, then the same split by the four big groups -->
+        <ContentControl DockPanel.Dock="Top" Style="{StaticResource Card}" Margin="0,18,0,0" Padding="22,18">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Left" VerticalAlignment="Center" MinWidth="230" Margin="0,0,24,0">
+                    <TextBlock Text="Можно освободить" Style="{StaticResource Caption}"/>
+                    <TextBlock x:Name="FreeText" Text="-" FontFamily="{StaticResource DisplayFont}" FontSize="52" FontWeight="Bold"/>
+                    <TextBlock x:Name="FreeHint" Style="{StaticResource Caption}"/>
+                </StackPanel>
+                <ItemsControl x:Name="Tiles" Focusable="False">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="1"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{DynamicResource Surface2Brush}" CornerRadius="14" Padding="14,12" Margin="6,0,0,0">
+                                <StackPanel>
+                                    <Border Width="36" Height="36" CornerRadius="10" Background="{DynamicResource Surface3Brush}" HorizontalAlignment="Left">
+                                        <TextBlock Text="{Binding Glyph}" FontFamily="{StaticResource Icons}" FontSize="{StaticResource IconSize}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding Name}" Margin="0,10,0,0" Foreground="{DynamicResource MutedBrush}"/>
+                                    <TextBlock Text="{Binding SizeText}" FontSize="17" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding Summary}" Style="{StaticResource Caption}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </DockPanel>
+        </ContentControl>
+        <!-- search; bulk ticks and the database under "⋯" -->
+        <DockPanel DockPanel.Dock="Top" Margin="0,18,0,12">
+            <Button DockPanel.Dock="Right" Style="{StaticResource More}" Margin="0">
+                <Button.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Отметить видимые" Tag="&#xE73A;" Click="All_Click"/>
+                        <MenuItem Header="Снять все" Tag="&#xE739;" Click="None_Click"/>
+                        <Separator/>
+                        <MenuItem Header="Обновить winapp2.ini" Tag="&#xE896;" Click="Download_Click"/>
+                        <MenuItem Header="Исключения" Tag="&#xE8F8;" ToolTip="Папки и файлы, которые никогда не удаляются" Click="Ignore_Click"/>
+                    </ContextMenu>
+                </Button.ContextMenu>
+            </Button>
+            <TextBox x:Name="Search" Style="{StaticResource SearchBox}" Width="290" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск по названию и категории"/>
         </DockPanel>
         <Grid>
-        <DataGrid x:Name="Grid" SelectionMode="Single" MouseDoubleClick="Details_Click">
-            <DataGrid.Columns>
-                <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="48"/>
-                <DataGridTemplateColumn Width="62" CellTemplate="{StaticResource AppIcon}"/>
-                <DataGridTextColumn Header="Название" Binding="{Binding Name}" IsReadOnly="True" Width="3*"/>
-                <DataGridTemplateColumn Header="Категория" SortMemberPath="Category" Width="140"><DataGridTemplateColumn.CellTemplate><DataTemplate><ContentPresenter Content="{Binding Category}" ContentTemplate="{StaticResource Badge}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
-                <DataGridTextColumn Header="Объектов" Binding="{Binding CountText}" SortMemberPath="Count" IsReadOnly="True" Width="90"/>
-                <DataGridTextColumn Header="Размер" Binding="{Binding SizeText}" SortMemberPath="Size" IsReadOnly="True" Width="90"/>
-                <DataGridTextColumn Header="Предупреждение" Binding="{Binding Warning}" IsReadOnly="True" Width="2*">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock" BasedOn="{StaticResource DangerText}"/>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-            </DataGrid.Columns>
-        </DataGrid>
-            <TextBlock Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=Grid}" Text="Ничего не найдено. Измените запрос."/>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+                <!-- a card per group: a tri-state tick, the rules in two columns, folded until opened -->
+                <ItemsControl x:Name="Groups" Focusable="False" Margin="0,0,0,90">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <ContentControl Style="{StaticResource Card}" Padding="0" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <DockPanel Margin="18,12,12,12">
+                                        <CheckBox DockPanel.Dock="Left" IsChecked="{Binding State}" Click="Group_Click" VerticalAlignment="Center" Margin="0,0,14,0"
+                                                  AutomationProperties.Name="{Binding Name}"/>
+                                        <Button x:Name="fold" DockPanel.Dock="Right" Style="{StaticResource IconBtn}" Content="&#xE70D;" Margin="0" Click="Fold_Click"
+                                                ToolTip="Развернуть" AutomationProperties.Name="Развернуть"/>
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding SizeText}" FontSize="15.5" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,14,0"/>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Name}" Style="{StaticResource Section}" Margin="0"/>
+                                            <TextBlock Text="{Binding Summary}" Style="{StaticResource Caption}"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                    <!-- two independent columns, so a long warning only makes its own row taller -->
+                                    <Grid x:Name="rules" Margin="8,0,8,10" Visibility="Collapsed">
+                                        <Grid.Resources>
+                                            <DataTemplate x:Key="Rule">
+                                                <DockPanel Margin="10,8">
+                                                    <CheckBox DockPanel.Dock="Left" IsChecked="{Binding Checked}" Click="Rule_Click" VerticalAlignment="Top" Margin="0,9,12,0"
+                                                              AutomationProperties.Name="{Binding Name}"/>
+                                                    <ContentPresenter DockPanel.Dock="Left" Content="{Binding}" ContentTemplate="{StaticResource AppIcon}" VerticalAlignment="Top" Margin="0,0,12,0"/>
+                                                    <Button x:Name="size" DockPanel.Dock="Right" Style="{StaticResource Ghost}" Content="{Binding SizeText}" VerticalAlignment="Top" Margin="0"
+                                                            Click="Details_Click" ToolTip="Найденные файлы этого правила, можно снять галочки" Visibility="Collapsed"/>
+                                                    <StackPanel Margin="0,1,0,0">
+                                                        <TextBlock Text="{Binding Name}" FontWeight="Medium" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="{Binding Category}" Style="{StaticResource Caption}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                                                        <!-- a warning is never cut -->
+                                                        <TextBlock x:Name="warn" Text="{Binding Warning}" Style="{StaticResource DangerText}" FontSize="12.5" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                </DockPanel>
+                                                <DataTemplate.Triggers>
+                                                    <DataTrigger Binding="{Binding Analyzed}" Value="True"><Setter TargetName="size" Property="Visibility" Value="Visible"/></DataTrigger>
+                                                    <DataTrigger Binding="{Binding Warning}" Value="{x:Null}"><Setter TargetName="warn" Property="Visibility" Value="Collapsed"/></DataTrigger>
+                                                </DataTemplate.Triggers>
+                                            </DataTemplate>
+                                        </Grid.Resources>
+                                        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                                        <ItemsControl ItemsSource="{Binding Left}" ItemTemplate="{StaticResource Rule}" Focusable="False"/>
+                                        <ItemsControl Grid.Column="1" ItemsSource="{Binding Right}" ItemTemplate="{StaticResource Rule}" Focusable="False"/>
+                                    </Grid>
+                                </StackPanel>
+                            </ContentControl>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding Open}" Value="True">
+                                    <Setter TargetName="rules" Property="Visibility" Value="Visible"/>
+                                    <Setter TargetName="fold" Property="Content" Value="&#xE70E;"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+            <TextBlock Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=Groups}" Text="Ничего не найдено. Измените запрос."/>
+            <!-- ticked rules: the summary, untick, cleaning after the rule -->
             <ContentControl x:Name="Bar" Style="{StaticResource SelectionBar}" Visibility="Collapsed">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock x:Name="BarText" Style="{StaticResource BarCount}"/>
-                    <TextBlock Style="{StaticResource Reversible}"><Run Text="&#xE7BA;" FontFamily="{StaticResource Icons}"/> <Run Text="Файлы удаляются без корзины"/></TextBlock>
-                    <Button Content="Снять все" Style="{StaticResource Small}" Click="None_Click"/>
-                    <Button Content="Очистить" Style="{StaticResource SmallDanger}" Margin="0" Click="Clean_Click"/>
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,18,0">
+                        <TextBlock x:Name="BarText" Style="{StaticResource BarCount}" Margin="0"/>
+                        <TextBlock Style="{StaticResource DangerText}" FontSize="12.5"><Run Text="&#xE7BA;" FontFamily="{StaticResource Icons}"/> <Run Text="Файлы удаляются без корзины"/></TextBlock>
+                    </StackPanel>
+                    <Button Content="Снять все" Click="None_Click"/>
+                    <Border Style="{StaticResource DockRule}"/>
+                    <Button Content="Очистить" Style="{StaticResource DangerBtn}" Margin="0" Click="Clean_Click"/>
                 </StackPanel>
             </ContentControl>
         </Grid>

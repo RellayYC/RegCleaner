@@ -579,7 +579,7 @@
  "Есть версия {0}. Установить? RegKeeper закроется примерно на минуту и откроется уже новым.": "Version {0} is available. Install it? RegKeeper will close for about a minute and reopen updated.",
  "В папке {0} нет версии новее {1}. Выбрать другую папку?": "There is no version newer than {1} in {0}. Choose another folder?",
  "Свернуть": "Minimize",
- "Развернуть": "Maximize",
+ "Развернуть": "Expand",
  "Восстановить": "Restore",
  "Защита включена": "Protection is on",
  "Каждое изменение можно откатить в Центре отмены": "Every change can be rolled back in Undo Center",
@@ -702,5 +702,13 @@
  "{0} с": "{0} s",
  "{0} записей · включено {1} · битых {2}": "{0} entries · {1} on · {2} broken",
  "Отключено вами −{0} с": "Turned off by you −{0} s",
- "Отключено: {0}": "Turned off: {0}"
+ "Отключено: {0}": "Turned off: {0}",
+ "Посчитать, что найдут отмеченные правила": "Count what the ticked rules would find",
+ "Найденные файлы этого правила, можно снять галочки": "Files this rule found; you can untick some",
+ "Правил: {0} · отмечено {1}": "Rules: {0} · {1} ticked",
+ "Отмечено: {0}": "Ticked: {0}",
+ "Размер появится после анализа": "The size appears after analysis",
+ "По отмеченным правилам: {0}": "Across ticked rules: {0}",
+ "Очистить {0}": "Clean {0}",
+ "Игры": "Games"
 }
