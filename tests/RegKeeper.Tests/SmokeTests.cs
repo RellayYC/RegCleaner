@@ -60,6 +60,7 @@ public class SmokeTests
                 Assert.True(views.All(v => v.IsEnabled), "still loading: " + string.Join(", ", views.Where(v => !v.IsEnabled).Select(v => v.GetType().Name)));
                 ShowScan(views.OfType<RegCleanupView>().Single());
                 ShowSearch(views.OfType<RegSearchView>().Single());
+                ShowSnapshots(views.OfType<SnapshotsView>().Single());
                 UpdateToastComesBack(win, $"{theme} {lang}");
                 SnapLayoutsHitTest(win);
                 if (theme == Theme.Dark) DialogKeys(win, lang);
@@ -466,6 +467,32 @@ public class SmokeTests
         var sw = Stopwatch.StartNew();
         while (!Equals(T<Button>(view, "SearchBtn").Content, L.T("Искать")) && sw.Elapsed < TimeSpan.FromSeconds(30)) { Thread.Sleep(50); Pump(); }
         Assert.True(T<DataGrid>(view, "Grid").Items.Count > 0, "search found nothing in Explorer keys");
+    }
+
+    /// <summary>Two snapshots and a trace of a scratch folder in the test data, so the shot shows the timeline and a diff.</summary>
+    static void ShowSnapshots(SnapshotsView view)
+    {
+        var dir = Path.Combine(AppPaths.Data, "snapdemo");
+        Directory.CreateDirectory(dir);
+        File.WriteAllText(Path.Combine(dir, "settings.ini"), "a");
+        File.WriteAllText(Path.Combine(dir, "old.log"), "a");
+        File.Delete(Path.Combine(dir, "plugin.dll"));
+        string a = Path.Combine(AppPaths.Snapshots, "demo-a.rksnap"), b = Path.Combine(AppPaths.Snapshots, "demo-b.rksnap");
+        Snapshot.Take(a, "v1.2", [dir]);
+        File.WriteAllText(Path.Combine(dir, "settings.ini"), "changed");
+        File.Delete(Path.Combine(dir, "old.log"));
+        File.WriteAllText(Path.Combine(dir, "plugin.dll"), "new");
+        Snapshot.Take(b, "v1.3", [dir]);
+        var changes = Snapshot.Diff(Snapshot.Read(a), Snapshot.Read(b)).ToList();
+        Snapshot.SaveChanges(Path.Combine(AppPaths.Traces, "demo.rktrace"), "Demo Setup", changes);
+        const System.Reflection.BindingFlags F = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        typeof(SnapshotsView).GetMethod("Load", F)!.Invoke(view, null);
+        Pump();
+        var line = T<ListBox>(view, "Timeline");
+        foreach (var i in line.Items.Cast<SnapInfo>().Where(i => i.File == a || i.File == b)) line.SelectedItems.Add(i);
+        typeof(SnapshotsView).GetMethod("Show", F)!.Invoke(view, [changes, "«v1.2» → «v1.3»"]);
+        Pump();
+        Assert.True(T<DataGrid>(view, "Changes").Items.Count >= 3, "snapshot diff found too little");
     }
 
     static T T<T>(FrameworkElement v, string name) where T : class => (T)v.FindName(name);

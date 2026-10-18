@@ -27,6 +27,7 @@ public sealed record SnapChange(ChangeKind Kind, SnapEntry Entry)
 public sealed record SnapInfo(string File, string Note, DateTime Date, string[] Roots)
 {
     public string Name => System.IO.Path.GetFileNameWithoutExtension(File);
+    public bool IsTrace => File.EndsWith(".rktrace", StringComparison.OrdinalIgnoreCase);
     public string SizeText => Sys.Size(new FileInfo(File).Length);
     public string RootsText => string.Join("; ", Roots.Select(r => r.StartsWith("HKEY_") ? Reg.Short(r) : r));
 }

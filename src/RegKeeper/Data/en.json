@@ -737,5 +737,12 @@
  "Свой путь": "Custom path",
  "Заменить на…": "Replace with…",
  "просмотрено разделов": "keys scanned",
- "Имена": "Names"
+ "Имена": "Names",
+ "Отследить установку": "Trace an install",
+ "Хронология": "Timeline",
+ "снимков ·": "snapshots ·",
+ "трасс": "traces",
+ "Снимков пока нет. «Снимок» сохранит текущее состояние.": "No snapshots yet. \"Snapshot\" saves the current state.",
+ "Сравнить с другим": "Compare with another",
+ "Откатить {0} изменений": "Roll back {0} changes"
 }

@@ -2,27 +2,16 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel>
-        <!-- header: title and description, the counters on the right -->
+        <!-- header: a snapshot, tracing an install as the main action; the rarer commands under "⋯" -->
         <DockPanel DockPanel.Dock="Top">
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                <ContentControl Style="{StaticResource Metric}">
-                    <StackPanel><TextBlock Text="Снимков" Style="{StaticResource MetricLabel}"/><TextBlock x:Name="SnapCount" Style="{StaticResource MetricValue}"/></StackPanel>
-                </ContentControl>
-                <ContentControl Style="{StaticResource Metric}">
-                    <StackPanel><TextBlock Text="Трасс" Style="{StaticResource MetricLabel}"/><TextBlock x:Name="TraceCount" Style="{StaticResource MetricValue}"/></StackPanel>
-                </ContentControl>
-            </StackPanel>
-            <StackPanel>
-                <TextBlock Text="Снимки и отслеживание установок" Style="{StaticResource Title}"/>
-                <TextBlock Style="{StaticResource Lead}" Text="Снимок фиксирует разделы реестра и файлы. Сравнение двух снимков показывает, что изменилось; отслеживание установки делает снимки до и после инсталлятора и сохраняет разницу, чтобы потом откатить ровно её."/>
-            </StackPanel>
-        </DockPanel>
-        <!-- toolbar: what to capture and the main actions in one row; the rest under "⋯" -->
-        <DockPanel DockPanel.Dock="Top" Margin="{StaticResource Toolbar}">
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="6,0,0,0">
-                <Button Content="Сделать снимок" Style="{StaticResource Primary}" Click="Take_Click"/>
-                <Button Content="Отследить установку..." Click="Trace_Click"/>
-                <Button Content="Сравнить" Click="Compare_Click" ToolTip="Сравнить два выбранных снимка"/>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top" Margin="12,6,0,0">
+                <Button Content="Снимок" Click="Take_Click" ToolTip="Сделать снимок"/>
+                <Button Style="{StaticResource Primary}" Click="Trace_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE768;" FontFamily="{StaticResource Icons}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Отследить установку" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
                 <Button Style="{StaticResource More}" Margin="0">
                     <Button.ContextMenu>
                         <ContextMenu>
@@ -34,68 +23,126 @@
                     </Button.ContextMenu>
                 </Button>
             </StackPanel>
-            <TextBox x:Name="Roots" Style="{StaticResource SearchBox}" Tag="&#xE722;" ToolTip="Что снимать: разделы реестра и папки через ;"/>
+            <StackPanel>
+                <TextBlock Text="Снимки и отслеживание установок" Style="{StaticResource Title}"/>
+                <TextBlock Style="{StaticResource Lead}" Text="Снимок фиксирует разделы реестра и файлы. Сравнение двух снимков показывает, что изменилось; отслеживание установки делает снимки до и после инсталлятора и сохраняет разницу, чтобы потом откатить ровно её."/>
+            </StackPanel>
         </DockPanel>
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="250"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-            <DataGrid x:Name="SnapList" SelectionMode="Extended" IsReadOnly="True" Margin="0,0,5,0" GotFocus="List_GotFocus">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Снимок" Binding="{Binding Note}" Width="2*"/>
-                    <DataGridTextColumn Header="Дата" Binding="{Binding Date, StringFormat=dd.MM.yyyy HH:mm}" Width="120"/>
-                    <DataGridTextColumn Header="Размер" Binding="{Binding SizeText}" Width="80"/>
-                </DataGrid.Columns>
-            </DataGrid>
-            <TextBlock Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=SnapList}" Text="Снимков пока нет. «Сделать снимок» сохранит текущее состояние."/>
-            <DataGrid x:Name="TraceList" Grid.Column="1" SelectionMode="Single" IsReadOnly="True" Margin="5,0,0,0"
-                      GotFocus="List_GotFocus" MouseDoubleClick="ShowTrace_Click">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Отслеженная установка" Binding="{Binding Note}" Width="2*"/>
-                    <DataGridTextColumn Header="Дата" Binding="{Binding Date, StringFormat=dd.MM.yyyy HH:mm}" Width="120"/>
-                </DataGrid.Columns>
-            </DataGrid>
-            <TextBlock Grid.Column="1" Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=TraceList}" Text="Отслеженных установок нет."/>
-            <!-- the changes of a comparison or trace: filter, marking under "⋯", rollback in the selection bar -->
-            <DockPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,20,0,12">
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="6,0,0,0">
-                    <TextBlock x:Name="Status" Style="{StaticResource Hint}" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                    <Button Content="Показать" Click="Open_Click" ToolTip="Открыть выбранное изменение в редакторе или проводнике"/>
-                    <Button Style="{StaticResource More}" Margin="0">
-                        <Button.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Отметить все" Tag="&#xE73A;" Click="All_Click"/>
-                                <MenuItem Header="Снять все" Tag="&#xE739;" Click="None_Click"/>
-                            </ContextMenu>
-                        </Button.ContextMenu>
-                    </Button>
-                </StackPanel>
-                <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition MaxWidth="420"/></Grid.ColumnDefinitions>
-                    <TextBox x:Name="Search" Style="{StaticResource SearchBox}" TextChanged="Search_TextChanged" ToolTip="Фильтр по пути"/>
+        <!-- timeline: circle = snapshot, square = trace; Ctrl+click two snapshots to compare, a trace opens on its own -->
+        <ContentControl DockPanel.Dock="Top" Style="{StaticResource Card}" Margin="0,16,0,0" Padding="0">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Top" Margin="20,14,14,0">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <TextBox x:Name="Roots" Style="{StaticResource SearchBox}" Tag="&#xE722;" Width="290" Height="{StaticResource SmallHeight}" ToolTip="Что снимать: разделы реестра и папки через ;"/>
+                        <Button Content="Сравнить" Style="{StaticResource Small}" Margin="6,0,0,0" Click="Compare_Click" ToolTip="Сравнить два выбранных снимка"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Хронология" FontSize="15.5" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                        <TextBlock x:Name="SnapCount" Style="{StaticResource Caption}" VerticalAlignment="Center"/>
+                        <TextBlock Text="снимков ·" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="4,0,4,0"/>
+                        <TextBlock x:Name="TraceCount" Style="{StaticResource Caption}" VerticalAlignment="Center"/>
+                        <TextBlock Text="трасс" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                    </StackPanel>
+                </DockPanel>
+                <Grid Height="116">
+                    <ListBox x:Name="Timeline" SelectionMode="Extended" Background="Transparent" BorderThickness="0" Padding="12,0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                             SelectionChanged="Timeline_SelectionChanged" MouseDoubleClick="ShowTrace_Click">
+                        <ListBox.Template><ControlTemplate TargetType="ListBox"><ScrollViewer Padding="{TemplateBinding Padding}" Focusable="False"><ItemsPresenter/></ScrollViewer></ControlTemplate></ListBox.Template>
+                        <ListBox.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ListBox.ItemsPanel>
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="Cursor" Value="Hand"/>
+                                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                                <Setter Property="ToolTip" Value="{Binding RootsText}"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="ListBoxItem">
+                                            <Grid Width="168" Background="Transparent">
+                                                <Grid.RowDefinitions><RowDefinition Height="36"/><RowDefinition/></Grid.RowDefinitions>
+                                                <Rectangle Height="1" Fill="{DynamicResource LineBrush}" VerticalAlignment="Center"/>
+                                                <Ellipse x:Name="dot" Width="16" Height="16" HorizontalAlignment="Left" Margin="8,0,0,0" StrokeThickness="1.5"
+                                                         Stroke="{DynamicResource MutedBrush}" Fill="{DynamicResource CardBrush}"/>
+                                                <Rectangle x:Name="box" Width="16" Height="16" RadiusX="4" RadiusY="4" HorizontalAlignment="Left" Margin="8,0,0,0" StrokeThickness="1.5"
+                                                           Stroke="{DynamicResource MutedBrush}" Fill="{DynamicResource CardBrush}" Visibility="Collapsed"/>
+                                                <Border x:Name="card" Grid.Row="1" Margin="0,0,10,12" Padding="8,6" CornerRadius="{StaticResource RTile}" Background="Transparent">
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Note}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                                        <TextBlock Text="{Binding Date, StringFormat=dd.MM.yyyy HH:mm}" Style="{StaticResource Caption}" Margin="0,2,0,0"/>
+                                                        <TextBlock Text="{Binding SizeText}" Style="{StaticResource Caption}" Foreground="{DynamicResource FaintBrush}"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Grid>
+                                            <ControlTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding IsTrace}" Value="True">
+                                                    <Setter TargetName="dot" Property="Visibility" Value="Collapsed"/>
+                                                    <Setter TargetName="box" Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="card" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                                </Trigger>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter TargetName="card" Property="Background" Value="{DynamicResource Surface2Brush}"/>
+                                                    <Setter TargetName="dot" Property="Fill" Value="{DynamicResource PrimaryBrush}"/>
+                                                    <Setter TargetName="dot" Property="Stroke" Value="{DynamicResource PrimaryBrush}"/>
+                                                    <Setter TargetName="box" Property="Fill" Value="{DynamicResource PrimaryBrush}"/>
+                                                    <Setter TargetName="box" Property="Stroke" Value="{DynamicResource PrimaryBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                    </ListBox>
+                    <TextBlock Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=Timeline}" Text="Снимков пока нет. «Снимок» сохранит текущее состояние."/>
                 </Grid>
             </DockPanel>
-            <DataGrid x:Name="Changes" Grid.Row="2" Grid.ColumnSpan="2" SelectionMode="Extended" MouseDoubleClick="Open_Click">
+        </ContentControl>
+        <!-- the changes of a comparison or trace: kind segments, path filter, the rarer commands under "⋯" -->
+        <DockPanel DockPanel.Dock="Top" Margin="0,20,0,12">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="12,0,0,0">
+                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" Width="290" TextChanged="Search_TextChanged" ToolTip="Фильтр по пути"/>
+                <Button Style="{StaticResource More}" Margin="6,0,0,0">
+                    <Button.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Показать" Tag="&#xE8A7;" ToolTip="Открыть выбранное изменение в редакторе или проводнике" Click="Open_Click"/>
+                            <Separator/>
+                            <MenuItem Header="Отметить все" Tag="&#xE73A;" Click="All_Click"/>
+                            <MenuItem Header="Снять все" Tag="&#xE739;" Click="None_Click"/>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
+            </StackPanel>
+            <Border Style="{StaticResource Segments}" VerticalAlignment="Center" Margin="0,0,14,0">
+                <StackPanel x:Name="Kinds" Orientation="Horizontal">
+                    <RadioButton x:Name="KindAll" Style="{StaticResource Segment}" Content="Все" Tag="" IsChecked="True" Checked="Kind_Checked"/>
+                    <RadioButton x:Name="KindAdded" Style="{StaticResource Segment}" Content="+" Tag="Added" Checked="Kind_Checked" ToolTip="Добавлено"/>
+                    <RadioButton x:Name="KindModified" Style="{StaticResource Segment}" Content="~" Tag="Modified" Checked="Kind_Checked" ToolTip="Изменено"/>
+                    <RadioButton x:Name="KindRemoved" Style="{StaticResource Segment}" Content="−" Tag="Removed" Checked="Kind_Checked" ToolTip="Удалено"/>
+                </StackPanel>
+            </Border>
+            <TextBlock x:Name="Status" Style="{StaticResource Caption}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+        </DockPanel>
+        <Grid>
+            <DataGrid x:Name="Changes" SelectionMode="Extended" MouseDoubleClick="Open_Click">
                 <DataGrid.Columns>
                     <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="48"/>
-                    <DataGridTextColumn Header="Изменение" Binding="{Binding KindText}" IsReadOnly="True" Width="170"/>
-                    <DataGridTextColumn Header="Путь" Binding="{Binding Display}" IsReadOnly="True" Width="*"/>
+                    <DataGridTemplateColumn Header="Изменение" SortMemberPath="KindText" Width="Auto" MinWidth="190"><DataGridTemplateColumn.CellTemplate><DataTemplate><ContentPresenter Content="{Binding KindText}" ContentTemplate="{StaticResource OutlineBadge}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Путь" Binding="{Binding Display}" IsReadOnly="True" Width="*" FontFamily="{StaticResource Mono}" FontSize="{StaticResource MonoSize}"/>
                 </DataGrid.Columns>
             </DataGrid>
-            <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=Changes}" Text="Выберите два снимка и нажмите «Сравнить» или откройте трассу."/>
-            <ContentControl x:Name="Bar" Grid.Row="2" Grid.ColumnSpan="2" Style="{StaticResource SelectionBar}" Visibility="Collapsed">
+            <TextBlock Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=Changes}" Text="Выберите два снимка и нажмите «Сравнить» или откройте трассу."/>
+            <!-- marked changes: what is reversible, another comparison, rolling back after the rule -->
+            <ContentControl x:Name="Bar" Style="{StaticResource SelectionBar}" Visibility="Collapsed">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock x:Name="BarText" Style="{StaticResource BarCount}"/>
-                    <TextBlock Style="{StaticResource Reversible}"><Run Text="&#xE7A7;" FontFamily="{StaticResource Icons}"/> <Run Text="Добавленные файлы уходят в корзину"/></TextBlock>
-                    <Button Content="Снять все" Style="{StaticResource Small}" Click="None_Click"/>
-                    <Button Content="Откатить" Style="{StaticResource SmallDanger}" Margin="0" Click="Rollback_Click"
-                            ToolTip="Удалить добавленное, вернуть изменённые и удалённые значения реестра. Добавленные файлы уходят в корзину."/>
+                    <TextBlock Style="{StaticResource Reversible}" Margin="0,0,18,0"><Run Text="&#xE7A7;" FontFamily="{StaticResource Icons}"/> <Run Text="Добавленные файлы уходят в корзину"/></TextBlock>
+                    <Button Content="Сравнить с другим" Click="Compare_Click" ToolTip="Сравнить два выбранных снимка"/>
+                    <Border Style="{StaticResource DockRule}"/>
+                    <Button Style="{StaticResource DangerBtn}" Margin="0" Click="Rollback_Click"
+                            ToolTip="Удалить добавленное, вернуть изменённые и удалённые значения реестра. Добавленные файлы уходят в корзину.">
+                        <TextBlock x:Name="BarText"/>
+                    </Button>
                 </StackPanel>
             </ContentControl>
         </Grid>

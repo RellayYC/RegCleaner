@@ -10,7 +10,7 @@ public partial class SnapshotsView : UserControl
 {
     List<SnapChange> _changes = new();
     string _source = "";
-    DataGrid? _lastList;
+    string _kind = "";
 
     readonly Action _bar;
 
@@ -18,22 +18,38 @@ public partial class SnapshotsView : UserControl
     {
         InitializeComponent();
         L.Apply(this);
-        _bar = Ui.Bar(Changes, Bar, BarText, () => _changes.Count(c => c.Checked));
+        _bar = Ui.Bar(Changes, Bar, BarText, () => _changes.Count(c => c.Checked), n => L.T($"Откатить {n} изменений"));
         Roots.Text = string.Join("; ", Snapshot.RegRoots.Select(Reg.Short).Concat(Snapshot.FileRoots));
         Load();
     }
 
     static string Stamp() => DateTime.Now.ToString("yyyyMMdd_HHmmss");
 
+    /// <summary>Snapshots and traces on one line, oldest first, scrolled to the newest.</summary>
     void Load()
     {
         static List<SnapInfo> Infos(string dir, string ext) => Directory.EnumerateFiles(dir, "*" + ext)
             .Select(f => { try { return Snapshot.Info(f); } catch { return null; } })
-            .OfType<SnapInfo>().OrderByDescending(i => i.Date).ToList();
-        SnapList.ItemsSource = Infos(AppPaths.Snapshots, ".rksnap");
-        TraceList.ItemsSource = Infos(AppPaths.Traces, ".rktrace");
-        SnapCount.Text = SnapList.Items.Count.ToString();
-        TraceCount.Text = TraceList.Items.Count.ToString();
+            .OfType<SnapInfo>().ToList();
+        var all = Infos(AppPaths.Snapshots, ".rksnap").Concat(Infos(AppPaths.Traces, ".rktrace")).OrderBy(i => i.Date).ToList();
+        Timeline.ItemsSource = all;
+        if (all.Count > 0) Timeline.ScrollIntoView(all[^1]);
+        SnapCount.Text = all.Count(i => !i.IsTrace).ToString();
+        TraceCount.Text = all.Count(i => i.IsTrace).ToString();
+    }
+
+    List<SnapInfo> Selected => Timeline.SelectedItems.Cast<SnapInfo>().OrderBy(i => i.Date).ToList();
+
+    /// <summary>A single trace opens its changes right away; snapshots wait for "Compare".</summary>
+    void Timeline_SelectionChanged(object s, SelectionChangedEventArgs e)
+    {
+        if (Selected is [{ IsTrace: true }]) ShowTrace_Click(s, e);
+    }
+
+    void Kind_Checked(object s, RoutedEventArgs e)
+    {
+        _kind = (string)((FrameworkElement)s).Tag;
+        if (IsLoaded) ApplyFilter();
     }
 
     string[] RootList() => Roots.Text.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -48,14 +64,18 @@ public partial class SnapshotsView : UserControl
     void ApplyFilter()
     {
         var q = Search.Text.Trim();
-        var list = q == "" ? _changes : _changes.Where(c => c.Display.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
+        var list = _changes.Where(c => (_kind == "" || c.Kind.ToString() == _kind)
+            && (q == "" || c.Display.Contains(q, StringComparison.OrdinalIgnoreCase))).ToList();
         Changes.ItemsSource = list;
+        KindAll.Content = $"{L.T("Все")} {_changes.Count}";
+        KindAdded.Content = $"+ {_changes.Count(c => c.Kind == ChangeKind.Added)}";
+        KindModified.Content = $"~ {_changes.Count(c => c.Kind == ChangeKind.Modified)}";
+        KindRemoved.Content = $"− {_changes.Count(c => c.Kind == ChangeKind.Removed)}";
         _bar?.Invoke();
         Status.Text = _source == "" ? "" : L.T($"{_source}: изменений {_changes.Count}") + (list.Count != _changes.Count ? L.T($", показано {list.Count}") : "");
     }
 
     void Search_TextChanged(object s, TextChangedEventArgs e) => ApplyFilter();
-    void List_GotFocus(object s, RoutedEventArgs e) => _lastList = (DataGrid)s;
 
     async void Take_Click(object s, RoutedEventArgs e)
     {
@@ -67,7 +87,7 @@ public partial class SnapshotsView : UserControl
 
     async void Compare_Click(object s, RoutedEventArgs e)
     {
-        var sel = SnapList.SelectedItems.Cast<SnapInfo>().OrderBy(i => i.Date).ToList();
+        var sel = Selected.Where(i => !i.IsTrace).ToList();
         if (sel.Count != 2) { Ui.Info(L.T("Выберите два снимка (Ctrl+клик).")); return; }
         await Ui.Busy(this, async () =>
         {
@@ -116,7 +136,7 @@ public partial class SnapshotsView : UserControl
 
     void ShowTrace_Click(object s, RoutedEventArgs e)
     {
-        if (TraceList.SelectedItem is not SnapInfo t) return;
+        if (Selected.FirstOrDefault(i => i.IsTrace) is not { } t) return;
         try { Show(Snapshot.LoadChanges(t.File), t.Note); }
         catch (Exception ex) { Ui.Error(ex); }
     }
@@ -156,7 +176,7 @@ public partial class SnapshotsView : UserControl
 
     void Delete_Click(object s, RoutedEventArgs e)
     {
-        var sel = _lastList?.SelectedItems.Cast<SnapInfo>().ToList() ?? new();
+        var sel = Selected;
         if (sel.Count == 0 || !Ui.Confirm(L.T($"Удалить {sel.Count} шт.?"))) return;
         sel.ForEach(i => File.Delete(i.File));
         Load();
