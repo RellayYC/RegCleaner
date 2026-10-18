@@ -198,7 +198,7 @@
  "Заменить на:": "Replace with:",
  "Где искать:": "Look in:",
  "Ключи через ; (например HKLM\\SOFTWARE; HKCU)": "Keys separated by ; (for example HKLM\\SOFTWARE; HKCU)",
- "Разделы": "Keys",
+ "Разделы": "Hives",
  "Имена значений": "Value names",
  "Учитывать регистр": "Match case",
  "Слово целиком": "Whole word",
@@ -724,5 +724,10 @@
  "Ещё не проверялось": "Not checked yet",
  "Безопасно {0} · проверить {1}": "Safe {0} · review {1}",
  "Нажмите «Сканировать»": "Press Scan",
- "Исправить {0}": "Fix {0}"
+ "Исправить {0}": "Fix {0}",
+ "Резервные копии": "Backups",
+ "Папка сжатия: прежние файлы реестра (*.old) остаются здесь": "Compaction folder: the previous registry files (*.old) stay here",
+ "После": "After",
+ "Экономия {0} · {1}%": "Saves {0} · {1}%",
+ "Разделов: {0}": "Hives: {0}"
 }

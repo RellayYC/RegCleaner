@@ -5,6 +5,20 @@ using RegKeeper.Core;
 
 namespace RegKeeper.Modules;
 
+/// <summary>A hive row: the bar is as long as the file against the biggest hive; analysed, it splits into data and what compaction frees.</summary>
+public sealed record HiveRow(HiveInfo H, long Max)
+{
+    static GridLength Star(long v) => new(v, GridUnitType.Star);
+    public string Key => Reg.Short(H.Key);
+    public string File => H.File;
+    public GridLength Used => Star(H.Size);
+    public GridLength Rest => Star(Max - H.Size);
+    public GridLength Data => Star(H.Size - H.Gain);
+    public GridLength Free => Star(H.Gain);
+    public string Sizes => H.Compacted != null ? $"{H.SizeText} → {H.CompactedText}" : H.SizeText;
+    public string Saving => H.Compacted != null ? "−" + Sys.Size(H.Gain) : "-";
+}
+
 public partial class CompactionView : UserControl
 {
     List<HiveInfo> _hives = new();
@@ -15,20 +29,29 @@ public partial class CompactionView : UserControl
         L.Apply(this);
         try { _hives = Compaction.Plan(); }
         catch (Exception e) { Ui.Error(e); }
-        Grid.ItemsSource = _hives;
         AnalyzeBtn.IsEnabled = Compaction.IsAdmin;
         Status.Visibility = Compaction.IsAdmin ? Visibility.Collapsed : Visibility.Visible;
-        CountText.Text = _hives.Count.ToString();
-        SizeText.Text = Sys.Size(_hives.Sum(h => h.Size));
+        Show();
+    }
+
+    void Show()
+    {
+        var max = _hives.Select(h => h.Size).DefaultIfEmpty(0).Max();
+        Hives.ItemsSource = _hives.Select(h => new HiveRow(h, max)).ToList();
+        long size = _hives.Sum(h => h.Size), gain = _hives.Sum(h => h.Gain);
+        var analyzed = _hives.Any(h => h.Compacted != null);
+        SizeText.Text = Sys.Size(size);
+        AfterText.Text = analyzed ? Sys.Size(size - gain) : "-";
+        GainPill.Visibility = analyzed ? Visibility.Visible : Visibility.Collapsed;
+        GainText.Text = L.T($"Экономия {Sys.Size(gain)} · {100.0 * gain / Math.Max(1, size):0.#}%");
+        CountText.Text = L.T($"Разделов: {_hives.Count}");
     }
 
     async void Analyze_Click(object s, RoutedEventArgs e)
     {
         try { await Ui.Busy(this, () => Task.Run(() => Compaction.Analyze(_hives))); }
         catch (Exception ex) { Ui.Error(ex); }
-        Grid.Items.Refresh();
-        var gain = _hives.Sum(h => h.Gain);
-        GainText.Text = Sys.Size(gain);
+        Show();
         CompactBtn.IsEnabled = _hives.Any(h => h.Gain > 0);
         Steps(CompactBtn.IsEnabled ? 2 : 1);
     }
