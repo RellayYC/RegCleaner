@@ -765,5 +765,9 @@
  "Изменённые значения": "Changed values",
  "Созданные ключи": "Created keys",
  "Созданные задачи": "Created tasks",
- "Задачи планировщика": "Scheduler tasks"
+ "Задачи планировщика": "Scheduler tasks",
+ "Снимки": "Snapshots",
+ "Трассы": "Traces",
+ "Открыть папку": "Open folder",
+ "Проверяются автоматически: при запуске и каждые 6 часов": "Checked automatically: on start and every 6 hours"
 }

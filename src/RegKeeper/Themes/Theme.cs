@@ -34,7 +34,7 @@ public static class Theme
         foreach (Window w in Application.Current.Windows) TitleBar(w);
     }
 
-    public static readonly int[] Scales = { 90, 100, 110, 125, 150 };
+    public static readonly int[] Scales = { 90, 100, 115, 125 };
 
     /// <summary>Interface size in percent, HKCU\Software\RegKeeper\Scale.</summary>
     public static int Scale

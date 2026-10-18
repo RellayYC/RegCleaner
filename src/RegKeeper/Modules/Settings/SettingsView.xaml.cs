@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using RegKeeper.Core;
 
 namespace RegKeeper.Modules;
@@ -30,8 +31,14 @@ public partial class SettingsView : UserControl
             Watcher.ToolTip = L.T("Не найден ") + Integration.WatcherExe;
             ToolTipService.SetShowOnDisabled(Watcher, true);
         }
-        DataInfo.Text = L.T($"{AppPaths.Data}\nЦентр отмены, снимки и трассы установок: {Sys.Size(Sys.DirSize(AppPaths.Data))}");
-        About.Text = $"RegKeeper {Update.Current}, .NET {Environment.Version}";
+        // each preview paints with its own theme's tokens, whatever theme the window is in
+        foreach (var (c, t) in new[] { (SystemLight, Theme.Light), (SystemDark, Theme.Dark), (LightPreview, Theme.Light), (DarkPreview, Theme.Dark) })
+            c.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = new Uri($"pack://application:,,,/RegKeeper;component/Themes/{t}.xaml") });
+        UsageBox.SizeChanged += (_, e) => UsageBox.Clip = new RectangleGeometry(new Rect(e.NewSize), 4, 4);
+        ShowData();
+        About.Text = $"RegKeeper {Update.Current}";
+        Runtime.Text = $".NET {Environment.Version} · Windows {Environment.OSVersion.Version.Build} · {System.Runtime.InteropServices.RuntimeInformation.OSArchitecture.ToString().ToLowerInvariant()}";
+        VersionTag.Content = $"v{Update.Current}";
         UpdateInfo.Text = Update.Online
             ? L.T("Обновления приходят с сервера RegKeeper, перед установкой проверяется подпись.")
             : L.T("Обновления берутся из папки с установщиками RegKeeper-x.y.z-x64.msi: ") + (Update.Source ?? L.T("папка ещё не выбрана"));
@@ -96,13 +103,49 @@ public partial class SettingsView : UserControl
     }
 
 
+    public sealed record Use(string Label, string Size, Brush Brush);
+
+    /// <summary>The data folder: total, path, and the undo records / snapshots / traces / rest as one bar.</summary>
+    void ShowData()
+    {
+        long total = Sys.DirSize(AppPaths.Data), undo = Sys.DirSize(AppPaths.Undo), snaps = Sys.DirSize(AppPaths.Snapshots), traces = Sys.DirSize(AppPaths.Traces);
+        DataSize.Text = Sys.Size(total);
+        DataPath.Text = AppPaths.Data;
+        DataPath.ToolTip = AppPaths.Data;
+        var parts = new (string Label, long Bytes, string Brush)[]
+        {
+            (L.T("Центр отмены"), undo, "PrimaryBrush"), (L.T("Снимки"), snaps, "MutedBrush"),
+            (L.T("Трассы"), traces, "FaintBrush"), (L.T("Другое"), Math.Max(0, total - undo - snaps - traces), "DashBrush"),
+        };
+        Usage.ColumnDefinitions.Clear();
+        Usage.Children.Clear();
+        foreach (var p in parts.Where(p => p.Bytes > 0))
+        {
+            Usage.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(p.Bytes, GridUnitType.Star) });
+            var r = new Border();
+            r.SetResourceReference(Border.BackgroundProperty, p.Brush);
+            Grid.SetColumn(r, Usage.ColumnDefinitions.Count - 1);
+            Usage.Children.Add(r);
+        }
+        UsageLegend.ItemsSource = parts.Select(p => new Use(p.Label, Sys.Size(p.Bytes), (Brush)FindResource(p.Brush))).ToList();
+    }
+
+    void Cols_SizeChanged(object s, SizeChangedEventArgs e)
+    {
+        var one = e.NewSize.Width < 860;
+        Grid.SetColumn(Right, one ? 0 : 2);
+        Grid.SetRow(Right, one ? 1 : 0);
+        Grid.SetColumnSpan(Right, one ? 3 : 1);
+        Grid.SetColumnSpan((UIElement)Cols.Children[0], one ? 3 : 1);
+    }
+
     void Theme_Checked(object s, RoutedEventArgs e)
     {
-        Motion.Slide(ThemePill, (FrameworkElement)s);
         var mode = (string)((RadioButton)s).Tag;
         if (mode == Theme.Saved) return; // the initial IsChecked from the constructor
         Theme.Saved = mode;
         Theme.Apply(Theme.Saved);
+        ShowData(); // the legend dots hold brushes of the old theme
     }
 
     void Scale_Checked(object s, RoutedEventArgs e)
