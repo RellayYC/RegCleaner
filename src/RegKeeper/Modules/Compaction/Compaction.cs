@@ -116,6 +116,18 @@ public static class Compaction
         catch (ManagementException) { return false; }
     }
 
+    /// <summary>Creation time of the newest system restore point, null when there is none or System Restore is off.</summary>
+    public static DateTime? LastRestorePoint()
+    {
+        try
+        {
+            using var s = new ManagementObjectSearcher(@"root\default", "SELECT CreationTime FROM SystemRestore");
+            return s.Get().Cast<ManagementObject>().Select(o => (DateTime?)ManagementDateTimeConverter.ToDateTime((string)o["CreationTime"])).Max();
+        }
+        catch (ManagementException) { return null; }
+        catch (UnauthorizedAccessException) { return null; }
+    }
+
     static List<(string Letter, string Device)> DriveMap()
     {
         var list = new List<(string, string)>();

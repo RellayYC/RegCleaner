@@ -40,6 +40,7 @@ public class SmokeTests
                     { WindowStartupLocation = WindowStartupLocation.Manual, Left = -20000, ShowActivated = false, ShowInTaskbar = false };
                 app.MainWindow = win;
                 win.Show();
+                win.BackupCard.Visibility = Visibility.Visible; // the shots show the guard card even when the user hid it
                 var nav = (ListBox)win.FindName("Nav");
                 var host = (ContentControl)win.FindName("Host");
                 var views = new List<UserControl>();
@@ -404,7 +405,7 @@ public class SmokeTests
         {
             var rect = new Rect(0, 0, content.ActualWidth, content.ActualHeight);
             dc.DrawRectangle(win.Background, null, rect);
-            dc.DrawRectangle(new VisualBrush(content) { Stretch = Stretch.None, AlignmentX = AlignmentX.Left, AlignmentY = AlignmentY.Top }, null, rect);
+            dc.DrawRectangle(new VisualBrush(content) { Stretch = Stretch.None, Viewbox = rect, ViewboxUnits = BrushMappingMode.Absolute }, null, rect);
         }
         bmp.Render(dv);
         var png = new PngBitmapEncoder();

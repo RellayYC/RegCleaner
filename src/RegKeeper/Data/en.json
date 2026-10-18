@@ -567,7 +567,7 @@
  "Установить {0}? RegKeeper закроется примерно на минуту и откроется уже новым.": "Install {0}? RegKeeper will close for about a minute and reopen updated.",
  "RegKeeper обновлён до версии {0}.": "RegKeeper has been updated to version {0}.",
  "Обновление не установилось, работает прежняя версия {0}.": "The update did not install; the previous version {0} is still running.",
- "Скрыть (вернуть можно в настройках)": "Hide (you can bring it back in Settings)",
+ "Скрыть (вернуть можно в настройках)": "Hide (Settings brings it back)",
  "Скрыть": "Hide",
  "Карточка «Резервная копия реестра» внизу боковой панели": "The “Registry backup” card at the bottom of the sidebar",
  "Лёгкий режим: без анимаций, подсветки и теней": "Light mode: no animations, highlights or shadows",
@@ -661,5 +661,17 @@
  "Сжать реестр?": "Compact the registry?",
  "освободится в {0} разделах": "freed in {0} hives",
  "Закройте все программы. Файлы заменятся при перезагрузке.": "Close all programs. The files are replaced on reboot.",
- "Сейчас": "Now"
+ "Сейчас": "Now",
+ "Программа, ключ реестра или твик": "Program, registry key or tweak",
+ "Всё можно отменить": "Everything can be undone",
+ "Можно отменить": "Can undo",
+ "Можно отменить {0}": "Can undo {0}",
+ "Точка восстановления: ": "Restore point: ",
+ "нет": "none",
+ "сегодня в {0}": "today at {0}",
+ "вчера в {0}": "yesterday at {0}",
+ "Открыть ключ {0}": "Open key {0}",
+ "Программы: {0}": "Programs: {0}",
+ "Твики: {0}": "Tweaks: {0}",
+ "Искать в реестре: {0}": "Search the registry: {0}"
 }

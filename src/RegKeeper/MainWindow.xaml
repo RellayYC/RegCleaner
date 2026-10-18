@@ -4,57 +4,72 @@
         xmlns:rk="clr-namespace:RegKeeper"
         Title="RegKeeper" Height="900" Width="1400" MinHeight="560" MinWidth="980"
         Icon="Assets/RegKeeper.ico" Style="{StaticResource {x:Type Window}}" WindowStartupLocation="CenterScreen">
-    <!-- own 34px title bar; the glass line keeps the system shadow and the resize border -->
+    <!-- own 46px title bar; the glass line keeps the system shadow and the resize border -->
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="{StaticResource TitleBarHeight}" ResizeBorderThickness="6" GlassFrameThickness="0,0,0,1"
                       CornerRadius="0" UseAeroCaptionButtons="False"/>
     </WindowChrome.WindowChrome>
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="{StaticResource SideColumn}"/>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="{StaticResource TitleRow}"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
 
-        <!-- the faint red glow from the bottom left -->
-        <Border Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{DynamicResource BgHotBrush}" IsHitTestVisible="False"/>
-
-        <Border Grid.RowSpan="2" Background="{DynamicResource SideBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,1,0"/>
-
-        <!-- title bar: the mark and the window title (Ui.Busy adds "Esc: отмена" to it), then the window buttons -->
-        <StackPanel Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
-            <Border Width="18" Height="18" CornerRadius="5" Background="{DynamicResource PrimaryBrush}">
-                <Viewbox Width="13" Height="13">
-                    <Canvas Width="32" Height="32">
-                        <Path Data="M11,8 V24 M11,8 H16.5 A4.5,4.5 0 0 1 16.5,17 H11 M16,17 L22,24" Stroke="{DynamicResource OnPrimaryBrush}"
-                              StrokeThickness="3.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"/>
-                    </Canvas>
-                </Viewbox>
+        <!-- title bar: the window title (Ui.Busy adds "Esc: отмена" to it), the command bar, the window buttons -->
+        <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="13" Foreground="{DynamicResource MutedBrush}"
+                   Margin="20,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+        <!-- Ctrl+K: one box for programs, registry keys and tweaks; it hands the text to the module's own search -->
+        <Grid Width="460" Height="32" HorizontalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True">
+            <TextBox x:Name="Omni" Style="{StaticResource SearchBox}" Height="32" MinHeight="32" FontSize="13" Padding="34,0,64,0"
+                     ToolTip="Программа, ключ реестра или твик" TextChanged="Omni_TextChanged" PreviewKeyDown="Omni_KeyDown"/>
+            <Border HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,7,0" Padding="7,2" CornerRadius="6"
+                    Background="{DynamicResource Surface2Brush}" IsHitTestVisible="False">
+                <TextBlock Text="Ctrl K" FontSize="11.5" Foreground="{DynamicResource FaintBrush}"/>
             </Border>
-            <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="12" FontWeight="SemiBold"
-                       Margin="9,0,0,0" VerticalAlignment="Center"/>
-        </StackPanel>
-        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Popup x:Name="OmniPop" PlacementTarget="{Binding ElementName=Omni}" Placement="Bottom" VerticalOffset="6" StaysOpen="False"
+                   AllowsTransparency="True" PopupAnimation="Fade">
+                <Border Width="460" Margin="0,0,0,24" Padding="6" CornerRadius="{StaticResource RControl}" Background="{DynamicResource BarBrush}"
+                        BorderBrush="{DynamicResource BarEdgeBrush}" BorderThickness="1">
+                    <ListBox x:Name="OmniList" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource TextBrush}"
+                             PreviewMouseLeftButtonUp="OmniList_Click" PreviewKeyDown="OmniList_KeyDown"/>
+                </Border>
+            </Popup>
+        </Grid>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Style="{StaticResource WinBtn}" Content="&#xE921;" ToolTip="Свернуть" AutomationProperties.Name="Свернуть" Click="Minimize_Click"/>
             <Button x:Name="MaxBtn" Style="{StaticResource WinBtn}" Content="&#xE922;" ToolTip="Развернуть" AutomationProperties.Name="Развернуть" Click="Maximize_Click"/>
             <Button Style="{StaticResource WinClose}" Content="&#xE8BB;" ToolTip="Закрыть" AutomationProperties.Name="Закрыть" Click="Close_Click"/>
         </StackPanel>
 
+        <Grid Grid.Row="1" Margin="14,0,14,14">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="{StaticResource SideColumn}"/>
+            <ColumnDefinition Width="14"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+        <!-- the sidebar island: brand, sections, the guard card, then Undo Center and Settings -->
+        <Border Background="{DynamicResource SideBrush}" BorderBrush="{DynamicResource LineSoftBrush}" BorderThickness="1" CornerRadius="20" Padding="12,18,12,12">
+        <DockPanel>
+        <DockPanel DockPanel.Dock="Top" Margin="6,0,0,10">
+            <Border Width="36" Height="36" CornerRadius="11" Background="{DynamicResource PrimaryBrush}" Margin="0,0,12,0">
+                <TextBlock Text="R" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource OnPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="RegKeeper" FontSize="17" FontWeight="SemiBold"/>
+                <TextBlock Text="Всё можно отменить" FontSize="12" Foreground="{DynamicResource FaintBrush}"/>
+            </StackPanel>
+        </DockPanel>
         <!-- the sidebar scrolls only when the window is too short for it; otherwise the last group sits at the bottom -->
-        <ScrollViewer Grid.Row="1" Margin="10,4,10,12" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
             <Grid MinHeight="{Binding ViewportHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
-                <ListBox x:Name="Nav" Background="Transparent" BorderThickness="0" SelectionChanged="Nav_SelectionChanged" FontSize="13">
+                <ListBox x:Name="Nav" Background="Transparent" BorderThickness="0" SelectionChanged="Nav_SelectionChanged" FontSize="14">
                     <!-- one active fill under the items, slid onto the selected one by Motion.Slide -->
                     <ListBox.Template>
                         <ControlTemplate TargetType="ListBox">
                             <Grid>
                                 <Canvas>
-                                    <Border x:Name="Pill" CornerRadius="{StaticResource RControl}" Background="{DynamicResource NavActiveBrush}" Visibility="Hidden">
-                                        <Border Width="3" HorizontalAlignment="Left" Margin="0,8" CornerRadius="1.5" Background="{DynamicResource PrimaryBrush}"/>
-                                    </Border>
+                                    <Border x:Name="Pill" CornerRadius="{StaticResource RControlIn}" Background="{DynamicResource NavActiveBrush}" Visibility="Hidden"/>
                                 </Canvas>
                                 <ItemsPresenter/>
                             </Grid>
@@ -78,7 +93,7 @@
                             <GroupStyle.HeaderTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock x:Name="t" Text="{Binding Name}" FontSize="12" Foreground="{DynamicResource FaintBrush}" Margin="12,14,0,6"/>
+                                        <TextBlock x:Name="t" Text="{Binding Name}" FontSize="12.5" Foreground="{DynamicResource FaintBrush}" Margin="12,14,0,6"/>
                                         <!-- room for the card, which is laid over this spot -->
                                         <Rectangle x:Name="room" Height="{Binding ActualHeight, ElementName=BackupCard}" Margin="0,0,0,10" Visibility="Collapsed"/>
                                     </Grid>
@@ -101,8 +116,8 @@
                                 <Setter.Value>
                                     <ControlTemplate TargetType="ListBoxItem">
                                         <Grid Height="{StaticResource NavHeight}" Background="Transparent">
-                                            <Border x:Name="h" CornerRadius="{StaticResource RControl}" Background="{DynamicResource HoverBrush}" Opacity="0"/>
-                                            <Border CornerRadius="{StaticResource RControl}" rk:Motion.SpotSize="{StaticResource SpotNavRadius}" rk:Motion.Spot="{DynamicResource SpotNav}"/>
+                                            <Border x:Name="h" CornerRadius="{StaticResource RControlIn}" Background="{DynamicResource HoverBrush}" Opacity="0"/>
+                                            <Border CornerRadius="{StaticResource RControlIn}" rk:Motion.SpotSize="{StaticResource SpotNavRadius}" rk:Motion.Spot="{DynamicResource SpotNav}"/>
                                             <ContentPresenter Margin="12,0,8,0" VerticalAlignment="Center"/>
                                         </Grid>
                                         <ControlTemplate.Triggers>
@@ -112,8 +127,8 @@
                                                 <Trigger.ExitActions><BeginStoryboard Storyboard="{StaticResource HoverOut}"/></Trigger.ExitActions>
                                             </Trigger>
                                             <Trigger Property="IsSelected" Value="True">
-                                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
-                                                <Setter Property="FontWeight" Value="Medium"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource NavActiveTextBrush}"/>
+                                                <Setter Property="FontWeight" Value="SemiBold"/>
                                                 <Setter TargetName="h" Property="Visibility" Value="Hidden"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
@@ -127,57 +142,56 @@
                             <DockPanel>
                                 <TextBlock Text="{Binding Glyph}" FontFamily="{StaticResource Icons}" FontSize="{StaticResource IconSize}" FontWeight="Normal"
                                            Width="{StaticResource IconSize}" VerticalAlignment="Center"/>
-                                <Border x:Name="badge" DockPanel.Dock="Right" CornerRadius="{StaticResource RTag}" Padding="6,0" Height="18" VerticalAlignment="Center"
-                                        Margin="6,0,0,0" Background="{DynamicResource TagBrush}" Visibility="Collapsed">
-                                    <TextBlock x:Name="badgeText" Text="{Binding Badge}" FontSize="11.5" FontWeight="Medium" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"/>
-                                </Border>
+                                <TextBlock x:Name="badge" DockPanel.Dock="Right" Text="{Binding Badge}" FontSize="12.5" Margin="6,0,2,0" VerticalAlignment="Center"
+                                           Opacity="0.6" Visibility="Collapsed"/>
                                 <TextBlock Text="{Binding Title}" Margin="10,0,0,1" VerticalAlignment="Center"/>
                             </DockPanel>
                             <DataTemplate.Triggers>
                                 <DataTrigger Binding="{Binding HasBadge}" Value="True"><Setter TargetName="badge" Property="Visibility" Value="Visible"/></DataTrigger>
-                                <DataTrigger Binding="{Binding Tone}" Value="light">
-                                    <Setter TargetName="badge" Property="Background" Value="{DynamicResource TagStrongBrush}"/>
-                                    <Setter TargetName="badgeText" Property="Foreground" Value="{DynamicResource TextBrush}"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Tone}" Value="hot">
-                                    <Setter TargetName="badge" Property="Background" Value="{DynamicResource DangerTintBrush}"/>
-                                    <Setter TargetName="badgeText" Property="Foreground" Value="{DynamicResource DangerTextBrush}"/>
-                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Tone}" Value="light"><Setter TargetName="badge" Property="Opacity" Value="0.85"/></DataTrigger>
                             </DataTemplate.Triggers>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
 
-                <!-- protection card: over the room the last group's header keeps, right above Undo Center and Settings -->
-                <Border x:Name="BackupCard" VerticalAlignment="Bottom" Margin="0,0,0,78" CornerRadius="{StaticResource RCard}" Padding="14,12,8,14"
-                        Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource PanelLineBrush}" BorderThickness="1">
+                <!-- guard card: over the room the last group's header keeps, right above Undo Center and Settings -->
+                <Border x:Name="BackupCard" VerticalAlignment="Bottom" Margin="0,0,0,82" CornerRadius="14" Padding="14"
+                        Background="{DynamicResource Surface2Brush}">
+                    <Border.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Создать точку восстановления" Click="Backup_Click"/>
+                            <MenuItem Header="Скрыть (вернуть можно в настройках)" Click="HideBackup_Click"/>
+                        </ContextMenu>
+                    </Border.ContextMenu>
                     <StackPanel>
                         <DockPanel>
-                            <Ellipse Width="7" Height="7" Fill="{DynamicResource PrimaryBrush}" Margin="0,1,9,0" VerticalAlignment="Center"/>
-                            <Button DockPanel.Dock="Right" Style="{StaticResource IconBtn}" Content="&#xE711;" FontSize="10" MinHeight="22" Width="22" Margin="0,-3,0,-3"
-                                    ToolTip="Скрыть (вернуть можно в настройках)" AutomationProperties.Name="Скрыть" Click="HideBackup_Click"/>
-                            <TextBlock Text="Защита включена" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource IconBtn}" Content="&#xE710;" FontSize="12" MinHeight="24" Width="24" Margin="0,-4,-6,-4"
+                                    ToolTip="Создать точку восстановления" AutomationProperties.Name="Создать точку восстановления" Click="Backup_Click"/>
+                            <TextBlock Text="&#xEA18;" FontFamily="{StaticResource Icons}" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="GuardTitle" Text="Можно отменить" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         </DockPanel>
-                        <TextBlock Text="Каждое изменение можно откатить в Центре отмены" Style="{StaticResource Hint}" Margin="16,4,6,10" TextWrapping="Wrap"/>
-                        <Button Style="{StaticResource Small}" Content="Создать точку восстановления" Margin="0,0,6,0" HorizontalAlignment="Stretch" Click="Backup_Click"/>
+                        <UniformGrid x:Name="GuardBars" Rows="1" Columns="8" Margin="0,12,-4,10"/>
+                        <TextBlock x:Name="GuardPoint" FontSize="12" Foreground="{DynamicResource FaintBrush}" TextWrapping="Wrap"/>
                     </StackPanel>
                 </Border>
             </Grid>
         </ScrollViewer>
+        </DockPanel>
+        </Border>
 
         <!-- 2px progress line while a module works (MainWindow.SetBusy) -->
-        <Border x:Name="BusyBar" Grid.Row="1" Grid.Column="1" Height="2" VerticalAlignment="Top" ClipToBounds="True" Visibility="Hidden">
+        <Border x:Name="BusyBar" Grid.Column="2" Height="2" VerticalAlignment="Top" ClipToBounds="True" Visibility="Hidden">
             <Rectangle x:Name="BusyRun" Width="160" HorizontalAlignment="Left" Fill="{DynamicResource TextBrush}" Opacity="0.6">
                 <Rectangle.RenderTransform><TranslateTransform/></Rectangle.RenderTransform>
             </Rectangle>
         </Border>
-        <ContentControl x:Name="Host" Grid.Row="1" Grid.Column="1" Margin="{StaticResource PagePad}" Focusable="False"/>
+        <ContentControl x:Name="Host" Grid.Column="2" Margin="{StaticResource PagePad}" Focusable="False"/>
         <!-- the outgoing page as a picture while it fades (Motion.SwapPage) -->
-        <Image x:Name="Ghost" Grid.Row="1" Grid.Column="1" Margin="{StaticResource PagePad}" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Top"
+        <Image x:Name="Ghost" Grid.Column="2" Margin="{StaticResource PagePad}" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Top"
                IsHitTestVisible="False" Visibility="Collapsed"/>
 
         <!-- a new version found by the background check (MainWindow.CheckUpdate); the cross hides it until the next check -->
-        <Border x:Name="UpdateToast" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,12,20,0" Width="300"
+        <Border x:Name="UpdateToast" Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,12,20,0" Width="300"
                 Visibility="Collapsed">
             <Border.RenderTransform><TranslateTransform/></Border.RenderTransform>
             <Grid>
@@ -200,5 +214,6 @@
             </Border>
             </Grid>
         </Border>
+        </Grid>
     </Grid>
 </Window>

@@ -21,6 +21,9 @@
     <Color x:Key="DangerTint">#1AC8323A</Color>
     <Color x:Key="TagFill">#0D000000</Color>
     <Color x:Key="TagStrong">#14000000</Color>
+    <Color x:Key="Surface3">#DFDFE4</Color>
+    <Color x:Key="RowSel">#0B000000</Color>
+    <Color x:Key="Hatch">#9A9AA2</Color>
     <Color x:Key="Bar">#FFFFFF</Color>
     <Color x:Key="BarEdge">#D2D2D8</Color>
     <Color x:Key="GlowRed">#0FC8323A</Color>
@@ -133,8 +136,15 @@
     <SolidColorBrush x:Key="HotCardBrush" Color="{StaticResource Surface}"/>
     <SolidColorBrush x:Key="HotEdgeBrush" Color="{StaticResource DangerEdge}"/>
     <SolidColorBrush x:Key="TileBrush" Color="{StaticResource Surface2}"/>
-    <SolidColorBrush x:Key="NavActiveBrush" Color="{StaticResource NavTop}"/>
-    <SolidColorBrush x:Key="RowSelBrush" Color="{StaticResource Surface2}"/>
+    <SolidColorBrush x:Key="NavActiveBrush" Color="{StaticResource Primary}"/>
+    <SolidColorBrush x:Key="RowSelBrush" Color="{StaticResource RowSel}"/>
+    <SolidColorBrush x:Key="Surface3Brush" Color="{StaticResource Surface3}"/>
+    <SolidColorBrush x:Key="NavActiveTextBrush" Color="{StaticResource OnPrimary}"/>
+    <!-- free space and what compaction frees: diagonal stripes of the primary colour and a lighter grey -->
+    <LinearGradientBrush x:Key="HatchBrush" MappingMode="Absolute" StartPoint="0,0" EndPoint="5,5" SpreadMethod="Repeat">
+        <GradientStop Color="{StaticResource Primary}" Offset="0"/><GradientStop Color="{StaticResource Primary}" Offset="0.45"/>
+        <GradientStop Color="{StaticResource Hatch}" Offset="0.45"/><GradientStop Color="{StaticResource Hatch}" Offset="1"/>
+    </LinearGradientBrush>
     <SolidColorBrush x:Key="DangerFillBrush" Color="{StaticResource DangerTint}"/>
     <SolidColorBrush x:Key="DangerFillHoverBrush" Color="{StaticResource DangerEdge}"/>
     <SolidColorBrush x:Key="DangerShineBrush" Color="{StaticResource DangerEdge}"/>

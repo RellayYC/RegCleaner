@@ -2,6 +2,8 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
+using Keys = System.Windows.Input.Key;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using Microsoft.Win32;
@@ -59,7 +61,11 @@ public partial class MainWindow : Window
         Nav.ItemsSource = _items;
         Nav.Items.GroupDescriptions.Add(new PropertyGroupDescription(nameof(NavItem.Group)));
         BackupCard.Visibility = ShowBackupCard ? Visibility.Visible : Visibility.Collapsed;
-        Loaded += (_, _) => { SlideNav(); _ = LoadBadges(); };
+        Loaded += (_, _) => { SlideNav(); _ = LoadBadges(); _ = RefreshGuard(); };
+        PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key == Keys.K && Keyboard.Modifiers == ModifierKeys.Control) { Omni.Focus(); Omni.SelectAll(); e.Handled = true; }
+        };
         StateChanged += (_, _) => Chrome();
         // a bare Application is the test host: no network from tests
         if (Application.Current is App)
@@ -179,10 +185,82 @@ public partial class MainWindow : Window
     async void Backup_Click(object sender, RoutedEventArgs e) => await Ui.Busy(BackupCard, async () =>
     {
         var ok = await Task.Run(() => Compaction.CreateRestorePoint(L.T("RegKeeper: резервная копия")));
+        await RefreshGuard();
         Ui.Info(ok ? L.T("Точка восстановления создана.") : L.T("Не удалось создать точку восстановления. Включите защиту системы для диска C:."));
     });
 
     void HideBackup_Click(object sender, RoutedEventArgs e) => ShowBackupCard = false;
+
+    /// <summary>Guard card: how many operations Undo Center can roll back (8 bars) and when the last restore point was made.</summary>
+    public async Task RefreshGuard()
+    {
+        var (count, point) = await Task.Run(() => (UndoCenter.List().Count, Compaction.LastRestorePoint()));
+        SetBadge(typeof(UndoView), count > 0 ? count.ToString() : null);
+        GuardTitle.Text = L.T($"Можно отменить {count}");
+        GuardBars.Children.Clear();
+        for (var i = 0; i < 8; i++)
+            GuardBars.Children.Add(new Border
+            {
+                Height = 6, CornerRadius = new CornerRadius(3), Margin = new Thickness(0, 0, 4, 0),
+                Background = (Brush)FindResource(i < count ? "PrimaryBrush" : "Surface3Brush"),
+            });
+        GuardPoint.Text = L.T("Точка восстановления: ") + (point is not { } p ? L.T("нет")
+            : p.Date == DateTime.Today ? L.T($"сегодня в {p:HH:mm}")
+            : p.Date == DateTime.Today.AddDays(-1) ? L.T($"вчера в {p:HH:mm}")
+            : p.ToString("d MMM yyyy"));
+    }
+
+    // Ctrl+K: the routes hand the text to the module's own search.
+    // TODO data: no unified results with counts; each route searches in its module.
+    void Omni_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        var q = Omni.Text.Trim();
+        OmniList.Items.Clear();
+        if (q.Length == 0) { OmniPop.IsOpen = false; return; }
+        void Add(string glyph, string text, Action go) => OmniList.Items.Add(new ListBoxItem
+        {
+            Tag = go, Padding = new Thickness(10, 8, 10, 8),
+            Content = new DockPanel { Children =
+            {
+                new TextBlock { Text = glyph, FontFamily = (FontFamily)FindResource("Icons"), Margin = new Thickness(0, 2, 10, 0) },
+                new TextBlock { Text = text, TextTrimming = TextTrimming.CharacterEllipsis },
+            } },
+        });
+        if (q.StartsWith("HK", StringComparison.OrdinalIgnoreCase) || q.Contains('\\')) Add("", L.T($"Открыть ключ {q}"), () => Show<RegEditorView>().Navigate(q));
+        Add("", L.T($"Программы: {q}"), () => Show<UninstallerView>().Search.Text = q);
+        Add("", L.T($"Твики: {q}"), () => Show<TweaksView>().Search.Text = q);
+        Add("", L.T($"Искать в реестре: {q}"), () => { var v = Show<RegSearchView>(); v.Pattern.Text = q; v.Search_Click(v, new RoutedEventArgs()); });
+        OmniList.SelectedIndex = 0;
+        OmniPop.IsOpen = true;
+    }
+
+    void OmniGo(ListBoxItem? item)
+    {
+        if (item?.Tag is not Action go) return;
+        OmniPop.IsOpen = false;
+        Omni.Clear();
+        go();
+    }
+
+    void Omni_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Keys.Enter) OmniGo(OmniList.SelectedItem as ListBoxItem ?? OmniList.Items.OfType<ListBoxItem>().FirstOrDefault());
+        else if (e.Key == Keys.Down && OmniPop.IsOpen) { OmniList.SelectedIndex = Math.Min(OmniList.SelectedIndex + 1, OmniList.Items.Count - 1); }
+        else if (e.Key == Keys.Up && OmniPop.IsOpen) { OmniList.SelectedIndex = Math.Max(OmniList.SelectedIndex - 1, 0); }
+        else if (e.Key == Keys.Escape) { OmniPop.IsOpen = false; Omni.Clear(); Keyboard.ClearFocus(); }
+        else return;
+        e.Handled = true;
+    }
+
+    void OmniList_Click(object sender, MouseButtonEventArgs e) =>
+        OmniGo(ItemsControl.ContainerFromElement(OmniList, (DependencyObject)e.OriginalSource) as ListBoxItem);
+
+    void OmniList_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Keys.Enter) return;
+        OmniGo(OmniList.SelectedItem as ListBoxItem);
+        e.Handled = true;
+    }
 
     /// <summary>The backup card at the bottom of the sidebar; its cross hides it, Settings brings it back. HKCU\Software\RegKeeper\BackupCard.</summary>
     public static bool ShowBackupCard

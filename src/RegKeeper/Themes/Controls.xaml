@@ -7,7 +7,7 @@
     <FontFamily x:Key="UiFont">pack://application:,,,/RegKeeper;component/Assets/Fonts/#Inter, Segoe UI Variable Text, Segoe UI</FontFamily>
     <FontFamily x:Key="DisplayFont">pack://application:,,,/RegKeeper;component/Assets/Fonts/#Inter, Segoe UI Variable Display, Segoe UI</FontFamily>
     <FontFamily x:Key="Mono">Cascadia Mono, Consolas</FontFamily>
-    <sys:Double x:Key="MonoSize">11.5</sys:Double>
+    <sys:Double x:Key="MonoSize">12.5</sys:Double>
 
     <!-- Dialog (Dialog.xaml): always dark, black and white, whatever the theme -->
     <SolidColorBrush x:Key="DlgDim" Color="#8C000000"/>
@@ -77,34 +77,34 @@
     </Style>
 
     <!-- shape and spacing tokens: panels 12, buttons and fields 8, tags 6, chips 15 -->
-    <CornerRadius x:Key="RCard">12</CornerRadius>
-    <CornerRadius x:Key="RCardIn">11</CornerRadius>
-    <CornerRadius x:Key="RControl">8</CornerRadius>
-    <CornerRadius x:Key="RControlIn">7</CornerRadius>
-    <CornerRadius x:Key="RRing">10</CornerRadius>
-    <CornerRadius x:Key="RTile">6</CornerRadius>
-    <CornerRadius x:Key="RTag">6</CornerRadius>
-    <CornerRadius x:Key="RChip">15</CornerRadius>
+    <CornerRadius x:Key="RCard">18</CornerRadius>
+    <CornerRadius x:Key="RCardIn">17</CornerRadius>
+    <CornerRadius x:Key="RControl">12</CornerRadius>
+    <CornerRadius x:Key="RControlIn">11</CornerRadius>
+    <CornerRadius x:Key="RRing">14</CornerRadius>
+    <CornerRadius x:Key="RTile">10</CornerRadius>
+    <CornerRadius x:Key="RTag">8</CornerRadius>
+    <CornerRadius x:Key="RChip">17</CornerRadius>
     <CornerRadius x:Key="RBar">2.5</CornerRadius>
     <Thickness x:Key="CardPad">20,18</Thickness>
     <Thickness x:Key="Gap">0,0,16,16</Thickness>
-    <Thickness x:Key="PagePad">28,24,28,24</Thickness>
+    <Thickness x:Key="PagePad">6,8,0,0</Thickness>
     <sys:Double x:Key="BarHeight">5</sys:Double>
     <sys:Double x:Key="MiniBarWidth">90</sys:Double>
     <!-- controls share one height so toolbars line up -->
-    <sys:Double x:Key="ControlHeight">34</sys:Double>
-    <sys:Double x:Key="SmallHeight">28</sys:Double>
-    <sys:Double x:Key="ChipHeight">30</sys:Double>
-    <sys:Double x:Key="TagHeight">22</sys:Double>
-    <sys:Double x:Key="SearchHeight">34</sys:Double>
-    <sys:Double x:Key="RowHeight">44</sys:Double>
-    <sys:Double x:Key="HeaderHeight">36</sys:Double>
-    <sys:Double x:Key="NavHeight">32</sys:Double>
-    <sys:Double x:Key="TitleBarHeight">34</sys:Double>
-    <sys:Double x:Key="SideWidth">248</sys:Double>
-    <GridLength x:Key="SideColumn">248</GridLength>
-    <GridLength x:Key="TitleRow">34</GridLength>
-    <sys:Double x:Key="IconSize">16</sys:Double>
+    <sys:Double x:Key="ControlHeight">40</sys:Double>
+    <sys:Double x:Key="SmallHeight">32</sys:Double>
+    <sys:Double x:Key="ChipHeight">34</sys:Double>
+    <sys:Double x:Key="TagHeight">25</sys:Double>
+    <sys:Double x:Key="SearchHeight">40</sys:Double>
+    <sys:Double x:Key="RowHeight">58</sys:Double>
+    <sys:Double x:Key="HeaderHeight">40</sys:Double>
+    <sys:Double x:Key="NavHeight">38</sys:Double>
+    <sys:Double x:Key="TitleBarHeight">46</sys:Double>
+    <sys:Double x:Key="SideWidth">252</sys:Double>
+    <GridLength x:Key="SideColumn">252</GridLength>
+    <GridLength x:Key="TitleRow">46</GridLength>
+    <sys:Double x:Key="IconSize">18</sys:Double>
     <sys:Double x:Key="ColumnMin">150</sys:Double>
     <Thickness x:Key="TablePad">0</Thickness>
     <Thickness x:Key="Toolbar">0,20,0,12</Thickness>
@@ -199,7 +199,7 @@
     <ScaleTransform x:Key="UiScale" ScaleX="1" ScaleY="1"/>
     <Style TargetType="Window">
         <Setter Property="FontFamily" Value="{StaticResource UiFont}"/>
-        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontSize" Value="14.5"/>
         <Setter Property="Typography.NumeralAlignment" Value="Tabular"/>
         <Setter Property="Background" Value="{DynamicResource BgBrush}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>

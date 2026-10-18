@@ -29,7 +29,7 @@ public partial class RegSearchView : UserControl
     void Pattern_KeyDown(object s, KeyEventArgs e) { if (e.Key == Key.Enter && _cts == null) Search_Click(s, e); }
 
     /// <summary>Second click while running = cancel. Hits are buffered on the worker and flushed to the grid by a timer.</summary>
-    async void Search_Click(object s, RoutedEventArgs e)
+    internal async void Search_Click(object s, RoutedEventArgs e)
     {
         if (_cts != null) { _cts.Cancel(); return; }
         if (Pattern.Text == "") return;

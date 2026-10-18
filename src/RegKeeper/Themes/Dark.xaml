@@ -5,69 +5,72 @@
          which lays translucent colours over Bg. Light.xaml has the same keys. -->
 
     <!-- design tokens -->
-    <Color x:Key="Bg">#0F0F11</Color>
-    <Color x:Key="Side">#0B0B0D</Color>
-    <Color x:Key="Surface">#17171A</Color>
-    <Color x:Key="Surface2">#222226</Color>
-    <Color x:Key="PanelLine">#2A2A2F</Color>
-    <Color x:Key="LineSoft">#1F1F23</Color>
-    <Color x:Key="Text">#EDEDEF</Color>
-    <Color x:Key="Muted">#8E8E96</Color>
-    <Color x:Key="Faint">#5D5D65</Color>
-    <Color x:Key="Primary">#F2F2F4</Color>
-    <Color x:Key="OnPrimary">#111113</Color>
-    <Color x:Key="Reversible">#CFCFD4</Color>
-    <Color x:Key="Danger">#EF5B62</Color>
-    <Color x:Key="DangerTint">#21EF5B62</Color>
+    <Color x:Key="Bg">#08080A</Color>
+    <Color x:Key="Side">#111114</Color>
+    <Color x:Key="Surface">#141417</Color>
+    <Color x:Key="Surface2">#1D1D21</Color>
+    <Color x:Key="PanelLine">#2A2A30</Color>
+    <Color x:Key="LineSoft">#1C1C20</Color>
+    <Color x:Key="Text">#F0F0F2</Color>
+    <Color x:Key="Muted">#8F8F98</Color>
+    <Color x:Key="Faint">#5C5C65</Color>
+    <Color x:Key="Primary">#F4F4F6</Color>
+    <Color x:Key="OnPrimary">#0D0D0F</Color>
+    <Color x:Key="Reversible">#D2D2D7</Color>
+    <Color x:Key="Danger">#F05A61</Color>
+    <Color x:Key="DangerTint">#21F05A61</Color>
     <Color x:Key="TagFill">#12FFFFFF</Color>
-    <Color x:Key="TagStrong">#17FFFFFF</Color>
-    <Color x:Key="Bar">#1D1D21</Color>
-    <Color x:Key="BarEdge">#36363C</Color>
-    <Color x:Key="GlowRed">#1A78141A</Color>
+    <Color x:Key="TagStrong">#1FFFFFFF</Color>
+    <Color x:Key="Surface3">#27272C</Color>
+    <Color x:Key="RowSel">#0BFFFFFF</Color>
+    <Color x:Key="Hatch">#BBBBC2</Color>
+    <Color x:Key="Bar">#1B1B1F</Color>
+    <Color x:Key="BarEdge">#34343A</Color>
+    <Color x:Key="GlowRed">#0078141A</Color>
     <Color x:Key="GlowRedClear">#0078141A</Color>
 
     <!-- older names the screens and gates use, set from the tokens above -->
-    <Color x:Key="Pane">#131316</Color>
-    <Color x:Key="Alt">#1B1B1F</Color>
-    <Color x:Key="Hover">#0AFFFFFF</Color>
+    <Color x:Key="Pane">#141417</Color>
+    <Color x:Key="Alt">#1D1D21</Color>
+    <Color x:Key="Hover">#12FFFFFF</Color>
     <Color x:Key="RowHover">#08FFFFFF</Color>
-    <Color x:Key="Selection">#222226</Color>
-    <Color x:Key="Subtle">#85858D</Color>
-    <Color x:Key="Border">#2A2A2F</Color>
-    <Color x:Key="BorderStrong">#36363C</Color>
-    <Color x:Key="Line">#1F1F23</Color>
-    <Color x:Key="Ring">#66F2F2F4</Color>
-    <Color x:Key="Accent">#F2F2F4</Color>
+    <Color x:Key="Selection">#1D1D21</Color>
+    <Color x:Key="Subtle">#8F8F98</Color>
+    <Color x:Key="Border">#2A2A30</Color>
+    <Color x:Key="BorderStrong">#34343A</Color>
+    <Color x:Key="Line">#1C1C20</Color>
+    <Color x:Key="Ring">#66F4F4F6</Color>
+    <Color x:Key="Accent">#F4F4F6</Color>
     <Color x:Key="AccentHover">#FFFFFF</Color>
-    <Color x:Key="OnAccent">#111113</Color>
+    <Color x:Key="OnAccent">#0D0D0F</Color>
     <Color x:Key="DangerHover">#F3737A</Color>
-    <Color x:Key="DangerEnd">#EF5B62</Color>
-    <Color x:Key="DangerDeep">#EF5B62</Color>
-    <Color x:Key="OnDanger">#111113</Color>
+    <Color x:Key="DangerEnd">#F05A61</Color>
+    <Color x:Key="DangerDeep">#F05A61</Color>
+    <Color x:Key="OnDanger">#0D0D0F</Color>
     <Color x:Key="DangerText">#F2767C</Color>
-    <Color x:Key="DangerSoft">#21EF5B62</Color>
-    <Color x:Key="DangerEdge">#59EF5B62</Color>
-    <Color x:Key="Success">#CFCFD4</Color>
-    <Color x:Key="Glass">#17171A</Color>
-    <Color x:Key="Dim">#5D5D65</Color>
-    <Color x:Key="Track">#222226</Color>
-    <Color x:Key="Tile1">#222226</Color>
-    <Color x:Key="Tile2">#222226</Color>
-    <Color x:Key="TileEdge">#2A2A2F</Color>
-    <Color x:Key="CardTop">#17171A</Color>
-    <Color x:Key="CardBottom">#17171A</Color>
-    <Color x:Key="HotTop">#17171A</Color>
-    <Color x:Key="HotBottom">#17171A</Color>
-    <Color x:Key="NavTop">#222226</Color>
-    <Color x:Key="NavEdge">#222226</Color>
-    <Color x:Key="SelTop">#222226</Color>
-    <Color x:Key="SelEdge">#2A2A2F</Color>
-    <Color x:Key="SegFirst">#F2F2F4</Color>
-    <Color x:Key="SegFirstEnd">#F2F2F4</Color>
-    <Color x:Key="Seg3">#8E8E96</Color>
-    <Color x:Key="Seg4">#5D5D65</Color>
+    <Color x:Key="DangerSoft">#21F05A61</Color>
+    <Color x:Key="DangerEdge">#59F05A61</Color>
+    <Color x:Key="Success">#D2D2D7</Color>
+    <Color x:Key="Glass">#141417</Color>
+    <Color x:Key="Dim">#5C5C65</Color>
+    <Color x:Key="Track">#27272C</Color>
+    <Color x:Key="Tile1">#1D1D21</Color>
+    <Color x:Key="Tile2">#1D1D21</Color>
+    <Color x:Key="TileEdge">#2A2A30</Color>
+    <Color x:Key="CardTop">#141417</Color>
+    <Color x:Key="CardBottom">#141417</Color>
+    <Color x:Key="HotTop">#141417</Color>
+    <Color x:Key="HotBottom">#141417</Color>
+    <Color x:Key="NavTop">#F4F4F6</Color>
+    <Color x:Key="NavEdge">#F4F4F6</Color>
+    <Color x:Key="SelTop">#1D1D21</Color>
+    <Color x:Key="SelEdge">#2A2A30</Color>
+    <Color x:Key="SegFirst">#F4F4F6</Color>
+    <Color x:Key="SegFirstEnd">#F4F4F6</Color>
+    <Color x:Key="Seg3">#8F8F98</Color>
+    <Color x:Key="Seg4">#5C5C65</Color>
     <Color x:Key="Seg5">#44444C</Color>
-    <Color x:Key="SegOther">#2A2A2F</Color>
+    <Color x:Key="SegOther">#2A2A30</Color>
     <Color x:Key="GlowLightColor">#FFFFFF</Color>
     <Color x:Key="Shadow">#000000</Color>
     <Color x:Key="Shine">#00FFFFFF</Color>
@@ -133,8 +136,15 @@
     <SolidColorBrush x:Key="HotCardBrush" Color="{StaticResource Surface}"/>
     <SolidColorBrush x:Key="HotEdgeBrush" Color="{StaticResource DangerEdge}"/>
     <SolidColorBrush x:Key="TileBrush" Color="{StaticResource Surface2}"/>
-    <SolidColorBrush x:Key="NavActiveBrush" Color="{StaticResource Surface2}"/>
-    <SolidColorBrush x:Key="RowSelBrush" Color="{StaticResource Surface2}"/>
+    <SolidColorBrush x:Key="NavActiveBrush" Color="{StaticResource Primary}"/>
+    <SolidColorBrush x:Key="RowSelBrush" Color="{StaticResource RowSel}"/>
+    <SolidColorBrush x:Key="Surface3Brush" Color="{StaticResource Surface3}"/>
+    <SolidColorBrush x:Key="NavActiveTextBrush" Color="{StaticResource OnPrimary}"/>
+    <!-- free space and what compaction frees: diagonal stripes of the primary colour and a lighter grey -->
+    <LinearGradientBrush x:Key="HatchBrush" MappingMode="Absolute" StartPoint="0,0" EndPoint="5,5" SpreadMethod="Repeat">
+        <GradientStop Color="{StaticResource Primary}" Offset="0"/><GradientStop Color="{StaticResource Primary}" Offset="0.45"/>
+        <GradientStop Color="{StaticResource Hatch}" Offset="0.45"/><GradientStop Color="{StaticResource Hatch}" Offset="1"/>
+    </LinearGradientBrush>
     <SolidColorBrush x:Key="DangerFillBrush" Color="{StaticResource DangerTint}"/>
     <SolidColorBrush x:Key="DangerFillHoverBrush" Color="{StaticResource DangerEdge}"/>
     <SolidColorBrush x:Key="DangerShineBrush" Color="{StaticResource DangerEdge}"/>
