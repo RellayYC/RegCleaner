@@ -4,8 +4,8 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
     <!-- control styles shared by both themes; colours come from the theme dictionary via DynamicResource -->
     <FontFamily x:Key="Icons">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
-    <FontFamily x:Key="UiFont">Inter, Segoe UI Variable Text, Segoe UI</FontFamily>
-    <FontFamily x:Key="DisplayFont">Inter, Segoe UI Variable Display, Segoe UI</FontFamily>
+    <FontFamily x:Key="UiFont">pack://application:,,,/RegKeeper;component/Assets/Fonts/#Inter, Segoe UI Variable Text, Segoe UI</FontFamily>
+    <FontFamily x:Key="DisplayFont">pack://application:,,,/RegKeeper;component/Assets/Fonts/#Inter, Segoe UI Variable Display, Segoe UI</FontFamily>
     <FontFamily x:Key="Mono">Cascadia Mono, Consolas</FontFamily>
     <sys:Double x:Key="MonoSize">11.5</sys:Double>
 
@@ -461,11 +461,12 @@
         <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
         <Setter Property="Tag" Value="{DynamicResource HoverBrush}"/>
         <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Background" Value="Transparent"/>
         <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="b" Background="Transparent">
+                    <Border x:Name="b" Background="{TemplateBinding Background}">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>

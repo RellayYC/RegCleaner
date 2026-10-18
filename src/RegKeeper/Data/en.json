@@ -50,7 +50,7 @@
  "Сжатая копия и резервная копия должны лежать на том же диске, что и раздел.": "The compacted copy and the backup must be on the same drive as the hive.",
  "Для сжатия реестра нужны права администратора.": "Registry compaction requires administrator rights.",
  "Не удалось включить ": "Could not enable ",
- "Файлы реестра со временем фрагментируются. Анализ записывает сжатые копии разделов и показывает выигрыш. Сжатие создаёт точку восстановления, а замена происходит при следующей перезагрузке. Старые файлы остаются резервной копией в папке сжатия.": "Registry files get fragmented over time. Analysis writes compacted copies of the hives and shows the gain. Compaction creates a restore point, and the replacement happens on the next reboot. The old files stay as a backup in the compaction folder.",
+ "Файлы реестра со временем фрагментируются. Анализ записывает сжатые копии разделов и показывает выигрыш. Перед сжатием можно создать точку восстановления, замена происходит при следующей перезагрузке. Старые файлы остаются резервной копией в папке сжатия.": "Registry files get fragmented over time. Analysis writes compacted copies of the hives and shows the gain. A restore point can be created before compaction, the replacement happens on the next reboot. The old files stay as a backup in the compaction folder.",
  "Анализ": "Analyze",
  "Сжать": "Compact",
  "Папка сжатия": "Compaction folder",
@@ -651,5 +651,9 @@
  "Показать системные пакеты": "Show system packages",
  "Добавить в избранное или убрать": "Add to or remove from favorites",
  "Ничего не найдено. Измените запрос или включите «Системные».": "Nothing found. Change the query or turn on System.",
- "Вернуть можно только из Microsoft Store": "Can only be restored from Microsoft Store"
+ "Вернуть можно только из Microsoft Store": "Can only be restored from Microsoft Store",
+ "Файлы реестра ставятся на замену.": "Registry files are queued for replacement.",
+ "Точка восстановления перед заменой": "Restore point before replacing",
+ "Точно? Это меняет файлы реестра Windows. Точка восстановления создана не будет.": "Sure? This changes Windows registry files. No restore point will be created.",
+ "Без точки прежние файлы реестра останутся только в папке сжатия (*.old)": "Without a restore point, the previous registry files stay only in the compaction folder (*.old)"
 }

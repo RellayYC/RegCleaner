@@ -38,19 +38,25 @@ public partial class CompactionView : UserControl
         var todo = _hives.Where(h => h.Gain > 0).ToList();
         if (todo.Count == 0) return;
         if (!Ui.Confirm(L.T($"Сжать разделов: {todo.Count}, выигрыш {Sys.Size(todo.Sum(h => h.Gain))}?\nЗакройте все программы. Замена файлов произойдёт при перезагрузке."))) return;
-        if (!Ui.Confirm(L.T("Точно? Это меняет файлы реестра Windows. Перед заменой будет создана точка восстановления."), L.T("Подтверждение"))) return;
+        var withPoint = RestorePoint.IsChecked == true;
+        if (!Ui.Confirm(withPoint
+            ? L.T("Точно? Это меняет файлы реестра Windows. Перед заменой будет создана точка восстановления.")
+            : L.T("Точно? Это меняет файлы реестра Windows. Точка восстановления создана не будет."), L.T("Подтверждение"))) return;
 
         var restorePoint = false;
         var errors = new List<string>();
         await Ui.Busy(this, () => Task.Run(() =>
         {
-            restorePoint = Compaction.CreateRestorePoint(L.T("RegKeeper: сжатие реестра"));
-            if (!restorePoint) return;
+            if (withPoint)
+            {
+                restorePoint = Compaction.CreateRestorePoint(L.T("RegKeeper: сжатие реестра"));
+                if (!restorePoint) return;
+            }
             foreach (var h in todo)
                 try { Compaction.Replace(h, h.Compacted + ".old"); }
                 catch (Exception ex) { errors.Add($"{h.Key}: {ex.Message}"); }
         }));
-        if (!restorePoint)
+        if (withPoint && !restorePoint)
         {
             Ui.Info(L.T("Не удалось создать точку восстановления (защита системы выключена?). Сжатие отменено."));
             return;

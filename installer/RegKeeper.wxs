@@ -32,6 +32,10 @@
             <Component Directory="INSTALLFOLDER">
                 <File Source="..\LICENSE" Name="LICENSE.txt" KeyPath="yes"/>
             </Component>
+            <!-- the embedded Inter font ships under the SIL OFL, which travels with it -->
+            <Component Directory="INSTALLFOLDER">
+                <File Source="..\src\RegKeeper\Assets\Fonts\OFL.txt" Name="Inter-OFL.txt" KeyPath="yes"/>
+            </Component>
             <Component Directory="INSTALLFOLDER">
                 <RegistryValue Root="HKLM" Key="Software\RegKeeper\Setup" Name="InstallDir" Type="string" Value="[INSTALLFOLDER]" KeyPath="yes"/>
             </Component>

@@ -31,6 +31,8 @@
   <ItemGroup>
     <None Update="Data\**" CopyToOutputDirectory="PreserveNewest" />
     <Resource Include="Assets\RegKeeper.ico" />
+    <Resource Include="Assets\Fonts\*.ttf" />
+    <None Update="Assets\Fonts\OFL.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

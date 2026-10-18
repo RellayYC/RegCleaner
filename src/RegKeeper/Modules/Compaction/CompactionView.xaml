@@ -17,7 +17,7 @@
             </StackPanel>
             <StackPanel>
                 <TextBlock Text="Сжатие реестра" Style="{StaticResource Title}"/>
-                <TextBlock Style="{StaticResource Lead}" Text="Файлы реестра со временем фрагментируются. Анализ записывает сжатые копии разделов и показывает выигрыш. Сжатие создаёт точку восстановления, а замена происходит при следующей перезагрузке. Старые файлы остаются резервной копией в папке сжатия."/>
+                <TextBlock Style="{StaticResource Lead}" Text="Файлы реестра со временем фрагментируются. Анализ записывает сжатые копии разделов и показывает выигрыш. Перед сжатием можно создать точку восстановления, замена происходит при следующей перезагрузке. Старые файлы остаются резервной копией в папке сжатия."/>
                 <TextBlock x:Name="Status" Style="{StaticResource DangerText}" TextWrapping="Wrap" Margin="0,6,0,0" Visibility="Collapsed" Text="Нужны права администратора: перезапустите RegKeeper от имени администратора."/>
             </StackPanel>
         </DockPanel>
@@ -38,7 +38,8 @@
                         <Border x:Name="Step2" Style="{StaticResource StepDot}"><TextBlock Text="2" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
                         <StackPanel>
                             <TextBlock Text="Сжатие" FontWeight="SemiBold"/>
-                            <TextBlock Text="Создаётся точка восстановления, файлы ставятся на замену." Style="{StaticResource Hint}" Margin="0,2,0,10"/>
+                            <TextBlock Text="Файлы реестра ставятся на замену." Style="{StaticResource Hint}" Margin="0,2,0,8"/>
+                            <CheckBox x:Name="RestorePoint" Style="{StaticResource Switch}" IsChecked="True" Margin="0,0,0,10" ToolTip="Без точки прежние файлы реестра останутся только в папке сжатия (*.old)"><TextBlock Text="Точка восстановления перед заменой" TextWrapping="Wrap"/></CheckBox>
                             <Button x:Name="CompactBtn" Content="Сжать" Style="{StaticResource DangerBtn}" HorizontalAlignment="Left" Margin="0" Click="Compact_Click" IsEnabled="False"/>
                         </StackPanel>
                     </DockPanel>

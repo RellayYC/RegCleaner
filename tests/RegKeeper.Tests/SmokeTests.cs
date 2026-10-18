@@ -58,6 +58,7 @@ public class SmokeTests
                 while (views.Any(v => !v.IsEnabled) && sw.Elapsed < TimeSpan.FromSeconds(120)) { Thread.Sleep(50); Pump(); }
                 Assert.True(views.All(v => v.IsEnabled), "still loading: " + string.Join(", ", views.Where(v => !v.IsEnabled).Select(v => v.GetType().Name)));
                 UpdateToastComesBack(win, $"{theme} {lang}");
+                SnapLayoutsHitTest(win);
                 if (lang == L.En && Russian(win, views) is { Count: > 0 } ru) Assert.Fail("untranslated:\n" + string.Join("\n", ru));
                 if (theme == Theme.Light) EditorNavigatesToNewSibling(views.OfType<RegEditorView>().Single());
                 if (theme == Theme.Light) FilterFollowsAutomationToggle(views.OfType<StartupView>().Single());
@@ -242,6 +243,19 @@ public class SmokeTests
     }
 
     // the update card sits top right, its cross hides it, and the next found update brings it back
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    static extern IntPtr SendMessage(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam);
+
+    // snap layouts need the maximize button to answer WM_NCHITTEST as HTMAXBUTTON
+    static void SnapLayoutsHitTest(MainWindow win)
+    {
+        var max = (Button)win.FindName("MaxBtn");
+        var p = max.PointToScreen(new Point(max.ActualWidth / 2, max.ActualHeight / 2));
+        var hwnd = new System.Windows.Interop.WindowInteropHelper(win).Handle;
+        var lp = (IntPtr)(((int)p.Y << 16) | ((int)p.X & 0xFFFF));
+        Assert.Equal(9, (int)SendMessage(hwnd, 0x84, IntPtr.Zero, lp));
+    }
+
     static void UpdateToastComesBack(MainWindow win, string where)
     {
         var toast = (Border)win.FindName("UpdateToast");

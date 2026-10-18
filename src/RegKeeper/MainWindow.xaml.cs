@@ -81,6 +81,47 @@ public partial class MainWindow : Window
     void Maximize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
     void Close_Click(object sender, RoutedEventArgs e) => Close();
 
+    // Windows 11 shows snap layouts only over a non-client maximize button: the hook reports MaxBtn as HTMAXBUTTON,
+    // so the click and the hover arrive as NC messages and are replayed here
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        System.Windows.Interop.HwndSource.FromHwnd(new System.Windows.Interop.WindowInteropHelper(this).Handle).AddHook(SnapHook);
+    }
+
+    const int HtMaxButton = 9;
+
+    IntPtr SnapHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        switch (msg)
+        {
+            case 0x84: // WM_NCHITTEST
+                var p = new Point((short)(lParam.ToInt64() & 0xFFFF), (short)((lParam.ToInt64() >> 16) & 0xFFFF));
+                var over = MaxBtn.IsVisible && new Rect(MaxBtn.PointToScreen(new Point()), MaxBtn.PointToScreen(new Point(MaxBtn.ActualWidth, MaxBtn.ActualHeight))).Contains(p);
+                SetMaxHover(over);
+                if (!over) return IntPtr.Zero;
+                handled = true;
+                return HtMaxButton;
+            case 0xA1 when wParam == HtMaxButton: // WM_NCLBUTTONDOWN
+                handled = true;
+                break;
+            case 0xA2 when wParam == HtMaxButton: // WM_NCLBUTTONUP
+                handled = true;
+                Maximize_Click(MaxBtn, new RoutedEventArgs());
+                break;
+            case 0x2A2: // WM_NCMOUSELEAVE
+                SetMaxHover(false);
+                break;
+        }
+        return IntPtr.Zero;
+    }
+
+    void SetMaxHover(bool on)
+    {
+        if (on) { MaxBtn.Background = (Brush)MaxBtn.Tag; MaxBtn.Foreground = (Brush)FindResource("TextBrush"); }
+        else { MaxBtn.ClearValue(BackgroundProperty); MaxBtn.ClearValue(ForegroundProperty); }
+    }
+
     // a maximized custom-chrome window hangs past the screen by its resize border; the padding pulls the content back in
     void Chrome()
     {
