@@ -23,6 +23,7 @@
     <Color x:Key="TagStrong">#14000000</Color>
     <Color x:Key="Surface3">#DFDFE4</Color>
     <Color x:Key="RowSel">#0B000000</Color>
+    <Color x:Key="Dash">#B4B4BC</Color>
     <Color x:Key="Hatch">#9A9AA2</Color>
     <Color x:Key="Bar">#FFFFFF</Color>
     <Color x:Key="BarEdge">#D2D2D8</Color>
@@ -108,6 +109,7 @@
     <SolidColorBrush x:Key="SubtleBrush" Color="{StaticResource Subtle}"/>
     <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource Border}"/>
     <SolidColorBrush x:Key="BorderStrongBrush" Color="{StaticResource BorderStrong}"/>
+    <SolidColorBrush x:Key="DashBrush" Color="{StaticResource Dash}"/>
     <SolidColorBrush x:Key="LineBrush" Color="{StaticResource Line}"/>
     <SolidColorBrush x:Key="RingBrush" Color="{StaticResource Ring}"/>
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource Accent}"/>

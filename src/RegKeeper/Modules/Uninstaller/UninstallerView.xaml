@@ -77,7 +77,7 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn IsReadOnly="True" Header="Версия" Binding="{Binding Version}" Width="130"><DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="TextTrimming" Value="CharacterEllipsis"/><Setter Property="TextWrapping" Value="NoWrap"/><Setter Property="VerticalAlignment" Value="Center"/></Style></DataGridTextColumn.ElementStyle></DataGridTextColumn>
+                <DataGridTextColumn IsReadOnly="True" Header="Версия" Binding="{Binding Version}" Width="130" ElementStyle="{StaticResource CellTrim}"/>
                 <DataGridTextColumn IsReadOnly="True" Header="Размер" Binding="{Binding SizeText}" SortMemberPath="SizeBytes" Width="100"/>
                 <DataGridTextColumn IsReadOnly="True" Header="Запуск" Binding="{Binding LastRunText}" SortMemberPath="LastRun" Width="120"/>
                 <DataGridTemplateColumn IsReadOnly="True" Header="Для кого" SortMemberPath="Scope" Width="190"><DataGridTemplateColumn.CellTemplate><DataTemplate><ContentPresenter Content="{Binding Scope}" ContentTemplate="{StaticResource Badge}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>

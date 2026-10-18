@@ -148,16 +148,17 @@ public class SmokeTests
         finally { Registry.CurrentUser.DeleteSubKeyTree(@"Software\RegKeeperTest", false); }
     }
 
-    /// <summary>B12: a filter checkbox toggled through UI Automation (screen readers, scripts) must refilter the list.</summary>
+    /// <summary>B12: a source segment selected through UI Automation (screen readers, scripts) must refilter the list.</summary>
     static void FilterFollowsAutomationToggle(StartupView view)
     {
-        var services = (CheckBox)view.FindName("ShowServices");
+        var registry = (RadioButton)view.FindName("KindRegistry");
+        var all = (RadioButton)((Panel)view.FindName("Kinds")).Children[0];
         var grid = (DataGrid)view.FindName("Grid");
         Assert.Contains(grid.Items.Cast<StartupItem>(), i => i.Kind == StartupKind.Service);
-        ((IToggleProvider)new CheckBoxAutomationPeer(services)).Toggle();
+        ((ISelectionItemProvider)new RadioButtonAutomationPeer(registry)).Select();
         Pump();
         try { Assert.DoesNotContain(grid.Items.Cast<StartupItem>(), i => i.Kind == StartupKind.Service); }
-        finally { ((IToggleProvider)new CheckBoxAutomationPeer(services)).Toggle(); Pump(); }
+        finally { ((ISelectionItemProvider)new RadioButtonAutomationPeer(all)).Select(); Pump(); }
     }
 
     /// <summary>Scrolled into a group, the grouped tweaks grid pins that group's title; at the top it shows none.</summary>

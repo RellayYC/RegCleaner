@@ -1,3 +1,4 @@
+using System.Diagnostics.Eventing.Reader;
 using System.Windows;
 using System.Windows.Controls;
 using RegKeeper.Core;
@@ -7,38 +8,75 @@ namespace RegKeeper.Modules;
 public partial class StartupView : UserControl
 {
     List<StartupItem> _all = new();
+    double? _boot;
+    StartupKind? _kind;
 
     public StartupView()
     {
         InitializeComponent();
         L.Apply(this);
         Ui.Bar(Grid, Bar, BarText, () => Grid.SelectedItems.Count);
+        AxisEnd.Text = L.T("40 с"); // column headers sit outside the tree L.Apply walks
         Loaded += async (_, _) => { if (_all.Count == 0) await Reload(); };
     }
 
     async Task Reload() => await Ui.Busy(this, async () =>
     {
-        _all = await Task.Run(Autoruns.Load);
+        (_all, _boot) = await Task.Run(() =>
+        {
+            var items = Autoruns.Load();
+            var (boot, apps) = BootTimes();
+            foreach (var i in items)
+                if (Path.GetFileName(Sys.ExtractPath(i.Command) ?? "") is { Length: > 0 } exe && apps.TryGetValue(exe, out var sec)) i.Seconds = sec;
+            return (items, boot);
+        });
         ApplyFilter();
     });
 
     void ApplyFilter()
     {
         var q = Search.Text.Trim();
-        var list = _all.Where(i => (ShowServices.IsChecked == true || i.Kind != StartupKind.Service)
-                                   && (ShowTasks.IsChecked == true || i.Kind != StartupKind.Task)
+        var list = _all.Where(i => (_kind == null || i.Kind == _kind)
                                    && (q == "" || i.Name.Contains(q, StringComparison.OrdinalIgnoreCase)
                                                || i.Command.Contains(q, StringComparison.OrdinalIgnoreCase)
                                                || i.Publisher.Contains(q, StringComparison.OrdinalIgnoreCase))).ToList();
         Grid.ItemsSource = list;
-        CountText.Text = list.Count.ToString();
-        OnText.Text = list.Count(i => i.Enabled).ToString();
-        MissingText.Text = list.Count(i => i.Missing).ToString();
+        int on = list.Count(i => i.Enabled), missing = list.Count(i => i.Missing);
+        CountText.Text = L.T($"{list.Count} записей · включено {on} · битых {missing}");
+        BootText.Text = _boot is { } b ? L.T($"{b:0} с") : "-";
+        BootHint.Visibility = _boot == null ? Visibility.Visible : Visibility.Collapsed;
+        var saved = _all.Where(i => !i.Enabled).Sum(i => i.Seconds ?? 0);
+        OffText.Text = saved > 0 ? L.T($"Отключено вами −{saved:0} с") : L.T($"Отключено: {_all.Count(i => !i.Enabled)}");
+    }
+
+    /// <summary>Windows' own boot measurements: event 100 is the last boot to a ready desktop, event 101 a program that
+    /// slowed it (its total start time). Reading the log needs admin; without it both come back empty.</summary>
+    static (double? Boot, Dictionary<string, double> Apps) BootTimes()
+    {
+        var apps = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+        double? boot = null;
+        try
+        {
+            var q = new EventLogQuery("Microsoft-Windows-Diagnostics-Performance/Operational", PathType.LogName, "*[System[(EventID=100 or EventID=101)]]") { ReverseDirection = true };
+            using var r = new EventLogReader(q);
+            var at100 = new EventLogPropertySelector(new[] { "Event/EventData/Data[@Name='BootTime']" });
+            var at101 = new EventLogPropertySelector(new[] { "Event/EventData/Data[@Name='FileName']", "Event/EventData/Data[@Name='TotalTime']" });
+            for (int n = 0; n < 500 && r.ReadEvent() is EventLogRecord e; n++)
+                using (e)
+                    if (e.Id == 100) boot ??= Convert.ToDouble(e.GetPropertyValues(at100)[0]) / 1000;
+                    else if (e.GetPropertyValues(at101) is [string file, var ms]) apps.TryAdd(file, Convert.ToDouble(ms) / 1000); // newest first
+        }
+        catch (Exception e) when (e is EventLogException or UnauthorizedAccessException or InvalidCastException or FormatException) { }
+        return (boot, apps);
     }
 
     void Search_TextChanged(object s, TextChangedEventArgs e) => ApplyFilter();
-    // Checked/Unchecked, not Click: UI Automation toggles do not raise Click; IsChecked="True" fires it while the XAML is parsed
-    void Filter_Changed(object s, RoutedEventArgs e) { if (IsInitialized) ApplyFilter(); }
+    // Checked, not Click: UI Automation selection does not raise Click; IsChecked="True" fires it while the XAML is parsed
+    void Kind_Checked(object s, RoutedEventArgs e)
+    {
+        _kind = Enum.TryParse<StartupKind>((string)((FrameworkElement)s).Tag, out var k) ? k : null;
+        if (IsInitialized) ApplyFilter();
+    }
 
     List<StartupItem> Selected => Grid.SelectedItems.Cast<StartupItem>().ToList();
 

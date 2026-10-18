@@ -278,6 +278,12 @@
         <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
     </Style>
+    <!-- a one-line grid cell: cut with an ellipsis instead of wrapping -->
+    <Style x:Key="CellTrim" TargetType="TextBlock">
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        <Setter Property="TextWrapping" Value="NoWrap"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
     <!-- registry paths, commands, values -->
     <Style x:Key="MonoText" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource Mono}"/>
@@ -385,6 +391,15 @@
         <DataTemplate.Triggers>
             <DataTrigger Binding="{Binding}" Value=""><Setter TargetName="p" Property="Visibility" Value="Collapsed"/></DataTrigger>
             <DataTrigger Binding="{Binding}" Value="{x:Null}"><Setter TargetName="p" Property="Visibility" Value="Collapsed"/></DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+    <!-- outline tag for a source or origin: no fill, a 1px edge -->
+    <DataTemplate x:Key="OutlineBadge">
+        <Border x:Name="p" Height="{StaticResource TagHeight}" CornerRadius="{StaticResource RTag}" BorderThickness="1" BorderBrush="{DynamicResource BorderStrongBrush}" Padding="8,0" HorizontalAlignment="Left">
+            <TextBlock Text="{Binding}" FontSize="12.5" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}"/>
+        </Border>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding}" Value=""><Setter TargetName="p" Property="Visibility" Value="Collapsed"/></DataTrigger>
         </DataTemplate.Triggers>
     </DataTemplate>
     <!-- status tag for problems: red tint and text -->

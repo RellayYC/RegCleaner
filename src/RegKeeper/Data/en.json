@@ -691,5 +691,16 @@
  "Запуск": "Last run",
  "Для кого": "For",
  "Тихо": "Quietly",
- "Следы в реестре можно вернуть": "Registry traces can be brought back"
+ "Следы в реестре можно вернуть": "Registry traces can be brought back",
+ "Папки": "Folders",
+ "Источник": "Source",
+ "Рабочий стол готов через": "Desktop ready in",
+ "Время берётся из журнала Diagnostics-Performance; нужны права администратора": "Times come from the Diagnostics-Performance log; administrator rights are needed",
+ "Новая запись в ключе Run": "A new entry in the Run key",
+ "время не измерено": "not measured",
+ "40 с": "40 s",
+ "{0} с": "{0} s",
+ "{0} записей · включено {1} · битых {2}": "{0} entries · {1} on · {2} broken",
+ "Отключено вами −{0} с": "Turned off by you −{0} s",
+ "Отключено: {0}": "Turned off: {0}"
 }

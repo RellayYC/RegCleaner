@@ -2,69 +2,141 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel>
-        <!-- header: title and description, the counters on the right -->
+        <!-- header: title and description, the source filter on the right -->
         <DockPanel DockPanel.Dock="Top">
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                <ContentControl Style="{StaticResource Metric}">
-                    <StackPanel><TextBlock Text="Записей" Style="{StaticResource MetricLabel}"/><TextBlock x:Name="CountText" Style="{StaticResource MetricValue}"/></StackPanel>
-                </ContentControl>
-                <ContentControl Style="{StaticResource Metric}">
-                    <StackPanel><TextBlock Text="Включено" Style="{StaticResource MetricLabel}"/><TextBlock x:Name="OnText" Style="{StaticResource MetricValue}"/></StackPanel>
-                </ContentControl>
-                <ContentControl Style="{StaticResource Metric}">
-                    <StackPanel><TextBlock Text="Битых" Style="{StaticResource MetricLabel}"/><TextBlock x:Name="MissingText" Style="{StaticResource MetricValue}"/></StackPanel>
-                </ContentControl>
-            </StackPanel>
+            <Border DockPanel.Dock="Right" Style="{StaticResource Segments}" VerticalAlignment="Top">
+                <StackPanel x:Name="Kinds" Orientation="Horizontal">
+                    <RadioButton Style="{StaticResource Segment}" Content="Все" Tag="all" IsChecked="True" Checked="Kind_Checked"/>
+                    <RadioButton x:Name="KindRegistry" Style="{StaticResource Segment}" Content="Реестр" Tag="Registry" Checked="Kind_Checked"/>
+                    <RadioButton Style="{StaticResource Segment}" Content="Папки" Tag="Folder" Checked="Kind_Checked"/>
+                    <RadioButton Style="{StaticResource Segment}" Content="Задачи" Tag="Task" Checked="Kind_Checked"/>
+                    <RadioButton Style="{StaticResource Segment}" Content="Службы" Tag="Service" Checked="Kind_Checked"/>
+                </StackPanel>
+            </Border>
             <StackPanel>
                 <TextBlock Text="Автозагрузка" Style="{StaticResource Title}"/>
                 <TextBlock Style="{StaticResource Lead}" Text="Ключи Run, папки автозагрузки, задачи планировщика при входе/старте и сторонние службы. Отключение обратимо, всё пишется в Центр отмены."/>
             </StackPanel>
         </DockPanel>
-        <!-- toolbar: one row; rarer commands under "⋯", deleting in the selection bar -->
-        <DockPanel DockPanel.Dock="Top" Margin="{StaticResource Toolbar}">
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="12,0,0,0">
-                <CheckBox x:Name="ShowServices" Content="Службы" Style="{StaticResource Chip}" IsChecked="True" Checked="Filter_Changed" Unchecked="Filter_Changed"/>
-                <CheckBox x:Name="ShowTasks" Content="Задачи" Style="{StaticResource Chip}" IsChecked="True" Margin="0,0,12,0" Checked="Filter_Changed" Unchecked="Filter_Changed"/>
-                <Button Content="Вкл / выкл" Style="{StaticResource Primary}" Click="Toggle_Click"/>
-                <Button Content="Отложить" Click="Delay_Click" ToolTip="Запускать через заданное время после входа в Windows (задачей планировщика)"/>
-                <Button Content="&#xE72C;" Style="{StaticResource IconBtn}" ToolTip="Обновить" AutomationProperties.Name="Обновить" Click="Refresh_Click"/>
-                <Button Style="{StaticResource More}" Margin="0">
-                    <Button.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Добавить" Tag="&#xE710;" Click="Add_Click"/>
-                            <Separator/>
-                            <MenuItem Header="Папка файла" Tag="&#xE838;" Click="Folder_Click"/>
-                            <MenuItem Header="Перейти к записи" Tag="&#xE8A7;" Click="Goto_Click"/>
-                        </ContextMenu>
-                    </Button.ContextMenu>
-                </Button>
-            </StackPanel>
-            <Grid>
-                <Grid.ColumnDefinitions><ColumnDefinition MaxWidth="420"/></Grid.ColumnDefinitions>
-                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" TextChanged="Search_TextChanged" ToolTip="Поиск по названию, команде и издателю"/>
-            </Grid>
+        <!-- summary: how long the last boot took to a usable desktop (Windows' own measurement) -->
+        <ContentControl DockPanel.Dock="Top" Style="{StaticResource Card}" Margin="0,18,0,0" Padding="22,16,18,16">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="Добавить" Style="{StaticResource Ghost}" Margin="0" VerticalAlignment="Center" Click="Add_Click"
+                        ToolTip="Новая запись в ключе Run"/>
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Рабочий стол готов через" Style="{StaticResource Caption}"/>
+                        <TextBlock x:Name="BootText" Style="{StaticResource Figure}" Text="-"/>
+                    </StackPanel>
+                    <StackPanel VerticalAlignment="Center" Margin="36,0,0,0">
+                        <TextBlock x:Name="OffText" FontSize="15.5" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="CountText" Style="{StaticResource Caption}" Margin="0,2,0,0"/>
+                        <TextBlock x:Name="BootHint" Style="{StaticResource Caption}" Foreground="{DynamicResource FaintBrush}" Margin="0,2,0,0"
+                                   Text="Время берётся из журнала Diagnostics-Performance; нужны права администратора"/>
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+        </ContentControl>
+        <!-- search and refresh -->
+        <DockPanel DockPanel.Dock="Top" Margin="0,18,0,12">
+            <Button DockPanel.Dock="Right" Content="&#xE72C;" Style="{StaticResource IconBtn}" Margin="0" ToolTip="Обновить" AutomationProperties.Name="Обновить" Click="Refresh_Click"/>
+            <TextBox x:Name="Search" Style="{StaticResource SearchBox}" Width="290" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск по названию, команде и издателю"/>
         </DockPanel>
         <Grid>
-        <DataGrid x:Name="Grid" IsReadOnly="True" SelectionMode="Extended" MouseDoubleClick="Toggle_Click">
+        <DataGrid x:Name="Grid" IsReadOnly="True" SelectionMode="Extended" MinRowHeight="52" MouseDoubleClick="Toggle_Click">
             <DataGrid.Columns>
-                <DataGridTemplateColumn Header="Вкл" SortMemberPath="Enabled" Width="60"><DataGridTemplateColumn.CellTemplate><DataTemplate>
+                <DataGridTemplateColumn Header="Вкл" SortMemberPath="Enabled" Width="64"><DataGridTemplateColumn.CellTemplate><DataTemplate>
                     <CheckBox Style="{StaticResource Switch}" IsChecked="{Binding Enabled, Mode=OneWay}" IsEnabled="{Binding CanToggle}" Click="Switch_Click" AutomationProperties.Name="Вкл / выкл"/>
                 </DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
-                <DataGridTemplateColumn Width="62" CellTemplate="{StaticResource AppIcon}"/>
-                <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="2*"/>
-                <DataGridTemplateColumn Header="Тип" SortMemberPath="KindText" Width="140"><DataGridTemplateColumn.CellTemplate><DataTemplate><ContentPresenter Content="{Binding KindText}" ContentTemplate="{StaticResource Badge}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
-                <DataGridTextColumn Header="Издатель" Binding="{Binding Publisher}" Width="*"/>
-                <DataGridTextColumn Header="Команда" Binding="{Binding Command}" Width="3*"/>
-                <DataGridTemplateColumn Header="Статус" SortMemberPath="Missing" Width="140"><DataGridTemplateColumn.CellTemplate><DataTemplate><ContentPresenter Content="{Binding Status}" ContentTemplate="{StaticResource DangerBadge}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                <DataGridTemplateColumn Width="54" CellTemplate="{StaticResource AppIcon}"/>
+                <!-- name over the command; a missing file shows in red instead -->
+                <DataGridTemplateColumn Header="Название" SortMemberPath="Name" Width="250">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel VerticalAlignment="Center" ToolTip="{Binding Command}">
+                                <TextBlock Text="{Binding Name}" FontWeight="Medium" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock x:Name="sub" Text="{Binding Command}" Style="{StaticResource Caption}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding Missing}" Value="True">
+                                    <Setter TargetName="sub" Property="Text" Value="{Binding Status}"/>
+                                    <Setter TargetName="sub" Property="Foreground" Value="{DynamicResource DangerTextBrush}"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Источник" SortMemberPath="KindText" Width="Auto" MinWidth="110"><DataGridTemplateColumn.CellTemplate><DataTemplate><ContentPresenter Content="{Binding KindText}" ContentTemplate="{StaticResource OutlineBadge}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                <DataGridTextColumn Header="Издатель" Binding="{Binding Publisher}" Width="160" ElementStyle="{StaticResource CellTrim}"/>
+                <!-- time from logon to the program being up, on a 0-40 s axis; dashed when the entry is off -->
+                <DataGridTemplateColumn SortMemberPath="Seconds" Width="*" MinWidth="240">
+                    <DataGridTemplateColumn.Header>
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+                            <TextBlock Text="0"/>
+                            <TextBlock Grid.Column="1" Text="10"/>
+                            <TextBlock Grid.Column="2" Text="20"/>
+                            <TextBlock Grid.Column="3" Text="30"/>
+                            <TextBlock x:Name="AxisEnd" Grid.Column="3" HorizontalAlignment="Right"/>
+                        </Grid>
+                    </DataGridTemplateColumn.Header>
+                    <DataGridTemplateColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="ContentTemplate" Value="{x:Null}"/>
+                        </Style>
+                    </DataGridTemplateColumn.HeaderStyle>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Height="22" Margin="12,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="{Binding BarLength}"/>
+                                    <ColumnDefinition Width="{Binding BarRest}"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="on" CornerRadius="6" Background="{DynamicResource PrimaryBrush}" Visibility="Collapsed">
+                                    <TextBlock Text="{Binding SecondsText}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource OnPrimaryBrush}"
+                                               VerticalAlignment="Center" Margin="8,0" TextTrimming="CharacterEllipsis"/>
+                                </Border>
+                                <Rectangle x:Name="off" RadiusX="6" RadiusY="6" Stroke="{DynamicResource DashBrush}" StrokeThickness="1.5" StrokeDashArray="3 2" Visibility="Collapsed"/>
+                                <TextBlock x:Name="none" Grid.ColumnSpan="2" Text="время не измерено" Style="{StaticResource Caption}" Foreground="{DynamicResource FaintBrush}" VerticalAlignment="Center"/>
+                            </Grid>
+                            <DataTemplate.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions><Condition Binding="{Binding Measured}" Value="True"/><Condition Binding="{Binding Enabled}" Value="True"/></MultiDataTrigger.Conditions>
+                                    <Setter TargetName="on" Property="Visibility" Value="Visible"/>
+                                    <Setter TargetName="none" Property="Visibility" Value="Collapsed"/>
+                                </MultiDataTrigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions><Condition Binding="{Binding Measured}" Value="True"/><Condition Binding="{Binding Enabled}" Value="False"/></MultiDataTrigger.Conditions>
+                                    <Setter TargetName="off" Property="Visibility" Value="Visible"/>
+                                    <Setter TargetName="none" Property="Visibility" Value="Collapsed"/>
+                                </MultiDataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
             <TextBlock Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=Grid}" Text="Ничего не найдено. Измените запрос или фильтры."/>
+            <!-- selected entries: switch, delay, the rarer commands under "⋯", deleting after the rule -->
             <ContentControl x:Name="Bar" Style="{StaticResource SelectionBar}" Visibility="Collapsed">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock x:Name="BarText" Style="{StaticResource BarCount}"/>
-                    <TextBlock Style="{StaticResource Reversible}"><Run Text="&#xE7A7;" FontFamily="{StaticResource Icons}"/> <Run Text="Всё можно вернуть из Центра отмены"/></TextBlock>
-                    <Button Content="Вкл / выкл" Style="{StaticResource SmallPrimary}" Click="Toggle_Click"/>
-                    <Button Content="Удалить" Style="{StaticResource SmallDanger}" Margin="0" Click="Delete_Click"/>
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,18,0">
+                        <TextBlock x:Name="BarText" Style="{StaticResource BarCount}" Margin="0"/>
+                        <TextBlock Style="{StaticResource Reversible}" Margin="0"><Run Text="&#xE7A7;" FontFamily="{StaticResource Icons}"/> <Run Text="Всё можно вернуть из Центра отмены"/></TextBlock>
+                    </StackPanel>
+                    <Button Content="Вкл / выкл" Style="{StaticResource Primary}" Click="Toggle_Click"/>
+                    <Button Content="Отложить" Click="Delay_Click" ToolTip="Запускать через заданное время после входа в Windows (задачей планировщика)"/>
+                    <Button Style="{StaticResource More}">
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Папка файла" Tag="&#xE838;" Click="Folder_Click"/>
+                                <MenuItem Header="Перейти к записи" Tag="&#xE8A7;" Click="Goto_Click"/>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+                    <Border Style="{StaticResource DockRule}"/>
+                    <Button Content="Удалить" Style="{StaticResource DangerBtn}" Margin="0" Click="Delete_Click"/>
                 </StackPanel>
             </ContentControl>
         </Grid>

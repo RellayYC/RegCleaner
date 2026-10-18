@@ -20,6 +20,13 @@ public sealed class StartupItem
     public string Publisher { get; set; } = "";
     public bool Missing { get; set; }
     public ImageSource? Icon { get; set; }
+    /// <summary>Logon-to-ready time Windows measured for this program (Diagnostics-Performance event 101); null when never measured.</summary>
+    public double? Seconds { get; set; }
+    public bool Measured => Seconds != null;
+    public string SecondsText => Seconds is { } s ? L.T($"{s:0.#} с") : "";
+    // the bar's share of the 0-40 s axis
+    public System.Windows.GridLength BarLength => new(Math.Min(Seconds ?? 0, 40), System.Windows.GridUnitType.Star);
+    public System.Windows.GridLength BarRest => new(40 - Math.Min(Seconds ?? 0, 40), System.Windows.GridUnitType.Star);
 
     public bool CanToggle => Kind is StartupKind.Task or StartupKind.Service || Approved != null;
     public string ApprovedName => Kind == StartupKind.Folder ? Path.GetFileName(Location) : Name;
