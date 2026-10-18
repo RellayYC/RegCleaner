@@ -58,6 +58,7 @@ public class SmokeTests
                 var sw = Stopwatch.StartNew();
                 while (views.Any(v => !v.IsEnabled) && sw.Elapsed < TimeSpan.FromSeconds(120)) { Thread.Sleep(50); Pump(); }
                 Assert.True(views.All(v => v.IsEnabled), "still loading: " + string.Join(", ", views.Where(v => !v.IsEnabled).Select(v => v.GetType().Name)));
+                ShowScan(views.OfType<RegCleanupView>().Single());
                 UpdateToastComesBack(win, $"{theme} {lang}");
                 SnapLayoutsHitTest(win);
                 if (theme == Theme.Dark) DialogKeys(win, lang);
@@ -118,9 +119,21 @@ public class SmokeTests
             if (node is FrameworkElement fe) { Check(fe.ToolTip, "ToolTip"); if (fe.ContextMenu != null) Walk(fe.ContextMenu); }
             if (node is DependencyObject d) foreach (var child in LogicalTreeHelper.GetChildren(d)) Walk(child);
         }
+        // template literals (cells, items): only the text written in XAML, not the bound data
+        void Visual(DependencyObject d)
+        {
+            if (d is FrameworkElement { Tag: "data" }) return;
+            if (d is TextBlock { TemplatedParent: not null } t && !BindingOperations.IsDataBound(t, TextBlock.TextProperty))
+                foreach (var r in t.Inlines.OfType<System.Windows.Documents.Run>().Where(r => !BindingOperations.IsDataBound(r, System.Windows.Documents.Run.TextProperty)))
+                    Check(r.Text, "Template");
+            if (d is FrameworkElement { TemplatedParent: not null } fe && !BindingOperations.IsDataBound(fe, FrameworkElement.ToolTipProperty)) Check(fe.ToolTip, "Template ToolTip");
+            for (var i = 0; i < VisualTreeHelper.GetChildrenCount(d); i++) Visual(VisualTreeHelper.GetChild(d, i));
+        }
         Walk(win);
         views.ForEach(Walk);
-        foreach (NavItem n in ((ListBox)win.FindName("Nav")).Items) Check(n.Title, "Nav");
+        var nav = (ListBox)win.FindName("Nav");
+        for (var i = 0; i < views.Count; i++) { nav.SelectedIndex = i; Pump(); Visual(views[i]); }
+        foreach (NavItem n in nav.Items) Check(n.Title, "Nav");
         return found;
     }
 
@@ -426,6 +439,18 @@ public class SmokeTests
         Directory.CreateDirectory(Path.GetDirectoryName(file)!);
         using var f = File.Create(file);
         png.Save(f);
+    }
+
+    /// <summary>The cleanup list filled with a real (read-only) scan, without the Scan button: that one saves the result
+    /// and the time into the user's own settings.</summary>
+    static void ShowScan(RegCleanupView view)
+    {
+        var t = typeof(RegCleanupView);
+        const System.Reflection.BindingFlags F = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        t.GetField("_all", F)!.SetValue(view, RegScanner.Scan());
+        t.GetField("_scanned", F)!.SetValue(view, true);
+        t.GetMethod("ApplyFilter", F)!.Invoke(view, null);
+        Pump();
     }
 
     static void Pump()

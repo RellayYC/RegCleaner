@@ -1,6 +1,7 @@
 <UserControl x:Class="RegKeeper.Modules.UninstallerView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:rk="clr-namespace:RegKeeper">
     <DockPanel>
         <!-- header: title and description; export and refresh on the right, the uninstall commands live in the dock -->
         <DockPanel DockPanel.Dock="Top">
@@ -85,7 +86,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Style="{StaticResource IconBtn}" Content="&#xE712;" Width="32" MinHeight="32" Height="32" Margin="0"
-                                    ToolTip="Ещё" AutomationProperties.Name="Ещё" Click="RowMore_Click"/>
+                                    rk:L.Tip="Ещё" Click="RowMore_Click"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

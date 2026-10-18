@@ -12,6 +12,10 @@ public sealed class RegIssue
     public string Problem { get; init; } = "";
     public string Display => ValueName == null ? Reg.Short(Key) : $"{Reg.Short(Key)} → {(ValueName == "" ? L.T("(По умолчанию)") : ValueName)}";
     public string Id => ValueName == null ? Key : Key + "|" + ValueName;
+    // ponytail: by category - leftovers nothing reads once the file is gone; uninstall entries, shared DLL counts,
+    // COM and type libraries can still matter to a half-removed program, so those get a look first
+    public bool Safe => new[] { L.T("Кэш имён программ"), L.T("Папки установщика"), L.T("Пути приложений"), L.T("Открыть с помощью"),
+                                L.T("Автозагрузка"), L.T("Правила брандмауэра") }.Contains(Category);
 }
 
 /// <summary>

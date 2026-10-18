@@ -54,6 +54,23 @@ public static class L
         Walk(root);
     }
 
+    // Template content (grid cells, list items) is built after Apply walked the view, so its literals go through these:
+    // <TextBlock rk:L.Text="..."/>, <Button rk:L.Tip="..."/> (the tip also names the element for screen readers)
+    public static readonly DependencyProperty TextProperty = DependencyProperty.RegisterAttached("Text", typeof(string), typeof(L),
+        new(null, (d, e) => ((TextBlock)d).Text = T((string)e.NewValue)));
+    public static void SetText(DependencyObject d, string v) => d.SetValue(TextProperty, v);
+    public static string GetText(DependencyObject d) => (string)d.GetValue(TextProperty);
+
+    public static readonly DependencyProperty TipProperty = DependencyProperty.RegisterAttached("Tip", typeof(string), typeof(L),
+        new(null, (d, e) =>
+        {
+            var s = T((string)e.NewValue);
+            ((FrameworkElement)d).ToolTip = s;
+            System.Windows.Automation.AutomationProperties.SetName(d, s);
+        }));
+    public static void SetTip(DependencyObject d, string v) => d.SetValue(TipProperty, v);
+    public static string GetTip(DependencyObject d) => (string)d.GetValue(TipProperty);
+
     static void Walk(object node)
     {
         switch (node)
@@ -61,7 +78,7 @@ public static class L
             case Window w: w.Title = T(w.Title); break;
             case TextBlock t when !BindingOperations.IsDataBound(t, TextBlock.TextProperty):
                 if (t.Inlines.Count == 1 || t.Inlines.Count == 0) t.Text = T(t.Text);
-                else foreach (var run in t.Inlines.OfType<System.Windows.Documents.Run>().ToList()) run.Text = T(run.Text);
+                else foreach (var run in t.Inlines.OfType<System.Windows.Documents.Run>().Where(r => !BindingOperations.IsDataBound(r, System.Windows.Documents.Run.TextProperty)).ToList()) run.Text = T(run.Text);
                 break;
             case DataGrid g:
                 foreach (var c in g.Columns) if (c.Header is string h) c.Header = T(h);

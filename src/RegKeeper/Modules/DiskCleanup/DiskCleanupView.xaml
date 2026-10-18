@@ -1,6 +1,7 @@
 <UserControl x:Class="RegKeeper.Modules.DiskCleanupView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:rk="clr-namespace:RegKeeper">
     <DockPanel>
         <!-- header: title and description; analysis and cleaning on the right -->
         <DockPanel DockPanel.Dock="Top">
@@ -68,7 +69,7 @@
                                         <CheckBox DockPanel.Dock="Left" IsChecked="{Binding State}" Click="Group_Click" VerticalAlignment="Center" Margin="0,0,14,0"
                                                   AutomationProperties.Name="{Binding Name}"/>
                                         <Button x:Name="fold" DockPanel.Dock="Right" Style="{StaticResource IconBtn}" Content="&#xE70D;" Margin="0" Click="Fold_Click"
-                                                ToolTip="Развернуть" AutomationProperties.Name="Развернуть"/>
+                                                rk:L.Tip="Развернуть"/>
                                         <TextBlock DockPanel.Dock="Right" Text="{Binding SizeText}" FontSize="15.5" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,14,0"/>
                                         <StackPanel VerticalAlignment="Center">
                                             <TextBlock Text="{Binding Name}" Style="{StaticResource Section}" Margin="0"/>
@@ -84,7 +85,7 @@
                                                               AutomationProperties.Name="{Binding Name}"/>
                                                     <ContentPresenter DockPanel.Dock="Left" Content="{Binding}" ContentTemplate="{StaticResource AppIcon}" VerticalAlignment="Top" Margin="0,0,12,0"/>
                                                     <Button x:Name="size" DockPanel.Dock="Right" Style="{StaticResource Ghost}" Content="{Binding SizeText}" VerticalAlignment="Top" Margin="0"
-                                                            Click="Details_Click" ToolTip="Найденные файлы этого правила, можно снять галочки" Visibility="Collapsed"/>
+                                                            Click="Details_Click" rk:L.Tip="Найденные файлы этого правила, можно снять галочки" Visibility="Collapsed"/>
                                                     <StackPanel Margin="0,1,0,0">
                                                         <TextBlock Text="{Binding Name}" FontWeight="Medium" TextTrimming="CharacterEllipsis"/>
                                                         <TextBlock Text="{Binding Category}" Style="{StaticResource Caption}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>

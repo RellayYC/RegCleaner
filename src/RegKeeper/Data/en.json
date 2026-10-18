@@ -710,5 +710,19 @@
  "Размер появится после анализа": "The size appears after analysis",
  "По отмеченным правилам: {0}": "Across ticked rules: {0}",
  "Очистить {0}": "Clean {0}",
- "Игры": "Games"
+ "Игры": "Games",
+ "Найдено проблем": "Problems found",
+ "Запись": "Entry",
+ "Оценка": "Verdict",
+ "Проверить": "Review",
+ "Безопасно": "Safe",
+ "Добавить в исключения": "Add to exclusions",
+ "Открыть ключ": "Open key",
+ "Ключ в редакторе реестра": "The key in the registry editor",
+ "Проверено сегодня в {0}": "Checked today at {0}",
+ "Проверено {0} в {1}": "Checked {0} at {1}",
+ "Ещё не проверялось": "Not checked yet",
+ "Безопасно {0} · проверить {1}": "Safe {0} · review {1}",
+ "Нажмите «Сканировать»": "Press Scan",
+ "Исправить {0}": "Fix {0}"
 }
