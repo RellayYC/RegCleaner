@@ -10,6 +10,8 @@ public sealed record SearchHit(HitKind Kind, string Key, string? ValueName, stri
 {
     public bool Checked { get; set; }
     public string KindText => Kind switch { HitKind.Key => L.T("Раздел"), HitKind.Name => L.T("Имя"), _ => L.T("Данные") };
+    public string ShortKey => Reg.Short(Key);
+    public string NameText => ValueName == null ? "" : ValueName == "" ? L.T("(По умолчанию)") : ValueName;
     public string Display => ValueName == null ? Reg.Short(Key) : $"{Reg.Short(Key)} → {(ValueName == "" ? L.T("(По умолчанию)") : ValueName)}";
 }
 

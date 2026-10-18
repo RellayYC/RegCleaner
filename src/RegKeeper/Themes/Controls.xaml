@@ -85,6 +85,7 @@
     <CornerRadius x:Key="RTile">10</CornerRadius>
     <CornerRadius x:Key="RTag">8</CornerRadius>
     <CornerRadius x:Key="RChip">17</CornerRadius>
+    <CornerRadius x:Key="RSpot">22</CornerRadius>
     <CornerRadius x:Key="RBar">2.5</CornerRadius>
     <Thickness x:Key="CardPad">20,18</Thickness>
     <Thickness x:Key="Gap">0,0,16,16</Thickness>
@@ -790,6 +791,36 @@
                 <Setter Property="Background" Value="{DynamicResource Surface3Brush}"/>
             </Trigger>
         </Style.Triggers>
+    </Style>
+
+    <!-- a segment that toggles on its own (CheckBox): several can be on at once -->
+    <Style x:Key="SegmentToggle" TargetType="ToggleButton">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
+        <Setter Property="FontSize" Value="13.5"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="b" Background="{TemplateBinding Background}" Padding="12,0" MinHeight="30" CornerRadius="9">
+                        <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                            <Setter Property="Background" Value="{DynamicResource Surface3Brush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- toggle: 40x23 track, 17px knob. Tag="pending" draws the wait ring (TweaksView marks a staged change) -->

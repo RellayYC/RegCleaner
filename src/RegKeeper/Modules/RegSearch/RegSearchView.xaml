@@ -2,77 +2,100 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel>
-        <!-- header: title and description, the counters on the right -->
-        <DockPanel DockPanel.Dock="Top">
+        <StackPanel DockPanel.Dock="Top">
+            <TextBlock Text="Поиск и замена в реестре" Style="{StaticResource Title}"/>
+            <TextBlock Style="{StaticResource Lead}" Text="Ищет по разделам, именам и данным значений. Замена и удаление найденного откатываются из Центра отмены."/>
+            <TextBlock x:Name="Stopped" Style="{StaticResource Hint}" Margin="0,6,0,0" Visibility="Collapsed" Text="Поиск остановлен, показано найденное до остановки."/>
+        </StackPanel>
+        <!-- spotlight: the query big, how to match on its right; where and in what below -->
+        <Border DockPanel.Dock="Top" Margin="0,16,0,12" Padding="22,16,18,16" CornerRadius="{StaticResource RSpot}" BorderThickness="1"
+                Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource CardEdgeBrush}">
+            <StackPanel>
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Style="{StaticResource Segments}" Margin="0,0,10,0">
+                            <StackPanel Orientation="Horizontal">
+                                <CheckBox x:Name="MatchCase" Content="Aa" Style="{StaticResource SegmentToggle}" ToolTip="Учитывать регистр"/>
+                                <CheckBox x:Name="WholeWord" Content="ab" Style="{StaticResource SegmentToggle}" ToolTip="Слово целиком"/>
+                                <CheckBox x:Name="IsRegex" Content=".*" Style="{StaticResource SegmentToggle}" ToolTip="Регулярное выражение" FontFamily="{StaticResource Mono}"/>
+                            </StackPanel>
+                        </Border>
+                        <Button x:Name="SearchBtn" Content="Искать" Style="{StaticResource Primary}" Margin="0" Click="Search_Click"/>
+                    </StackPanel>
+                    <TextBlock Text="&#xE721;" FontFamily="{StaticResource Icons}" FontSize="22" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,14,0"/>
+                    <TextBox x:Name="Pattern" ToolTip="Что найти" KeyDown="Pattern_KeyDown" FontSize="30" FontWeight="SemiBold" Padding="0"
+                             MinHeight="48" Background="Transparent" BorderThickness="0" Margin="0,0,12,0"/>
+                </DockPanel>
+                <Rectangle Height="1" Fill="{DynamicResource LineSoftBrush}" Margin="-22,14,-18,14"/>
+                <DockPanel>
+                    <Border DockPanel.Dock="Right" Style="{StaticResource Segments}" VerticalAlignment="Top">
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox x:Name="InKeys" Content="Разделы" Style="{StaticResource SegmentToggle}" IsChecked="True"/>
+                            <CheckBox x:Name="InNames" Content="Имена" Style="{StaticResource SegmentToggle}" IsChecked="True" ToolTip="Имена значений"/>
+                            <CheckBox x:Name="InData" Content="Данные" Style="{StaticResource SegmentToggle}" IsChecked="True"/>
+                        </StackPanel>
+                    </Border>
+                    <!-- hive chips are added in code from Reg.RootNames; "own path" swaps them for a free list -->
+                    <WrapPanel x:Name="Hives">
+                        <CheckBox x:Name="Custom" Content="Свой путь" Style="{StaticResource Chip}" Margin="0,0,6,6" Click="Custom_Click"/>
+                        <TextBox x:Name="Roots" Width="290" Margin="0,0,6,6" Visibility="Collapsed" ToolTip="Ключи через ; (например HKLM\SOFTWARE; HKCU)"/>
+                    </WrapPanel>
+                </DockPanel>
+            </StackPanel>
+        </Border>
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                <ContentControl Style="{StaticResource Metric}">
-                    <StackPanel><TextBlock Text="Разделов" Style="{StaticResource MetricLabel}"/><TextBlock x:Name="ScannedText" Text="-" Style="{StaticResource MetricValue}"/></StackPanel>
-                </ContentControl>
-                <ContentControl Style="{StaticResource Metric}">
-                    <StackPanel><TextBlock Text="Найдено" Style="{StaticResource MetricLabel}"/><TextBlock x:Name="FoundText" Text="-" Style="{StaticResource MetricValue}"/></StackPanel>
-                </ContentControl>
+                <Button Content="Заменить в отмеченных" Margin="10,0,6,0" Click="Replace_Click"/>
+                <Button Content="Удалить отмеченные" Style="{StaticResource DangerBtn}" Margin="0" Click="Delete_Click"/>
             </StackPanel>
-            <StackPanel>
-                <TextBlock Text="Поиск и замена в реестре" Style="{StaticResource Title}"/>
-                <TextBlock Style="{StaticResource Lead}" Text="Ищет по разделам, именам и данным значений. Замена и удаление найденного откатываются из Центра отмены."/>
-                <TextBlock x:Name="Stopped" Style="{StaticResource Hint}" Margin="0,6,0,0" Visibility="Collapsed" Text="Поиск остановлен, показано найденное до остановки."/>
+            <TextBox x:Name="Replacement" ToolTip="Заменить на…"/>
+        </DockPanel>
+        <DockPanel DockPanel.Dock="Top" Margin="0,8,0,8">
+            <Button DockPanel.Dock="Right" Style="{StaticResource More}" Margin="0">
+                <Button.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Отметить все" Tag="&#xE73A;" Click="All_Click"/>
+                        <MenuItem Header="Снять все" Tag="&#xE739;" Click="None_Click"/>
+                        <Separator/>
+                        <MenuItem Header="Открыть в редакторе" Tag="&#xE8A7;" Click="Open_Click"/>
+                    </ContextMenu>
+                </Button.ContextMenu>
+            </Button>
+            <TextBlock x:Name="Bar" DockPanel.Dock="Right" Style="{StaticResource Reversible}" Margin="0,0,12,0"/>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Найдено" Style="{StaticResource Section}" Margin="0,0,6,0"/>
+                <TextBlock x:Name="FoundText" Text="-" Style="{StaticResource Section}" Margin="0,0,14,0"/>
+                <TextBlock Text="просмотрено разделов" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <TextBlock x:Name="ScannedText" Text="-" Style="{StaticResource Caption}" VerticalAlignment="Center"/>
             </StackPanel>
         </DockPanel>
-        <!-- toolbar: the pattern and Search in one row; marking and the editor under "⋯" -->
-        <DockPanel DockPanel.Dock="Top" Margin="{StaticResource Toolbar}">
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="6,0,0,0">
-                <Button x:Name="SearchBtn" Content="Искать" Style="{StaticResource Primary}" Click="Search_Click"/>
-                <Button Style="{StaticResource More}" Margin="0">
-                    <Button.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Отметить все" Tag="&#xE73A;" Click="All_Click"/>
-                            <MenuItem Header="Снять все" Tag="&#xE739;" Click="None_Click"/>
-                            <Separator/>
-                            <MenuItem Header="Открыть в редакторе" Tag="&#xE8A7;" Click="Open_Click"/>
-                        </ContextMenu>
-                    </Button.ContextMenu>
-                </Button>
-            </StackPanel>
-            <TextBox x:Name="Pattern" Style="{StaticResource SearchBox}" ToolTip="Что найти" KeyDown="Pattern_KeyDown"/>
-        </DockPanel>
-        <Grid DockPanel.Dock="Top" Margin="0,0,0,10">
-            <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="10"/><ColumnDefinition/></Grid.ColumnDefinitions>
-            <StackPanel>
-                <TextBlock Text="Заменить на" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                <TextBox x:Name="Replacement"/>
-            </StackPanel>
-            <StackPanel Grid.Column="2">
-                <TextBlock Text="Где искать" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
-                <TextBox x:Name="Roots" ToolTip="Ключи через ; (например HKLM\SOFTWARE; HKCU)"/>
-            </StackPanel>
-        </Grid>
-        <!-- what to match: chips wrap in a narrow window, buttons never do -->
-        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
-            <CheckBox x:Name="InKeys" Content="Разделы" Style="{StaticResource Chip}" IsChecked="True" Margin="0,0,6,6"/>
-            <CheckBox x:Name="InNames" Content="Имена значений" Style="{StaticResource Chip}" IsChecked="True" Margin="0,0,6,6"/>
-            <CheckBox x:Name="InData" Content="Данные" Style="{StaticResource Chip}" IsChecked="True" Margin="0,0,18,6"/>
-            <CheckBox x:Name="MatchCase" Content="Учитывать регистр" Style="{StaticResource Chip}" Margin="0,0,6,6"/>
-            <CheckBox x:Name="WholeWord" Content="Слово целиком" Style="{StaticResource Chip}" Margin="0,0,6,6"/>
-            <CheckBox x:Name="IsRegex" Content="Регулярное выражение" Style="{StaticResource Chip}" Margin="0,0,6,6"/>
-        </WrapPanel>
         <Grid>
-        <DataGrid x:Name="Grid" SelectionMode="Extended" MouseDoubleClick="Open_Click">
-            <DataGrid.Columns>
-                <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="48"/>
-                <DataGridTextColumn Header="Где" Binding="{Binding KindText}" IsReadOnly="True" Width="80"/>
-                <DataGridTextColumn Header="Ключ" Binding="{Binding Display}" IsReadOnly="True" Width="3*"/>
-                <DataGridTextColumn Header="Совпадение" Binding="{Binding Text}" IsReadOnly="True" Width="2*"/>
-            </DataGrid.Columns>
-        </DataGrid>
+            <DataGrid x:Name="Grid" SelectionMode="Extended" MouseDoubleClick="Open_Click" VirtualizingPanel.IsVirtualizingWhenGrouping="True">
+                <DataGrid.GroupStyle>
+                    <GroupStyle>
+                        <GroupStyle.HeaderTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="14,14,0,6">
+                                    <TextBlock Text="&#xE8B7;" FontFamily="{StaticResource Icons}" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="{Binding Name}" Style="{StaticResource MonoText}" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding ItemCount}" Style="{StaticResource Caption}" Foreground="{DynamicResource FaintBrush}" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </GroupStyle.HeaderTemplate>
+                    </GroupStyle>
+                </DataGrid.GroupStyle>
+                <DataGrid.Columns>
+                    <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="48"/>
+                    <DataGridTemplateColumn Header="Где" SortMemberPath="KindText" Width="Auto" MinWidth="100"><DataGridTemplateColumn.CellTemplate><DataTemplate><ContentPresenter Content="{Binding KindText}" ContentTemplate="{StaticResource OutlineBadge}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Имя" Binding="{Binding NameText}" IsReadOnly="True" Width="260" ElementStyle="{StaticResource CellTrim}"/>
+                    <DataGridTemplateColumn x:Name="MatchCol" Header="Совпадение" SortMemberPath="Text" Width="300">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate><TextBlock Style="{StaticResource MonoText}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" DataContextChanged="Match_DataContextChanged"/></DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
             <TextBlock Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=Grid}" Text="Здесь появится найденное. Введите текст и нажмите «Искать»."/>
-            <ContentControl x:Name="Bar" Style="{StaticResource SelectionBar}" Visibility="Collapsed">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock x:Name="BarText" Style="{StaticResource BarCount}"/>
-                    <TextBlock Style="{StaticResource Reversible}"><Run Text="&#xE7A7;" FontFamily="{StaticResource Icons}"/> <Run Text="Всё можно вернуть из Центра отмены"/></TextBlock>
-                    <Button Content="Заменить" Style="{StaticResource Small}" Click="Replace_Click" ToolTip="Заменить в отмеченных"/>
-                    <Button Content="Удалить" Style="{StaticResource SmallDanger}" Margin="0" Click="Delete_Click"/>
-                </StackPanel>
-            </ContentControl>
         </Grid>
     </DockPanel>
 </UserControl>

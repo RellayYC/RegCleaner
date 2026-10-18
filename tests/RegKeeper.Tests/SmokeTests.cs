@@ -59,6 +59,7 @@ public class SmokeTests
                 while (views.Any(v => !v.IsEnabled) && sw.Elapsed < TimeSpan.FromSeconds(120)) { Thread.Sleep(50); Pump(); }
                 Assert.True(views.All(v => v.IsEnabled), "still loading: " + string.Join(", ", views.Where(v => !v.IsEnabled).Select(v => v.GetType().Name)));
                 ShowScan(views.OfType<RegCleanupView>().Single());
+                ShowSearch(views.OfType<RegSearchView>().Single());
                 UpdateToastComesBack(win, $"{theme} {lang}");
                 SnapLayoutsHitTest(win);
                 if (theme == Theme.Dark) DialogKeys(win, lang);
@@ -452,6 +453,22 @@ public class SmokeTests
         t.GetMethod("ApplyFilter", F)!.Invoke(view, null);
         Pump();
     }
+
+    /// <summary>A real read-only search in one small branch, so the shot shows grouped hits with the match lit.</summary>
+    static void ShowSearch(RegSearchView view)
+    {
+        T<TextBox>(view, "Pattern").Text = "Explorer";
+        T<CheckBox>(view, "Custom").IsChecked = true;
+        typeof(RegSearchView).GetMethod("Custom_Click", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.Invoke(view, [null!, null!]);
+        T<TextBox>(view, "Roots").Text = @"HKCR\Folder; HKCR\Directory";
+        SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext()); // the await comes back here, as in the app
+        view.Search_Click(view, new RoutedEventArgs());
+        var sw = Stopwatch.StartNew();
+        while (!Equals(T<Button>(view, "SearchBtn").Content, L.T("Искать")) && sw.Elapsed < TimeSpan.FromSeconds(30)) { Thread.Sleep(50); Pump(); }
+        Assert.True(T<DataGrid>(view, "Grid").Items.Count > 0, "search found nothing in Explorer keys");
+    }
+
+    static T T<T>(FrameworkElement v, string name) where T : class => (T)v.FindName(name);
 
     static void Pump()
     {
