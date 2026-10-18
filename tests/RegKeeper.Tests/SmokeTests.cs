@@ -59,6 +59,7 @@ public class SmokeTests
                 Assert.True(views.All(v => v.IsEnabled), "still loading: " + string.Join(", ", views.Where(v => !v.IsEnabled).Select(v => v.GetType().Name)));
                 UpdateToastComesBack(win, $"{theme} {lang}");
                 SnapLayoutsHitTest(win);
+                if (theme == Theme.Dark) DialogKeys(win, lang);
                 if (lang == L.En && Russian(win, views) is { Count: > 0 } ru) Assert.Fail("untranslated:\n" + string.Join("\n", ru));
                 if (theme == Theme.Light) EditorNavigatesToNewSibling(views.OfType<RegEditorView>().Single());
                 if (theme == Theme.Light) FilterFollowsAutomationToggle(views.OfType<StartupView>().Single());
@@ -358,6 +359,42 @@ public class SmokeTests
     }
 
     /// <summary>RK_SHOTS=<folder> dumps every view as PNG for a visual review.</summary>
+    /// <summary>The compaction dialog over the main window: Esc and × give -1, the primary button its index and is the default (Enter).</summary>
+    static void DialogKeys(Window win, string lang)
+    {
+        Dialog Open()
+        {
+            var d = new Dialog(L.T("Сжать реестр?"), [L.T("Отмена"), L.T("Сжать")], 1, "20,1 МБ", L.T("освободится в 5 разделах"),
+                (121_600_000, 101_600_000), L.T("Закройте все программы. Файлы заменятся при перезагрузке.")) { ShowActivated = false };
+            d.Cover(win);
+            d.Show();
+            Pump();
+            return d;
+        }
+        var d = Open();
+        var buttons = ((StackPanel)d.FindName("Buttons")).Children.OfType<Button>().ToList();
+        Assert.True(buttons[1].IsDefault && !buttons[0].IsDefault, "Enter must press the primary button");
+        Assert.Equal(KeyboardNavigationMode.Cycle, KeyboardNavigation.GetTabNavigation((DependencyObject)d.FindName("Card")));
+        Assert.Equal(win.ActualWidth, d.Width, 1);
+        if (Environment.GetEnvironmentVariable("RK_SHOTS") is { Length: > 0 } dir)
+        {
+            ((FrameworkElement)d.FindName("Root")).BeginAnimation(UIElement.OpacityProperty, null);
+            ((FrameworkElement)d.FindName("Root")).Opacity = 1;
+            Pump();
+            ShotOf((FrameworkElement)d.Content, Path.Combine(dir, $"dialog-{lang}-compaction.png"));
+        }
+        d.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(d), 0, Key.Escape) { RoutedEvent = Keyboard.PreviewKeyDownEvent });
+        Assert.False(d.IsVisible, "Esc must close the dialog");
+        Assert.Equal(-1, d.Result);
+        d = Open();
+        ((Button)d.FindName("X")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Assert.Equal(-1, d.Result);
+        d = Open();
+        ((StackPanel)d.FindName("Buttons")).Children.OfType<Button>().Last().RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Assert.Equal(1, d.Result);
+        Assert.False(d.IsVisible);
+    }
+
     static void Shot(Window win, string file)
     {
         var content = (FrameworkElement)win.Content;

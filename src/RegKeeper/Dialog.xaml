@@ -1,0 +1,58 @@
+<Window x:Class="RegKeeper.Dialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent" ResizeMode="NoResize"
+        ShowInTaskbar="False" FontFamily="{StaticResource UiFont}" FontSize="14" Foreground="{StaticResource DlgText}"
+        TextOptions.TextFormattingMode="Display" UseLayoutRounding="True">
+    <!-- the owner dims under the card; without an owner the window is just the card -->
+    <Grid x:Name="Root" Opacity="0">
+        <Border x:Name="Dim" Background="{StaticResource DlgDim}"/>
+        <Grid Width="440" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40">
+            <Border Background="{StaticResource DlgBg}" CornerRadius="10">
+                <Border.Effect><DropShadowEffect Color="{StaticResource DlgShadow}" BlurRadius="40" ShadowDepth="12" Direction="270" Opacity="0.7"/></Border.Effect>
+            </Border>
+            <Border x:Name="Card" Background="{StaticResource DlgBg}" BorderBrush="{StaticResource DlgEdge}" BorderThickness="1" CornerRadius="10"
+                    Padding="20,14,20,20" KeyboardNavigation.TabNavigation="Cycle">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,10">
+                        <Button x:Name="X" DockPanel.Dock="Right" Content="&#xE711;" FontFamily="{StaticResource Icons}" FontSize="10" Width="28" Height="28" Margin="0,0,-8,0"
+                                Style="{StaticResource DlgButton}" Padding="0" Background="Transparent" BorderBrush="Transparent" Foreground="{StaticResource DlgHead}"
+                                IsTabStop="False" Focusable="False" Click="X_Click"/>
+                        <TextBlock x:Name="Head" Text="RegKeeper" FontSize="12" Foreground="{StaticResource DlgHead}" VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <TextBlock x:Name="TitleText" FontSize="17" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,0,0,14"/>
+                    <ScrollViewer x:Name="BodyScroll" MaxHeight="320" VerticalScrollBarVisibility="Auto" Margin="0,-6,0,14" Visibility="Collapsed">
+                        <TextBlock x:Name="Body" Foreground="{StaticResource DlgBody}" TextWrapping="Wrap" LineHeight="20"/>
+                    </ScrollViewer>
+                    <WrapPanel x:Name="FigureRow" Visibility="Collapsed" Margin="0,-4,0,12">
+                        <TextBlock x:Name="Figure" FontSize="44" FontWeight="SemiBold" Margin="0,0,10,0" VerticalAlignment="Bottom"/>
+                        <TextBlock x:Name="Caption" Foreground="{StaticResource DlgMuted}" VerticalAlignment="Bottom" Margin="0,0,0,10"/>
+                    </WrapPanel>
+                    <StackPanel x:Name="BarRow" Visibility="Collapsed">
+                        <Grid x:Name="Bar" Height="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.ColumnSpan="2" Background="{StaticResource DlgTrack}" CornerRadius="4"/>
+                            <Border Background="{StaticResource DlgFill}" CornerRadius="4,0,0,4"/>
+                            <Border Grid.Column="1" Background="{StaticResource DlgHatch}" CornerRadius="0,4,4,0"/>
+                        </Grid>
+                        <DockPanel Margin="0,6,0,0">
+                            <TextBlock DockPanel.Dock="Right" Text="После сжатия" FontSize="12" Foreground="{StaticResource DlgCaption}"/>
+                            <TextBlock Text="Сейчас" FontSize="12" Foreground="{StaticResource DlgCaption}"/>
+                        </DockPanel>
+                    </StackPanel>
+                    <Border x:Name="Warn" Visibility="Collapsed" Margin="0,16,0,0" Padding="12,10" CornerRadius="8" BorderThickness="1"
+                            BorderBrush="{StaticResource DlgLine}" Background="{StaticResource DlgWarnBg}">
+                        <DockPanel>
+                            <TextBlock Text="&#xE7BA;" FontFamily="{StaticResource Icons}" FontSize="14" Foreground="{StaticResource DlgBody}" Margin="0,2,10,0"/>
+                            <TextBlock x:Name="WarnText" FontSize="13" Foreground="{StaticResource DlgBody}" TextWrapping="Wrap"/>
+                        </DockPanel>
+                    </Border>
+                    <StackPanel x:Name="Buttons" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

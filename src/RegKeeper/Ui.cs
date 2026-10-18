@@ -7,7 +7,7 @@ namespace RegKeeper;
 /// <summary>Small UI helpers shared by modules.</summary>
 public static class Ui
 {
-    /// <summary>Set by headless runs (smoke tests): messages go here instead of a MessageBox and Confirm answers no.</summary>
+    /// <summary>Set by headless runs (smoke tests): messages go here instead of a dialog and Confirm answers no.</summary>
     public static Action<string>? Headless;
 
     /// <summary>Shadow a button casts from a copy of its body (Controls.xaml), so the label itself keeps ClearType.</summary>
@@ -52,20 +52,20 @@ public static class Ui
     public static bool Confirm(string text, string title = "RegKeeper")
     {
         if (Headless != null) { Headless("confirm: " + text); return false; }
-        return MessageBox.Show(text, title, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+        return Dialog.Show(text, [L.T("Отмена"), L.T("Да")], 1, head: title) == 1;
     }
 
     public static void Info(string text)
     {
         if (Headless != null) Headless("info: " + text);
-        else MessageBox.Show(text, "RegKeeper", MessageBoxButton.OK, MessageBoxImage.Information);
+        else Dialog.Show(text, ["OK"], 0);
     }
 
     public static void Error(Exception e)
     {
         var text = e is AggregateException a ? a.InnerException?.Message ?? a.Message : e.Message;
         if (Headless != null) Headless("error: " + e);
-        else MessageBox.Show(text, "RegKeeper", MessageBoxButton.OK, MessageBoxImage.Error);
+        else Dialog.Show(text, ["OK"], 0, head: L.T("Ошибка"));
     }
 
     /// <summary>Runs work off the UI thread with a wait cursor and the given control disabled; errors are shown.</summary>

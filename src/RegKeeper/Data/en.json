@@ -61,7 +61,6 @@
  "Разделов: {0}   Всего: {1}": "Hives: {0}   Total: {1}",
  "Нужны права администратора: перезапустите RegKeeper от имени администратора.": "Administrator rights required: restart RegKeeper as administrator.",
  "Можно освободить: {0}": "Can be freed: {0}",
- "Сжать разделов: {0}, выигрыш {1}?\nЗакройте все программы. Замена файлов произойдёт при перезагрузке.": "Compact {0} hives, gain {1}?\nClose all programs. The files are replaced on reboot.",
  "Точно? Это меняет файлы реестра Windows. Перед заменой будет создана точка восстановления.": "Are you sure? This changes the Windows registry files. A restore point is created before the replacement.",
  "Подтверждение": "Confirmation",
  "RegKeeper: сжатие реестра": "RegKeeper: registry compaction",
@@ -655,5 +654,12 @@
  "Файлы реестра ставятся на замену.": "Registry files are queued for replacement.",
  "Точка восстановления перед заменой": "Restore point before replacing",
  "Точно? Это меняет файлы реестра Windows. Точка восстановления создана не будет.": "Sure? This changes Windows registry files. No restore point will be created.",
- "Без точки прежние файлы реестра останутся только в папке сжатия (*.old)": "Without a restore point, the previous registry files stay only in the compaction folder (*.old)"
+ "Без точки прежние файлы реестра останутся только в папке сжатия (*.old)": "Without a restore point, the previous registry files stay only in the compaction folder (*.old)",
+ "Да": "Yes",
+ "Нет": "No",
+ "Ошибка": "Error",
+ "Сжать реестр?": "Compact the registry?",
+ "освободится в {0} разделах": "freed in {0} hives",
+ "Закройте все программы. Файлы заменятся при перезагрузке.": "Close all programs. The files are replaced on reboot.",
+ "Сейчас": "Now"
 }

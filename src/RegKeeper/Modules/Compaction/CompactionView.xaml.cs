@@ -37,7 +37,8 @@ public partial class CompactionView : UserControl
     {
         var todo = _hives.Where(h => h.Gain > 0).ToList();
         if (todo.Count == 0) return;
-        if (!Ui.Confirm(L.T($"Сжать разделов: {todo.Count}, выигрыш {Sys.Size(todo.Sum(h => h.Gain))}?\nЗакройте все программы. Замена файлов произойдёт при перезагрузке."))) return;
+        if (Dialog.Show(L.T("Сжать реестр?"), [L.T("Отмена"), L.T("Сжать")], 1, Sys.Size(todo.Sum(h => h.Gain)), L.T($"освободится в {todo.Count} разделах"),
+                (todo.Sum(h => h.Size), todo.Sum(h => h.CompactedSize)), L.T("Закройте все программы. Файлы заменятся при перезагрузке.")) != 1) return;
         var withPoint = RestorePoint.IsChecked == true;
         if (!Ui.Confirm(withPoint
             ? L.T("Точно? Это меняет файлы реестра Windows. Перед заменой будет создана точка восстановления.")

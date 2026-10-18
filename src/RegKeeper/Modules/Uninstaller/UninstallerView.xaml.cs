@@ -146,8 +146,7 @@ public partial class UninstallerView : UserControl
         });
         // Inno/NSIS uninstallers re-launch themselves from %TEMP% and return at once; let the user tell us when done.
         if (Reg.Exists(app.KeyPath) &&
-            MessageBox.Show(L.T("Когда деинсталлятор закончит работу, нажмите OK, чтобы найти оставшиеся следы."), "RegKeeper",
-                MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK)
+            Dialog.Show(L.T("Когда деинсталлятор закончит работу, нажмите OK, чтобы найти оставшиеся следы."), [L.T("Отмена"), "OK"], 1) != 1)
             return true;
         await ScanAndClean(app);
         return true;
@@ -186,9 +185,9 @@ public partial class UninstallerView : UserControl
         }).ToList();
         if (running.Count == 0) return true;
         var names = string.Join(", ", running.Select(p => p.ProcessName).Distinct());
-        var r = MessageBox.Show(L.T($"Программа запущена ({names}). Закрыть её процессы?"), "RegKeeper", MessageBoxButton.YesNoCancel, MessageBoxImage.Warning);
-        if (r == MessageBoxResult.Cancel) return false;
-        if (r == MessageBoxResult.Yes)
+        var r = Dialog.Show(L.T($"Программа запущена ({names}). Закрыть её процессы?"), [L.T("Отмена"), L.T("Нет"), L.T("Да")], 2);
+        if (r <= 0) return false;
+        if (r == 2)
             foreach (var p in running)
                 try { p.Kill(true); p.WaitForExit(5000); } catch { }
         return true;
