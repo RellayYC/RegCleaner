@@ -18,10 +18,17 @@ foreach ($p in 'RegKeeper', 'RegKeeper.Watcher') {
         -p:BaseOutputPath="$root\artifacts\msi-bin\$p\" -o $pub -nologo -v q # own bin: a running dev build in src\*\bin locks its files
     if ($LASTEXITCODE) { throw "publish $p failed" }
 }
+# the "Browse" helper: .NET Framework 4 csc ships with Windows, so no SDK or package is needed for it
+$picker = Join-Path $root 'artifacts\FolderPicker.exe'
+& "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe" -nologo -target:winexe -platform:anycpu -codepage:65001 -optimize `
+    "-win32manifest:$PSScriptRoot\FolderPicker.manifest" "-out:$picker" "$PSScriptRoot\FolderPicker.cs"
+if ($LASTEXITCODE) { throw 'FolderPicker build failed' }
+$t = & $picker --target 'D:\Programs\' | Out-String
+if ($t.Trim() -ne 'D:\Programs\RegKeeper\') { throw "FolderPicker target check: $t" }
 New-Item -ItemType Directory -Force $Out | Out-Null
 Push-Location $PSScriptRoot
 try {
     wix build RegKeeper.wxs -arch x64 -culture ru-RU -ext WixToolset.UI.wixext -ext WixToolset.Util.wixext `
-        -d Version=$Version -d Pub=$pub -pdbtype none -o "$Out\RegKeeper-$Version-x64.msi"
+        -d Version=$Version -d Pub=$pub -d Picker=$picker -pdbtype none -o "$Out\RegKeeper-$Version-x64.msi"
     if ($LASTEXITCODE) { throw 'wix build failed' }
 } finally { Pop-Location }
