@@ -1,124 +1,206 @@
 <UserControl x:Class="RegKeeper.Modules.RegEditorView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             PreviewKeyDown="View_PreviewKeyDown">
+    <UserControl.Resources>
+        <!-- one Miller column: the subkeys of one level, the one on the path filled -->
+        <Style x:Key="MillerList" TargetType="ListBox" BasedOn="{StaticResource {x:Type ListBox}}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Padding" Value="6"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="b" Height="{StaticResource SmallHeight}" CornerRadius="8" Background="Transparent" Padding="10,0">
+                                        <DockPanel>
+                                            <TextBlock DockPanel.Dock="Left" Text="&#xE8B7;" FontFamily="{StaticResource Icons}" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0" Opacity="0.7"/>
+                                            <TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                        </DockPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="b" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="b" Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource OnPrimaryBrush}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
     <DockPanel>
-        <StackPanel DockPanel.Dock="Top">
-            <TextBlock Text="Редактор реестра" Style="{StaticResource Title}"/>
-            <!-- toolbar: one row; the address keeps most of the room, favourites give way first; key commands under "⋯" and on the tree -->
-            <Grid Margin="{StaticResource Toolbar}">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="2*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*" MinWidth="120" MaxWidth="232"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <TextBox x:Name="Address" Style="{StaticResource SearchBox}" Tag="&#xE8B7;" Margin="0,0,6,0" ToolTip="Путь к разделу, Enter - перейти" KeyDown="Address_KeyDown"/>
-                <Button Grid.Column="1" Content="Перейти" Click="Go_Click"/>
-                <Button Grid.Column="2" Content="★" Click="AddFavorite_Click" ToolTip="Добавить текущий ключ в избранное (повторно - убрать)"/>
-                <ComboBox x:Name="Favorites" Grid.Column="3" Margin="0,0,6,0" SelectionChanged="Favorites_SelectionChanged" ToolTip="Избранное"/>
-                <StackPanel Grid.Column="4" Orientation="Horizontal">
-                    <Button Content="Из буфера" Click="Clipboard_Click" ToolTip="Перейти к пути из буфера обмена"/>
-                    <Button Content="&#xE72C;" Style="{StaticResource IconBtn}" ToolTip="Обновить" AutomationProperties.Name="Обновить" Click="Refresh_Click"/>
-                    <Button Style="{StaticResource More}" Margin="0">
-                        <Button.ContextMenu>
-                            <ContextMenu>
+        <!-- header: title; favourite, paste a path and export on the right, the key commands under "⋯" -->
+        <DockPanel DockPanel.Dock="Top">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                <Button x:Name="Star" Content="&#xE734;" Style="{StaticResource IconBtn}" Click="AddFavorite_Click" ToolTip="Добавить текущий ключ в избранное (повторно - убрать)" AutomationProperties.Name="Избранное"/>
+                <Button Content="Вставить путь" Click="Clipboard_Click" ToolTip="Перейти к пути из буфера обмена"/>
+                <Button Content="Экспорт .reg" Click="Export_Click"/>
+                <Button x:Name="MoreBtn" Style="{StaticResource More}" Margin="0">
+                    <Button.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem x:Name="FavMenu" Header="Избранное" Tag="&#xE728;"/>
+                            <MenuItem Header="Обновить" Tag="&#xE72C;" Click="Refresh_Click"/>
+                            <Separator/>
                             <MenuItem Header="Создать раздел" Tag="&#xE710;" Click="NewKey_Click"/>
                             <MenuItem Header="Переименовать" Tag="&#xE8AC;" Click="RenameKey_Click"/>
                             <MenuItem Header="Копировать" Tag="&#xE8C8;" ToolTip="Копия раздела со всем содержимым в другое место" Click="CopyKey_Click"/>
                             <MenuItem Header="Копировать путь" Tag="&#xE71B;" Click="CopyPath_Click"/>
                             <Separator/>
-                            <MenuItem Header="Экспорт .reg" Tag="&#xEDE1;" Click="Export_Click"/>
                             <MenuItem Header="Импорт .reg" Tag="&#xE8B5;" Click="Import_Click"/>
                             <Separator/>
                             <MenuItem Header="Удалить раздел" Tag="&#xE74D;" Click="DeleteKey_Click"/>
-                            </ContextMenu>
-                        </Button.ContextMenu>
-                    </Button>
-                </StackPanel>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>
+            </StackPanel>
+            <TextBlock Text="Редактор реестра" Style="{StaticResource Title}"/>
+        </DockPanel>
+        <!-- breadcrumbs: every level of the current key, a click goes there; Ctrl+L or a click on the bar types a path -->
+        <Border x:Name="CrumbBar" DockPanel.Dock="Top" Height="44" Margin="0,18,0,12" Padding="8,0,14,0" CornerRadius="12" Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource LineSoftBrush}" BorderThickness="1" Cursor="IBeam" MouseLeftButtonUp="CrumbBar_MouseLeftButtonUp">
+            <Grid>
+                <DockPanel x:Name="CrumbView">
+                    <TextBlock DockPanel.Dock="Right" Text="Ctrl L - ввести путь" Style="{StaticResource Caption}" Foreground="{DynamicResource FaintBrush}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    <ItemsControl x:Name="Crumbs" ClipToBounds="True" VerticalAlignment="Center" Cursor="Arrow">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock x:Name="sep" Text="&#xE76C;" FontFamily="{StaticResource Icons}" FontSize="10" Foreground="{DynamicResource FaintBrush}" VerticalAlignment="Center" Margin="2,0"/>
+                                    <Button Content="{Binding Value}" Tag="{Binding Key}" Style="{StaticResource Ghost}" Height="{StaticResource SmallHeight}" Padding="8,0" Margin="0" FontFamily="{StaticResource Mono}" FontSize="{StaticResource MonoSize}" Click="Crumb_Click"/>
+                                </StackPanel>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding RelativeSource={RelativeSource PreviousData}}" Value="{x:Null}">
+                                        <Setter TargetName="sep" Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
+                <TextBox x:Name="Address" Visibility="Collapsed" Background="Transparent" BorderThickness="0" VerticalAlignment="Center" Margin="4,0,0,0"
+                         FontFamily="{StaticResource Mono}" FontSize="{StaticResource MonoSize}" ToolTip="Путь к разделу, Enter - перейти"
+                         KeyDown="Address_KeyDown" LostKeyboardFocus="Address_LostKeyboardFocus"/>
             </Grid>
-            <!-- breadcrumbs: every level of the current key, a click goes there -->
-            <ItemsControl x:Name="Crumbs" Margin="0,0,0,10" ClipToBounds="True">
-                <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock x:Name="sep" Text="&#xE76C;" FontFamily="{StaticResource Icons}" FontSize="10" Foreground="{DynamicResource FaintBrush}" VerticalAlignment="Center" Margin="2,0"/>
-                            <Button Content="{Binding Value}" Tag="{Binding Key}" Style="{StaticResource Ghost}" Height="{StaticResource SmallHeight}" Padding="8,0" Margin="0" FontSize="12" Click="Crumb_Click"/>
-                        </StackPanel>
-                        <DataTemplate.Triggers>
-                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource PreviousData}}" Value="{x:Null}">
-                                <Setter TargetName="sep" Property="Visibility" Value="Collapsed"/>
-                            </DataTrigger>
-                        </DataTemplate.Triggers>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </StackPanel>
+        </Border>
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*" MinWidth="200"/>
-                <ColumnDefinition Width="18"/>
-                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="3*" MaxWidth="676"/>
+                <ColumnDefinition Width="2*" MinWidth="320"/>
             </Grid.ColumnDefinitions>
-            <TreeView x:Name="Tree" SelectedItemChanged="Tree_SelectedItemChanged">
-                <TreeView.ContextMenu>
-                    <ContextMenu>
-                            <MenuItem Header="Создать раздел" Tag="&#xE710;" Click="NewKey_Click"/>
-                            <MenuItem Header="Переименовать" Tag="&#xE8AC;" Click="RenameKey_Click"/>
-                            <MenuItem Header="Копировать" Tag="&#xE8C8;" ToolTip="Копия раздела со всем содержимым в другое место" Click="CopyKey_Click"/>
-                            <MenuItem Header="Копировать путь" Tag="&#xE71B;" Click="CopyPath_Click"/>
-                            <Separator/>
-                            <MenuItem Header="Экспорт .reg" Tag="&#xEDE1;" Click="Export_Click"/>
-                            <Separator/>
-                            <MenuItem Header="Удалить раздел" Tag="&#xE74D;" Click="DeleteKey_Click"/>
-                    </ContextMenu>
-                </TreeView.ContextMenu>
-            </TreeView>
-            <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" Background="Transparent"/>
-            <DockPanel Grid.Column="2">
-                <!-- new value: type and Create; editing a selected value is in the selection bar -->
-                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,10">
-                    <ComboBox x:Name="NewType" Width="150" SelectedIndex="0" ToolTip="Тип нового значения">
-                        <ComboBoxItem Content="REG_SZ" Tag="1"/>
-                        <ComboBoxItem Content="REG_EXPAND_SZ" Tag="2"/>
-                        <ComboBoxItem Content="REG_MULTI_SZ" Tag="7"/>
-                        <ComboBoxItem Content="REG_DWORD" Tag="4"/>
-                        <ComboBoxItem Content="REG_QWORD" Tag="11"/>
-                        <ComboBoxItem Content="REG_BINARY" Tag="3"/>
-                    </ComboBox>
-                    <Button Content="Создать значение" Margin="6,0,0,0" Click="NewValue_Click"/>
-                </StackPanel>
-                <!-- the selected value in full -->
-                <ContentControl DockPanel.Dock="Bottom" Margin="0,10,0,0" Padding="16,12" DataContext="{Binding SelectedItem, ElementName=Values}">
-                    <ContentControl.Style>
-                        <Style TargetType="ContentControl" BasedOn="{StaticResource Card}">
-                            <Style.Triggers><DataTrigger Binding="{Binding}" Value="{x:Null}"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers>
-                        </Style>
-                    </ContentControl.Style>
-                    <StackPanel>
-                        <DockPanel>
-                            <ContentPresenter DockPanel.Dock="Right" Content="{Binding Type}" ContentTemplate="{StaticResource Badge}"/>
-                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-                        </DockPanel>
-                        <ScrollViewer MaxHeight="120" Margin="0,8,0,0" VerticalScrollBarVisibility="Auto">
-                            <TextBlock Text="{Binding Data}" Style="{StaticResource MonoText}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
-                        </ScrollViewer>
-                    </StackPanel>
-                </ContentControl>
+            <!-- Miller columns: the hives in a rail, then the last three levels of the path -->
+            <ContentControl Style="{StaticResource Card}" Padding="0" Margin="0,0,12,0">
                 <Grid>
-                    <DataGrid x:Name="Values" IsReadOnly="True" SelectionMode="Extended" MouseDoubleClick="EditValue_Click">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Имя" Binding="{Binding Name}" Width="*"/>
-                            <DataGridTextColumn Header="Тип" Binding="{Binding Type}" Width="130"/>
-                            <DataGridTextColumn Header="Значение" Binding="{Binding Data}" Width="2*"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                    <TextBlock Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=Values}" Text="В этом разделе нет значений."/>
-                    <ContentControl x:Name="Bar" Style="{StaticResource SelectionBar}" Visibility="Collapsed">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock x:Name="BarText" Style="{StaticResource BarCount}"/>
-                            <Button Content="Изменить" Style="{StaticResource SmallPrimary}" Click="EditValue_Click"/>
-                            <Button Content="Переименовать" Style="{StaticResource Small}" Click="RenameValue_Click"/>
-                            <Button Content="Удалить" Style="{StaticResource SmallDanger}" Margin="0" Click="DeleteValue_Click"/>
-                        </StackPanel>
-                    </ContentControl>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="44"/><ColumnDefinition/></Grid.ColumnDefinitions>
+                    <Border BorderBrush="{DynamicResource LineSoftBrush}" BorderThickness="0,0,1,0">
+                        <ItemsControl x:Name="Roots" Margin="4,6" Focusable="False">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button x:Name="b" Content="{Binding Short}" Tag="{Binding Long}" ToolTip="{Binding Long}" Style="{StaticResource Ghost}" Height="{StaticResource SmallHeight}"
+                                            Padding="0" Margin="0,0,0,4" FontSize="10.5" FontWeight="SemiBold" Click="Crumb_Click"/>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding On}" Value="True">
+                                            <Setter TargetName="b" Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+                                            <Setter TargetName="b" Property="Foreground" Value="{DynamicResource OnPrimaryBrush}"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
+                    <ItemsControl x:Name="Columns" Grid.Column="1" Focusable="False">
+                        <ItemsControl.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Создать раздел" Tag="&#xE710;" Click="NewKey_Click"/>
+                                <MenuItem Header="Переименовать" Tag="&#xE8AC;" Click="RenameKey_Click"/>
+                                <MenuItem Header="Копировать" Tag="&#xE8C8;" ToolTip="Копия раздела со всем содержимым в другое место" Click="CopyKey_Click"/>
+                                <MenuItem Header="Копировать путь" Tag="&#xE71B;" Click="CopyPath_Click"/>
+                                <Separator/>
+                                <MenuItem Header="Экспорт .reg" Tag="&#xEDE1;" Click="Export_Click"/>
+                                <Separator/>
+                                <MenuItem Header="Удалить раздел" Tag="&#xE74D;" Click="DeleteKey_Click"/>
+                            </ContextMenu>
+                        </ItemsControl.ContextMenu>
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="3"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{DynamicResource LineSoftBrush}" BorderThickness="0,0,1,0">
+                                    <ListBox Style="{StaticResource MillerList}" ItemsSource="{Binding Names}" SelectedItem="{Binding Selected, Mode=OneTime}"
+                                             SelectionChanged="Column_SelectionChanged" Loaded="Column_Loaded"/>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </Grid>
-            </DockPanel>
+            </ContentControl>
+            <!-- the values of the current key, the selected one in full below -->
+            <ContentControl Grid.Column="1" Style="{StaticResource Card}" Padding="0">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="18,12,12,8">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <ComboBox x:Name="NewType" Width="150" SelectedIndex="0" ToolTip="Тип нового значения">
+                                <ComboBoxItem Content="REG_SZ" Tag="1"/>
+                                <ComboBoxItem Content="REG_EXPAND_SZ" Tag="2"/>
+                                <ComboBoxItem Content="REG_MULTI_SZ" Tag="7"/>
+                                <ComboBoxItem Content="REG_DWORD" Tag="4"/>
+                                <ComboBoxItem Content="REG_QWORD" Tag="11"/>
+                                <ComboBoxItem Content="REG_BINARY" Tag="3"/>
+                            </ComboBox>
+                            <Button Content="&#xE710;" Style="{StaticResource IconBtn}" Margin="6,0,0,0" Click="NewValue_Click" ToolTip="Создать значение" AutomationProperties.Name="Создать значение"/>
+                        </StackPanel>
+                        <TextBlock Text="Значения" Style="{StaticResource Section}" Margin="0" VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <!-- the selected value in full: edit, rename, delete; edits land in the undo center first -->
+                    <Border DockPanel.Dock="Bottom" Background="{DynamicResource Surface2Brush}" CornerRadius="0,0,18,18" Padding="18,12" DataContext="{Binding SelectedItem, ElementName=Values}">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Style.Triggers><DataTrigger Binding="{Binding}" Value="{x:Null}"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel>
+                            <DockPanel>
+                                <ContentPresenter DockPanel.Dock="Right" Content="{Binding Type}" ContentTemplate="{StaticResource Badge}"/>
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            <ScrollViewer MaxHeight="96" Margin="0,8,0,10" VerticalScrollBarVisibility="Auto">
+                                <TextBlock Text="{Binding Data}" Style="{StaticResource MonoText}" Foreground="{DynamicResource MutedBrush}" TextWrapping="Wrap"/>
+                            </ScrollViewer>
+                            <WrapPanel>
+                                <Button Content="Изменить" Style="{StaticResource SmallPrimary}" Click="EditValue_Click"/>
+                                <Button Content="Переименовать" Style="{StaticResource Small}" Click="RenameValue_Click"/>
+                                <Button Content="Удалить" Style="{StaticResource SmallDanger}" Click="DeleteValue_Click"/>
+                            </WrapPanel>
+                            <TextBlock Style="{StaticResource Reversible}" Margin="0,8,0,0" TextWrapping="Wrap"><Run Text="&#xE7A7;" FontFamily="{StaticResource Icons}"/> <Run Text="Изменения сначала пишутся в Центр отмены"/></TextBlock>
+                        </StackPanel>
+                    </Border>
+                    <Grid>
+                        <DataGrid x:Name="Values" IsReadOnly="True" SelectionMode="Extended" MouseDoubleClick="EditValue_Click" BorderThickness="0" Background="Transparent">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Имя" Binding="{Binding Name}" Width="*" ElementStyle="{StaticResource CellTrim}"/>
+                                <DataGridTextColumn Header="Тип" Binding="{Binding Type}" Width="120" ElementStyle="{StaticResource CellTrim}"/>
+                                <DataGridTemplateColumn Header="Значение" SortMemberPath="Data" Width="1.4*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Data}" FontFamily="{StaticResource Mono}" FontSize="{StaticResource MonoSize}" Foreground="{DynamicResource MutedBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <TextBlock Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=Values}" Text="В этом разделе нет значений."/>
+                    </Grid>
+                </DockPanel>
+            </ContentControl>
         </Grid>
     </DockPanel>
 </UserControl>

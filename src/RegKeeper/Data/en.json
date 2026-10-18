@@ -729,5 +729,9 @@
  "Папка сжатия: прежние файлы реестра (*.old) остаются здесь": "Compaction folder: the previous registry files (*.old) stay here",
  "После": "After",
  "Экономия {0} · {1}%": "Saves {0} · {1}%",
- "Разделов: {0}": "Hives: {0}"
+ "Разделов: {0}": "Hives: {0}",
+ "Вставить путь": "Paste path",
+ "Ctrl L - ввести путь": "Ctrl L - type a path",
+ "Значения": "Values",
+ "Изменения сначала пишутся в Центр отмены": "Changes are written to the Undo Center first"
 }

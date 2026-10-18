@@ -148,7 +148,7 @@ public class SmokeTests
             ed.Navigate(parent + @"\A");
             Registry.CurrentUser.CreateSubKey(@"Software\RegKeeperTest\B").Dispose();
             ed.Navigate(parent + @"\B");
-            Assert.Equal(parent + @"\B", ((TreeViewItem)((TreeView)ed.FindName("Tree")).SelectedItem).Tag);
+            Assert.Equal(parent + @"\B", ((TextBox)ed.FindName("Address")).Text);
             // B14: a missing or unreadable key says so instead of silently stopping at its parent
             var said = new List<string>();
             var prev = Ui.Headless;
@@ -156,7 +156,7 @@ public class SmokeTests
             try { ed.Navigate(parent + @"\Missing\Deeper"); }
             finally { Ui.Headless = prev; }
             Assert.Contains(said, m => m.Contains(@"RegKeeperTest\Missing\Deeper"));
-            Assert.Equal(parent, ((TreeViewItem)((TreeView)ed.FindName("Tree")).SelectedItem).Tag);
+            Assert.Equal(parent, ((TextBox)ed.FindName("Address")).Text);
         }
         finally { Registry.CurrentUser.DeleteSubKeyTree(@"Software\RegKeeperTest", false); }
     }

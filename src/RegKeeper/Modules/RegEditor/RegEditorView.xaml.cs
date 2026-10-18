@@ -13,40 +13,39 @@ public sealed record ValueRow(RawValue V)
     public string Data => V.Display();
 }
 
+/// <summary>One Miller column: the subkeys of <see cref="Parent"/>, <see cref="Selected"/> the one on the path.</summary>
+public sealed record MillerCol(string Parent, List<string> Names, string? Selected);
+public sealed record MillerRoot(string Long, string Short, bool On);
+
 public partial class RegEditorView : UserControl
 {
     static readonly string FavPath = Path.Combine(AppPaths.Data, "favorites.txt");
-    const string Dummy = "…";
+    string? _path;
 
     public RegEditorView()
     {
         InitializeComponent();
         L.Apply(this);
-        Ui.Bar(Values, Bar, BarText, () => Values.SelectedItems.Count);
-        foreach (var root in Reg.RootNames) Tree.Items.Add(Node(root, root));
         LoadFavorites();
+        Go("HKEY_CURRENT_USER");
     }
 
-    string? Current => (Tree.SelectedItem as TreeViewItem)?.Tag as string;
+    string? Current => _path;
 
-    static TreeViewItem Node(string header, string path)
+    /// <summary>Shows <paramref name="path"/>, an existing key: the rail, the last three levels as columns, the crumbs and the values.</summary>
+    void Go(string path)
     {
-        var n = new TreeViewItem { Header = header, Tag = path };
-        n.Items.Add(Dummy);
-        n.Expanded += (_, _) => Fill(n);
-        return n;
+        _path = path;
+        var parts = path.Split('\\');
+        Roots.ItemsSource = Reg.RootNames.Select(r => new MillerRoot(r, Reg.Short(r), r == parts[0])).ToList();
+        Columns.ItemsSource = Enumerable.Range(Math.Max(0, parts.Length - 3), Math.Min(3, parts.Length)).Select(i =>
+        {
+            var parent = string.Join('\\', parts.Take(i + 1));
+            return new MillerCol(parent, Reg.SubKeys(parent).Order(StringComparer.OrdinalIgnoreCase).ToList(), i + 1 < parts.Length ? parts[i + 1] : null);
+        }).ToList();
+        Star.Content = _favs.Contains(path) ? "\uE735" : "\uE734";
+        ShowValues();
     }
-
-    /// <summary>Lazy load: the dummy child gives every key an expander; real children replace it on first expand.</summary>
-    static void Fill(TreeViewItem n, bool force = false)
-    {
-        if (!force && !(n.Items.Count == 1 && n.Items[0] is string)) return;
-        var path = (string)n.Tag;
-        n.Items.Clear();
-        foreach (var sub in Reg.SubKeys(path).Order(StringComparer.OrdinalIgnoreCase)) n.Items.Add(Node(sub, path + "\\" + sub));
-    }
-
-    void Tree_SelectedItemChanged(object s, RoutedPropertyChangedEventArgs<object> e) => ShowValues();
 
     void ShowValues()
     {
@@ -59,42 +58,40 @@ public partial class RegEditorView : UserControl
             .Select(v => new ValueRow(v)).ToList();
     }
 
-    /// <summary>Expands the tree down to the deepest existing key of <paramref name="path"/> and selects it.</summary>
+    // the binding preselects the path item before the column loads; only a later pick is a click
+    void Column_SelectionChanged(object s, SelectionChangedEventArgs e)
+    {
+        var lb = (ListBox)s;
+        if (lb.IsLoaded && lb.SelectedItem is string name && lb.DataContext is MillerCol c && name != c.Selected) Go(c.Parent + "\\" + name);
+    }
+
+    void Column_Loaded(object s, RoutedEventArgs e) { if (((ListBox)s).SelectedItem is { } i) ((ListBox)s).ScrollIntoView(i); }
+
+    /// <summary>Goes to the deepest existing key of <paramref name="path"/>, saying so when it stops short.</summary>
     public void Navigate(string path)
     {
         string full;
         try { full = Reg.Normalize(path); }
         catch (ArgumentException e) { Ui.Info(e.Message); return; }
         var parts = full.Split('\\', StringSplitOptions.RemoveEmptyEntries);
-        var node = Tree.Items.Cast<TreeViewItem>().First(n => ((string)n.Tag).Equals(parts[0], StringComparison.OrdinalIgnoreCase));
+        var at = Reg.RootNames.First(r => r.Equals(parts[0], StringComparison.OrdinalIgnoreCase));
         foreach (var part in parts.Skip(1))
         {
-            Fill(node);
-            node.IsExpanded = true;
-            // a key created since this node was loaded (copy target, another program): re-read once before giving up
-            if ((Child(node, part) ?? (Reg.Exists(node.Tag + "\\" + part) ? Refill(node, part) : null)) is not { } next)
+            if (Reg.SubKeys(at).FirstOrDefault(n => n.Equals(part, StringComparison.OrdinalIgnoreCase)) is not { } name)
             {
-                Ui.Info(L.T($"Раздел не найден или нет доступа:\n{full}\n\nОткрыт ближайший: {node.Tag}"));
+                Ui.Info(L.T($"Раздел не найден или нет доступа:\n{full}\n\nОткрыт ближайший: {at}"));
                 break;
             }
-            node = next;
+            at += "\\" + name;
         }
-        node.IsSelected = true;
-        node.BringIntoView();
-        Dispatcher.BeginInvoke(() => node.BringIntoView(), System.Windows.Threading.DispatcherPriority.Background);
+        Go(at);
     }
 
-    static TreeViewItem? Child(TreeViewItem n, string name) =>
-        n.Items.OfType<TreeViewItem>().FirstOrDefault(c => ((string)c.Header).Equals(name, StringComparison.OrdinalIgnoreCase));
-
-    static TreeViewItem? Refill(TreeViewItem n, string name) { Fill(n, true); return Child(n, name); }
-
-    /// <summary>Re-reads the selected node's children (keeps expansion of the node itself) and its values.</summary>
+    /// <summary>Re-reads the columns and values, then goes to <paramref name="select"/> if given.</summary>
     void Reload(string? select = null)
     {
-        if (Tree.SelectedItem is TreeViewItem n) { Fill(n, true); n.IsExpanded = true; }
         if (select != null) Navigate(select);
-        else ShowValues();
+        else if (_path != null) Navigate(_path);
     }
 
     /// <summary>Runs a change through an undo transaction and reports what failed.</summary>
@@ -110,9 +107,34 @@ public partial class RegEditorView : UserControl
         catch (Exception e) { Ui.Error(e); return false; }
     }
 
-    void Address_KeyDown(object s, KeyEventArgs e) { if (e.Key == Key.Enter) Navigate(Address.Text); }
+    // the crumb bar turns into a path box: Ctrl+L or a click on the bar; Enter goes, Esc or leaving puts the crumbs back
+    void TypePath(bool on)
+    {
+        Address.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+        CrumbView.Visibility = on ? Visibility.Hidden : Visibility.Visible;
+        if (!on) return;
+        Address.Text = _path;
+        Address.Focus();
+        Address.SelectAll();
+    }
+
+    void View_PreviewKeyDown(object s, KeyEventArgs e)
+    {
+        if (e.Key == Key.L && Keyboard.Modifiers == ModifierKeys.Control) { TypePath(true); e.Handled = true; }
+    }
+
+    void CrumbBar_MouseLeftButtonUp(object s, MouseButtonEventArgs e) { if (Address.Visibility != Visibility.Visible) TypePath(true); }
+
+    void Address_KeyDown(object s, KeyEventArgs e)
+    {
+        if (e.Key is not (Key.Enter or Key.Escape)) return;
+        var path = Address.Text;
+        TypePath(false);
+        if (e.Key == Key.Enter) Navigate(path);
+    }
+
+    void Address_LostKeyboardFocus(object s, KeyboardFocusChangedEventArgs e) => TypePath(false);
     void Crumb_Click(object s, RoutedEventArgs e) => Navigate((string)((Button)s).Tag);
-    void Go_Click(object s, RoutedEventArgs e) => Navigate(Address.Text);
     void Clipboard_Click(object s, RoutedEventArgs e) { if (Clipboard.ContainsText()) Navigate(Clipboard.GetText().Trim().Trim('[', ']')); }
     void CopyPath_Click(object s, RoutedEventArgs e) { if (Current != null) Clipboard.SetText(Current); }
     void Refresh_Click(object s, RoutedEventArgs e) => Reload();
@@ -156,10 +178,7 @@ public partial class RegEditorView : UserControl
         Reload();
     }
 
-    void SelectParent()
-    {
-        if (Tree.SelectedItem is TreeViewItem { Parent: TreeViewItem p }) p.IsSelected = true;
-    }
+    void SelectParent() { if (_path?.Contains('\\') == true) _path = Reg.Parent(_path); }
 
     // a whole hive takes minutes to export: off the UI thread, so the window stays alive
     async void Export_Click(object s, RoutedEventArgs e)
@@ -242,20 +261,27 @@ public partial class RegEditorView : UserControl
 
     // ---- favorites: one path per line
 
-    void LoadFavorites() => Favorites.ItemsSource = File.Exists(FavPath) ? File.ReadAllLines(FavPath).Where(l => l != "").ToList() : new List<string>();
+    List<string> _favs = new();
+
+    void LoadFavorites()
+    {
+        _favs = File.Exists(FavPath) ? File.ReadAllLines(FavPath).Where(l => l != "").ToList() : new List<string>();
+        FavMenu.Items.Clear();
+        foreach (var p in _favs)
+        {
+            var item = new MenuItem { Header = Reg.Short(p) };
+            item.Click += (_, _) => Navigate(p);
+            FavMenu.Items.Add(item);
+        }
+        FavMenu.IsEnabled = _favs.Count > 0;
+    }
 
     void AddFavorite_Click(object s, RoutedEventArgs e)
     {
         if (Current is not { } path) return;
-        var list = (List<string>)Favorites.ItemsSource;
-        if (!list.Remove(path)) list.Add(path);
-        File.WriteAllLines(FavPath, list);
+        if (!_favs.Remove(path)) _favs.Add(path);
+        File.WriteAllLines(FavPath, _favs);
         LoadFavorites();
-    }
-
-    void Favorites_SelectionChanged(object s, SelectionChangedEventArgs e)
-    {
-        if (Favorites.SelectedItem is string p) Navigate(p);
-        Favorites.SelectedItem = null;
+        Go(path);
     }
 }

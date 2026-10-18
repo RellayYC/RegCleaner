@@ -1055,7 +1055,7 @@
                 <ControlTemplate TargetType="ListBox">
                     <Grid>
                         <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="{StaticResource RCard}">
-                            <ScrollViewer Padding="{TemplateBinding Padding}" Focusable="False">
+                            <ScrollViewer Padding="{TemplateBinding Padding}" Focusable="False" HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}">
                                 <ItemsPresenter/>
                             </ScrollViewer>
                         </Border>
