@@ -5,7 +5,8 @@
     <DockPanel>
         <!-- header: title and description; analysis and cleaning on the right -->
         <DockPanel DockPanel.Dock="Top">
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+            <StackPanel x:Name="Actions" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                <Button Content="Анализ всего" Click="AnalyzeAll_Click" ToolTip="Посчитать все правила, и неотмеченные тоже"/>
                 <Button Content="Анализ" Click="Analyze_Click" ToolTip="Посчитать, что найдут отмеченные правила"/>
                 <Button x:Name="CleanBtn" Content="Очистить" Style="{StaticResource DangerSolid}" Margin="0" Click="Clean_Click"/>
             </StackPanel>
@@ -85,7 +86,7 @@
                                                               AutomationProperties.Name="{Binding Name}"/>
                                                     <ContentPresenter DockPanel.Dock="Left" Content="{Binding}" ContentTemplate="{StaticResource AppIcon}" VerticalAlignment="Top" Margin="0,0,12,0"/>
                                                     <Button x:Name="size" DockPanel.Dock="Right" Style="{StaticResource Ghost}" Content="{Binding SizeText}" VerticalAlignment="Top" Margin="0"
-                                                            Click="Details_Click" rk:L.Tip="Найденные файлы этого правила, можно снять галочки" Visibility="Collapsed"/>
+                                                            Click="Details_Click" rk:L.Tip="Найденные файлы этого правила, можно снять галочки"/>
                                                     <StackPanel Margin="0,1,0,0">
                                                         <TextBlock Text="{Binding Name}" FontWeight="Medium" TextTrimming="CharacterEllipsis"/>
                                                         <TextBlock Text="{Binding Category}" Style="{StaticResource Caption}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
@@ -94,7 +95,7 @@
                                                     </StackPanel>
                                                 </DockPanel>
                                                 <DataTemplate.Triggers>
-                                                    <DataTrigger Binding="{Binding Analyzed}" Value="True"><Setter TargetName="size" Property="Visibility" Value="Visible"/></DataTrigger>
+                                                    <DataTrigger Binding="{Binding SizeText}" Value=""><Setter TargetName="size" Property="Visibility" Value="Collapsed"/></DataTrigger>
                                                     <DataTrigger Binding="{Binding Warning}" Value="{x:Null}"><Setter TargetName="warn" Property="Visibility" Value="Collapsed"/></DataTrigger>
                                                 </DataTemplate.Triggers>
                                             </DataTemplate>

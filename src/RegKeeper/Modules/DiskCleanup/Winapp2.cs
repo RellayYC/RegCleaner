@@ -10,12 +10,16 @@ namespace RegKeeper.Modules;
 public sealed record FileKey(string Dir, string[] Patterns, bool Recurse, bool RemoveSelf);
 
 /// <summary>One cleanup entry in winapp2.ini terms (our built-ins use the same syntax).</summary>
-public sealed class CleanRule
+public sealed class CleanRule : System.ComponentModel.INotifyPropertyChanged
 {
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+    /// <summary>The section name as written in the ini: ticks are saved by it, whatever the interface language.</summary>
+    public string Key { get; init; } = "";
     public string Name { get; init; } = "";
     public string Category { get; set; } = "";
     public string? Warning { get; set; }
-    public bool Checked { get; set; }
+    bool _checked;
+    public bool Checked { get => _checked; set { _checked = value; Raise(nameof(Checked)); } }
     public bool DefaultOn { get; set; }
     public bool RecycleBin { get; set; }
     /// <summary>Our extension: delete past ACLs (Windows.old belongs to TrustedInstaller) and drop junctions as links.</summary>
@@ -36,12 +40,18 @@ public sealed class CleanRule
         : Category == L.T("Приложения") || Category == L.T("Прочее") ? "\uE71D"
         : "\uE774"; // browsers and the rest of the internet sections
 
-    public bool Analyzed { get; set; }
+    bool _analyzed, _scanning;
+    long _size;
+    public bool Analyzed { get => _analyzed; set { _analyzed = value; Raise(nameof(Analyzed), nameof(SizeText)); } }
+    /// <summary>Queued or being walked right now; the row shows an ellipsis instead of a size.</summary>
+    public bool Scanning { get => _scanning; set { _scanning = value; Raise(nameof(SizeText)); } }
     public List<Leftover> Found { get; set; } = new();
-    public long Size { get; set; }
+    public long Size { get => _size; set { _size = value; Raise(nameof(SizeText)); } }
     public long Count { get; set; }
-    public string SizeText => Analyzed ? Sys.Size(Size) : "";
+    public string SizeText => Analyzed ? Sys.Size(Size) : Scanning ? "…" : "";
     public string CountText => Analyzed ? Count.ToString() : "";
+
+    void Raise(params string[] names) { foreach (var n in names) PropertyChanged?.Invoke(this, new(n)); }
 }
 
 /// <summary>
@@ -145,7 +155,8 @@ public static partial class Winapp2
             if (line == "" || line.StartsWith(';')) continue;
             if (line.StartsWith('[') && line.EndsWith(']'))
             {
-                rules.Add(r = new CleanRule { Name = L.T(line[1..^1].TrimEnd(' ', '*')) }); // our built-ins use Russian names as keys
+                var key = line[1..^1].TrimEnd(' ', '*');
+                rules.Add(r = new CleanRule { Key = key, Name = Ru(L.T(key)) }); // our built-ins use Russian names as keys
                 continue;
             }
             var eq = line.IndexOf('=');
@@ -158,8 +169,11 @@ public static partial class Winapp2
                 case "filekey": r.Files.Add(ParseFileKey(val)); break;
                 case "excludekey": r.Excludes.Add(val); break;
                 case "regkey": r.RegKeys.Add(val); break;
-                case "warning": r.Warning = L.T(val); break;
-                case "section": r.Category = val; break;
+                case "warning": r.Warning = Ru(L.T(val)); break;
+                case "section":
+                    r.Category = val.Equals("Games", StringComparison.OrdinalIgnoreCase) ? L.T("Игры")
+                        : val.EndsWith(" Web Browser", StringComparison.OrdinalIgnoreCase) ? L.T("Браузеры") : val; // the browser is in the rule name
+                    break;
                 case "langsecref" when r.Category == "": r.Category = L.T(LangSec.GetValueOrDefault(val, "Браузеры")); break; // i18n: keep
                 case "default": r.DefaultOn = val == "1"; break;
                 case "recyclebin": r.RecycleBin = val == "1"; break;
@@ -179,16 +193,37 @@ public static partial class Winapp2
         return new FileKey(p[0].TrimEnd('\\'), patterns, flags.Contains("RECURSE"), flags.Contains("REMOVESELF"));
     }
 
+    /// <summary>
+    /// winapp2 is English: a Russian interface gets Data\winapp2-ru.json - whole names and warnings, or a known tail
+    /// ("* Caches") after a product name, which stays as is: "Yandex Browser Caches" → "Yandex Browser: кэш".
+    /// </summary>
+    static string Ru(string s)
+    {
+        if (L.Current != L.Ru || RuMap.Value.Count == 0) return s;
+        if (RuMap.Value.TryGetValue(s, out var ru)) return ru;
+        foreach (var (tail, t) in RuTails.Value)
+            if (s.Length > tail.Length && s.EndsWith(tail, StringComparison.Ordinal)) return s[..^tail.Length] + ": " + t;
+        return s;
+    }
+
+    static readonly Lazy<Dictionary<string, string>> RuMap = new(() =>
+        Path.Combine(AppContext.BaseDirectory, "Data", "winapp2-ru.json") is var p && File.Exists(p)
+            ? System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(p))! : new());
+
+    // longest first, so "Web Browsing Session Backups" wins over "Backups"
+    static readonly Lazy<List<(string Tail, string Ru)>> RuTails = new(() =>
+        RuMap.Value.Where(kv => kv.Key.StartsWith("* ")).Select(kv => (kv.Key[1..], kv.Value)).OrderByDescending(x => x.Item1.Length).ToList());
+
     /// <summary>Built-ins plus winapp2.ini (if downloaded), only the entries that apply to this PC, with saved ticks.</summary>
     public static List<CleanRule> Load()
     {
         var rules = Parse(Builtin);
         if (File.Exists(IniPath)) rules.AddRange(Parse(File.ReadAllText(IniPath)));
         var saved = File.Exists(CheckedPath) ? File.ReadAllLines(CheckedPath).ToHashSet() : null;
-        rules = rules.Where(Applies).ToList();
+        rules = rules.AsParallel().AsOrdered().Where(Applies).ToList(); // ~4000 detections, mostly disk probes
         foreach (var r in rules)
         {
-            r.Checked = saved?.Contains(r.Name) ?? r.DefaultOn;
+            r.Checked = saved == null ? r.DefaultOn : saved.Contains(r.Key) || saved.Contains(r.Name); // older versions saved the shown name
             var exe = r.DetectFile.Where(d => d.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)).SelectMany(ExpandVars).FirstOrDefault(File.Exists);
             if (exe != null) r.Icon = Inventory.LoadIcon(exe);
         }
@@ -196,7 +231,7 @@ public static partial class Winapp2
     }
 
     public static void SaveChecked(IEnumerable<CleanRule> rules) =>
-        File.WriteAllLines(CheckedPath, rules.Where(r => r.Checked).Select(r => r.Name));
+        File.WriteAllLines(CheckedPath, rules.Where(r => r.Checked).Select(r => r.Key));
 
     public static async Task<int> Download()
     {
@@ -288,9 +323,15 @@ public static partial class Winapp2
     static bool IsRoot(string dir) =>
         dir.TrimEnd('\\').Length <= 3 || Vars.Values.SelectMany(v => v).Any(v => v.TrimEnd('\\').Equals(dir.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase));
 
+    /// <summary>Fills Found/Size/Count, then flags the rule analyzed, so a row reading it mid-walk never sees half a list.</summary>
     public static void Analyze(CleanRule r, IReadOnlyList<string> ignore)
     {
+        Walk(r, ignore);
         r.Analyzed = true;
+    }
+
+    static void Walk(CleanRule r, IReadOnlyList<string> ignore)
+    {
         if (r.RecycleBin)
         {
             var info = new SHQUERYRBINFO { cbSize = Marshal.SizeOf<SHQUERYRBINFO>() };
@@ -337,8 +378,8 @@ public static partial class Winapp2
         }
 
         r.Found = files.Concat(dirs).Concat(regs).ToList();
-        r.Size = files.Sum(f => f.Size);
         r.Count = files.Count + regs.Count;
+        r.Size = files.Sum(f => f.Size);
     }
 
     /// <summary>Deletes checked items of analyzed rules. Files are deleted for good (it's junk); registry goes through undo.</summary>
@@ -362,17 +403,23 @@ public static partial class Winapp2
                 r.Analyzed = false;
                 continue;
             }
-            foreach (var l in r.Found.Where(l => l.Checked))
+            // files in parallel (thousands of small deletes are latency-bound), then folders and registry in order
+            Parallel.ForEach(r.Found.Where(l => l.Checked && l.Kind == "Файл"), l => // i18n: keep
+            {
+                try
+                {
+                    if (Protect.IsProtectedPath(l.Path)) { Interlocked.Increment(ref failed); return; }
+                    Remove(l.Path, r.Force);
+                    Interlocked.Add(ref freed, l.Size);
+                }
+                catch (Exception e) when (e is IOException or UnauthorizedAccessException) { Interlocked.Increment(ref failed); }
+            });
+            foreach (var l in r.Found.Where(l => l.Checked && l.Kind != "Файл")) // i18n: keep
             {
                 try
                 {
                     switch (l.Kind)
                     {
-                        case "Файл" when Protect.IsProtectedPath(l.Path): failed++; break; // i18n: keep
-                        case "Файл": // i18n: keep
-                            Remove(l.Path, r.Force);
-                            freed += l.Size;
-                            break;
                         case "Папка": DeleteEmptyTree(l.Path, r.Force); break; // i18n: keep
                         case "Ключ реестра": tx.DeleteKey(l.Path); break; // i18n: keep
                         case "Значение реестра": tx.DeleteValue(l.Path, l.ValueName!); break; // i18n: keep
@@ -404,7 +451,9 @@ public static partial class Winapp2
         try
         {
             if (Directory.Exists(path)) Directory.Delete(path);
-            else { File.SetAttributes(path, FileAttributes.Normal); File.Delete(path); }
+            else
+                try { File.Delete(path); }
+                catch (UnauthorizedAccessException) { File.SetAttributes(path, FileAttributes.Normal); File.Delete(path); } // read-only: one extra call only then
         }
         catch (UnauthorizedAccessException) when (force) { ForceDelete(path); }
     }

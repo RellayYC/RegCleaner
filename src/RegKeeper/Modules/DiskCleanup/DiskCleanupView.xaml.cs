@@ -20,7 +20,7 @@ public sealed class CleanGroup : INotifyPropertyChanged
     public bool? State
     {
         get => Items.All(r => r.Checked) ? true : Items.Any(r => r.Checked) ? null : false;
-        set { foreach (var r in Items) r.Checked = value == true; Raise(nameof(Left), nameof(Right)); }
+        set { foreach (var r in Items) r.Checked = value == true; Raise(); }
     }
     long Found => Items.Where(r => r.Analyzed && r.Checked).Sum(r => r.Size);
     public string SizeText => Items.Any(r => r.Analyzed) ? Sys.Size(Found) : "-";
@@ -52,13 +52,12 @@ public partial class DiskCleanupView : UserControl
         Status.Visibility = File.Exists(Winapp2.IniPath) ? Visibility.Collapsed : Visibility.Visible;
     });
 
-    // ponytail: four fixed groups by category name; winapp2 browsers are "<name> Web Browser" plus the LangSecRef ones
+    // ponytail: four fixed groups by category name; Parse folds "<name> Web Browser" sections into Browsers
     static (string Name, string Glyph)[] Kinds => [(L.T("Windows"), ""), (L.T("Браузеры"), ""), (L.T("Приложения"), ""), (L.T("Игры"), "")];
     static string Kind(CleanRule r) =>
         r.Category == L.T("Windows") || r.ComponentStore || r.RecycleBin ? Kinds[0].Name
-        : r.Category == L.T("Браузеры") || r.Category == L.T("Интернет") || r.Category.Contains("Browser", StringComparison.OrdinalIgnoreCase)
-          || r.Category is "Firefox" or "Google Chrome" or "Microsoft Edge" ? Kinds[1].Name
-        : r.Category == "Games" ? Kinds[3].Name
+        : r.Category == L.T("Браузеры") || r.Category == L.T("Интернет") || r.Category is "Firefox" or "Google Chrome" or "Microsoft Edge" ? Kinds[1].Name
+        : r.Category == L.T("Игры") ? Kinds[3].Name
         : Kinds[2].Name;
 
     void ApplyFilter()
@@ -106,31 +105,52 @@ public partial class DiskCleanupView : UserControl
         if (!_open.Remove(g.Name) && g.Open) _open.Add(g.Name);
     }
 
-    /// <summary>Re-reads every rule row after sizes or ticks changed outside the rows themselves.</summary>
+    /// <summary>Group sums and the hero after sizes or ticks changed; the rows follow their rules themselves.</summary>
     void Refresh()
     {
-        foreach (var g in _groups) g.Raise(nameof(CleanGroup.Left), nameof(CleanGroup.Right));
+        foreach (var g in _groups) g.Raise();
         UpdateStatus();
     }
 
-    async Task Analyze()
+    /// <summary>
+    /// Only the action buttons wait (Actions disabled): the list, the search and the other tabs stay usable.
+    /// Each rule shows its size as soon as its own walk ends.
+    /// </summary>
+    async Task Analyze(List<CleanRule> rules)
     {
         Winapp2.SaveChecked(_all);
-        var rules = _all.Where(r => r.Checked).ToList();
-        // Esc stops starting new rules; rules already being walked finish, the rest stay unanalyzed
-        await Ui.Busy(this, ct => Task.Run(() =>
+        foreach (var r in rules) r.Scanning = true;
+        // rows update themselves; the sums and the hero redraw once per idle moment, not once per rule
+        var pending = 0;
+        void Done()
+        {
+            if (Interlocked.Exchange(ref pending, 1) == 0)
+                Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, () => { pending = 0; Refresh(); });
+        }
+        // Esc stops starting new rules; rules already being walked finish, the rest stay unanalyzed.
+        // DISM first (minutes), and no chunking: one big folder must not hold back the rules queued behind it.
+        await Ui.Busy(Actions, ct => Task.Run(() =>
         {
             var ignore = Winapp2.LoadIgnore();
-            Parallel.ForEach(rules, new ParallelOptions { CancellationToken = ct }, r => Winapp2.Analyze(r, ignore));
+            var queue = System.Collections.Concurrent.Partitioner.Create(rules.OrderByDescending(r => r.ComponentStore), System.Collections.Concurrent.EnumerablePartitionerOptions.NoBuffering);
+            Parallel.ForEach(queue, new ParallelOptions { CancellationToken = ct }, r =>
+            {
+                Winapp2.Analyze(r, ignore);
+                Done();
+            });
         }));
+        foreach (var r in rules) r.Scanning = false;
         Refresh();
     }
 
-    async void Analyze_Click(object s, RoutedEventArgs e) => await Analyze();
+    async void Analyze_Click(object s, RoutedEventArgs e) { if (Actions.IsEnabled) await Analyze(_all.Where(r => r.Checked).ToList()); }
+    // DISM takes minutes and would hold the buttons: it joins "all" only when ticked
+    async void AnalyzeAll_Click(object s, RoutedEventArgs e) { if (Actions.IsEnabled) await Analyze(_all.Where(r => !r.ComponentStore || r.Checked).ToList()); }
 
     async void Clean_Click(object s, RoutedEventArgs e)
     {
-        if (_all.Any(r => r.Checked && !r.Analyzed)) await Analyze();
+        if (!Actions.IsEnabled) return; // the dock's button while a run goes
+        if (_all.Where(r => r.Checked && !r.Analyzed).ToList() is { Count: > 0 } fresh) await Analyze(fresh);
         var rules = _all.Where(r => r.Checked && r.Analyzed && r.Count > 0).ToList();
         if (rules.Count == 0) { Ui.Info(L.T("Нечего удалять.")); return; }
         var warn = rules.Where(r => r.Warning != null).Select(r => $"• {r.Name}: {r.Warning}").ToList();
@@ -138,7 +158,7 @@ public partial class DiskCleanupView : UserControl
                         L.T("Файлы удаляются без корзины.") + (warn.Count > 0 ? L.T("\n\nВнимание:\n") + string.Join("\n", warn) : ""))) return;
 
         (long Freed, int Failed) res = default;
-        await Ui.Busy(this, () => Task.Run(() =>
+        await Ui.Busy(Actions, () => Task.Run(() =>
         {
             using var tx = UndoTx.Begin(L.T("Очистка диска: ") + string.Join(", ", rules.Select(r => r.Name).Take(10)));
             res = Winapp2.Clean(rules, tx);
@@ -149,8 +169,8 @@ public partial class DiskCleanupView : UserControl
 
     void Details_Click(object s, RoutedEventArgs e)
     {
-        if (((FrameworkElement)s).DataContext is not CleanRule r) return;
-        if (!r.Analyzed || r.Found.Count == 0) { Ui.Info(r.Analyzed ? L.T("Ничего не найдено.") : L.T("Сначала выполните анализ.")); return; }
+        if (((FrameworkElement)s).DataContext is not CleanRule { Analyzed: true } r) return; // "…": still being walked
+        if (r.Found.Count == 0) { Ui.Info(L.T("Ничего не найдено.")); return; }
         ChecklistWindow.Ask(r.Name, L.T("Снимите галочки с того, что нужно оставить. Папки удаляются, только если опустели."), r.Found, L.T("Готово"));
         r.Size = r.Found.Where(l => l.Checked).Sum(l => l.Size);
         Refresh();

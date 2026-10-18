@@ -50,6 +50,22 @@ public class Winapp2Tests : IDisposable
     }
 
     [Fact]
+    public void Russian_TranslatesNamesByTail_KeepsKeyForTicks()
+    {
+        var rules = Winapp2.Parse("""
+            [Yandex Browser Caches *]
+            Section=Games
+            FileKey1=%Temp%|*.yb
+            [Windows Notepad *]
+            FileKey1=%Temp%|*.np
+            """);
+        Assert.Equal("Yandex Browser: кэш", rules[0].Name);
+        Assert.Equal("Yandex Browser Caches", rules[0].Key);
+        Assert.Equal("Игры", rules[0].Category);
+        Assert.Equal("Блокнот", rules[1].Name);
+    }
+
+    [Fact]
     public void ForceRule_RemovesWholeFolder_DropsJunctionsWithoutTouchingTargets()
     {
         Touch(@"Outside\precious.txt");

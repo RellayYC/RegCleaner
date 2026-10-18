@@ -769,5 +769,7 @@
  "Снимки": "Snapshots",
  "Трассы": "Traces",
  "Открыть папку": "Open folder",
- "Проверяются автоматически: при запуске и каждые 6 часов": "Checked automatically: on start and every 6 hours"
+ "Проверяются автоматически: при запуске и каждые 6 часов": "Checked automatically: on start and every 6 hours",
+ "Анализ всего": "Analyze all",
+ "Посчитать все правила, и неотмеченные тоже": "Measure every rule, unticked ones too"
 }
