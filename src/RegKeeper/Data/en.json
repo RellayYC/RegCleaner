@@ -744,5 +744,10 @@
  "трасс": "traces",
  "Снимков пока нет. «Снимок» сохранит текущее состояние.": "No snapshots yet. \"Snapshot\" saves the current state.",
  "Сравнить с другим": "Compare with another",
- "Откатить {0} изменений": "Roll back {0} changes"
+ "Откатить {0} изменений": "Roll back {0} changes",
+ "включено": "enabled",
+ "Переключите нужное и нажмите «Применить». Тег на карточке показывает, что изменится. Каждое применение можно откатить в Центре отмены.": "Switch what you need and press Apply. The tag on a card shows what will change. Every apply can be rolled back in the Undo Center.",
+ "Поиск": "Search",
+ "Сбросить": "Reset",
+ "{0} изменений не применены": "{0} changes not applied"
 }

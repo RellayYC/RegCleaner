@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using RegKeeper.Core;
 
 namespace RegKeeper.Modules;
@@ -9,6 +8,9 @@ namespace RegKeeper.Modules;
 public partial class TweaksView : UserControl
 {
     List<Tweak> _all = new();
+    string _cat = "";
+    Tweak? _menu;
+    readonly Action _bar;
 
     public TweaksView()
     {
@@ -16,6 +18,8 @@ public partial class TweaksView : UserControl
         L.Apply(this);
         Resources["WillOn"] = L.T("включится");
         Resources["WillOff"] = L.T("выключится");
+        Cards.Tag = 3;
+        _bar = Ui.Bar(Cards, Bar, BarText, () => _all.Count(t => t.Wanted != t.IsOn), n => L.T($"{n} изменений не применены"));
         Load();
     }
 
@@ -23,21 +27,60 @@ public partial class TweaksView : UserControl
     {
         try { _all = Tweaks.Load(); }
         catch (Exception e) { Ui.Error(e); }
+        foreach (var c in _all.Select(t => t.Category).Distinct())
+        {
+            var b = new RadioButton { Content = c, Tag = c, Style = (Style)FindResource("Segment") };
+            b.Checked += Cat_Checked;
+            Cats.Children.Add(b);
+        }
         ApplyFilter();
     }
 
     void ApplyFilter()
     {
         var q = Search.Text.Trim();
-        var list = q == "" ? _all : _all.Where(t => (t.Name + " " + t.Description + " " + t.Category).Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
-        var view = new ListCollectionView(list);
-        view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(Tweak.Category)));
-        Grid.ItemsSource = view;
-        OnText.Text = _all.Count(t => t.IsOn).ToString();
-        TotalText.Text = _all.Count.ToString();
+        Cards.ItemsSource = _all.Where(t => (_cat == "" || t.Category == _cat)
+            && (q == "" || (t.Name + " " + t.Description + " " + t.Category).Contains(q, StringComparison.OrdinalIgnoreCase))).ToList();
+        OnRun.Text = _all.Count(t => t.IsOn).ToString();
+        TotalRun.Text = _all.Count.ToString();
+        _bar?.Invoke();
+    }
+
+    void Cat_Checked(object s, RoutedEventArgs e)
+    {
+        _cat = (string)((FrameworkElement)s).Tag;
+        if (IsLoaded) ApplyFilter();
+    }
+
+    /// <summary>The category strip is wider than the window at 100%: the wheel scrolls it sideways, the bar stays hidden.</summary>
+    void Cats_MouseWheel(object s, System.Windows.Input.MouseWheelEventArgs e)
+    {
+        var sv = (ScrollViewer)s;
+        sv.ScrollToHorizontalOffset(sv.HorizontalOffset - e.Delta);
+        e.Handled = true;
     }
 
     void Search_TextChanged(object s, TextChangedEventArgs e) => ApplyFilter();
+
+    void SearchBtn_Click(object s, RoutedEventArgs e)
+    {
+        var show = Search.Visibility != Visibility.Visible;
+        Search.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        if (show) Search.Focus(); else Search.Text = "";
+    }
+
+    void Cards_SizeChanged(object s, SizeChangedEventArgs e)
+    {
+        var n = e.NewSize.Width < 760 ? 2 : 3;
+        if (!Equals(Cards.Tag, n)) Cards.Tag = n;
+    }
+
+    /// <summary>The card under the right click is the one "Key in editor" opens.</summary>
+    void Cards_ContextMenuOpening(object s, ContextMenuEventArgs e)
+    {
+        _menu = (e.OriginalSource as FrameworkElement)?.DataContext as Tweak;
+        if (_menu == null) e.Handled = true;
+    }
 
     void Reset_Click(object s, RoutedEventArgs e)
     {
@@ -47,7 +90,6 @@ public partial class TweaksView : UserControl
 
     async void Apply_Click(object s, RoutedEventArgs e)
     {
-        Grid.CommitEdit();
         var changed = _all.Where(t => t.Wanted != t.IsOn).ToList();
         if (changed.Count == 0) { Ui.Info(L.T("Нечего применять: отметки совпадают с текущим состоянием.")); return; }
         if (!Ui.Confirm(L.T("Применить:\n") + string.Join("\n", changed.Select(t => (t.Wanted ? "+ " : "- ") + t.Name)))) return;
@@ -71,6 +113,6 @@ public partial class TweaksView : UserControl
 
     void Open_Click(object s, RoutedEventArgs e)
     {
-        if (Grid.SelectedItem is Tweak t) MainWindow.Current.Show<RegEditorView>().Navigate(t.Values[0].Key);
+        if (_menu is { } t) MainWindow.Current.Show<RegEditorView>().Navigate(t.Values[0].Key);
     }
 }

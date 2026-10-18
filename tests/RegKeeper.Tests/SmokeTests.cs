@@ -61,13 +61,14 @@ public class SmokeTests
                 ShowScan(views.OfType<RegCleanupView>().Single());
                 ShowSearch(views.OfType<RegSearchView>().Single());
                 ShowSnapshots(views.OfType<SnapshotsView>().Single());
+                ShowTweaks(views.OfType<TweaksView>().Single());
                 UpdateToastComesBack(win, $"{theme} {lang}");
                 SnapLayoutsHitTest(win);
                 if (theme == Theme.Dark) DialogKeys(win, lang);
                 if (lang == L.En && Russian(win, views) is { Count: > 0 } ru) Assert.Fail("untranslated:\n" + string.Join("\n", ru));
                 if (theme == Theme.Light) EditorNavigatesToNewSibling(views.OfType<RegEditorView>().Single());
                 if (theme == Theme.Light) FilterFollowsAutomationToggle(views.OfType<StartupView>().Single());
-                if (theme == Theme.Light) StickyGroupTitle(nav, views.IndexOf(views.OfType<TweaksView>().Single()), host);
+                if (theme == Theme.Light) StickyGroupTitle(nav, views.IndexOf(views.OfType<RegSearchView>().Single()), host);
                 if (lang == L.Ru) UninstallerMenuAndDetails(nav, host, $"{theme}");
                 if (lang == L.Ru) CursorLight(win, nav, views.IndexOf(views.OfType<DiskCleanupView>().Single()), $"{theme}");
                 var store = views.OfType<StoreAppsView>().Single();
@@ -493,6 +494,16 @@ public class SmokeTests
         typeof(SnapshotsView).GetMethod("Show", F)!.Invoke(view, [changes, "«v1.2» → «v1.3»"]);
         Pump();
         Assert.True(T<DataGrid>(view, "Changes").Items.Count >= 3, "snapshot diff found too little");
+    }
+
+    /// <summary>Two switches flipped without applying, so the shot shows pending cards and the dock.</summary>
+    static void ShowTweaks(TweaksView view)
+    {
+        var cards = T<ItemsControl>(view, "Cards");
+        foreach (var t in cards.Items.Cast<Tweak>().Take(2)) t.Wanted = !t.IsOn;
+        typeof(TweaksView).GetMethod("ApplyFilter", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.Invoke(view, null);
+        Pump();
+        Assert.Equal(Visibility.Visible, T<FrameworkElement>(view, "Bar").Visibility);
     }
 
     static T T<T>(FrameworkElement v, string name) where T : class => (T)v.FindName(name);
