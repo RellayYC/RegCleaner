@@ -33,13 +33,13 @@ public static class Ui
 
     /// <summary>Shows a selection bar (Controls.xaml SelectionBar) while count() is above zero and writes the count into text.
     /// Re-counts on selection and on any tick in the grid; the returned action re-counts after code changes the ticks.</summary>
-    public static Action Bar(DataGrid grid, FrameworkElement bar, TextBlock text, Func<int> count)
+    public static Action Bar(DataGrid grid, FrameworkElement bar, TextBlock text, Func<int> count, Func<int, string>? label = null)
     {
         void Update()
         {
             var n = count();
             bar.Visibility = n > 0 ? Visibility.Visible : Visibility.Collapsed;
-            text.Text = L.T($"Выбрано: {n}");
+            text.Text = label?.Invoke(n) ?? L.T($"Выбрано: {n}");
         }
         RoutedEventHandler later = (_, _) => grid.Dispatcher.BeginInvoke(Update); // after the tick reaches the item
         grid.AddHandler(System.Windows.Controls.Primitives.ToggleButton.CheckedEvent, later, true);

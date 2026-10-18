@@ -157,7 +157,7 @@
     </RadialGradientBrush>
 
     <!-- panels cast no shadow; only the floating selection bar and popups do (0 18 40 .45) -->
-    <DropShadowEffect x:Key="BarShadow" Color="{StaticResource Shadow}" Direction="270" ShadowDepth="18" BlurRadius="40" Opacity="0.45"/>
+    <DropShadowEffect x:Key="BarShadow" Color="{StaticResource Shadow}" Direction="270" ShadowDepth="24" BlurRadius="60" Opacity="0.6"/>
     <DropShadowEffect x:Key="GlowLight" Color="{StaticResource Shadow}" ShadowDepth="0" BlurRadius="0" Opacity="0"/>
     <DropShadowEffect x:Key="GlowHot" Color="{StaticResource Shadow}" ShadowDepth="0" BlurRadius="0" Opacity="0"/>
     <DropShadowEffect x:Key="CardShadow" Color="{StaticResource Shadow}" ShadowDepth="0" BlurRadius="0" Opacity="0"/>

@@ -25,6 +25,9 @@ public sealed class InstalledApp
     public ImageSource? Icon { get; set; }
     public bool Checked { get; set; }
     public bool Favorite { get; set; }
+    /// <summary>Last launch of MainExe from its Prefetch file; null when Windows has no record of it.</summary>
+    public DateTime? LastRun { get; set; }
+    public string LastRunText => LastRun?.ToString("dd.MM.yyyy") ?? "";
 
     public string SizeText => SizeBytes > 0 ? Sys.Size(SizeBytes) : "";
     public string DateText => InstallDate?.ToString("dd.MM.yyyy") ?? "";

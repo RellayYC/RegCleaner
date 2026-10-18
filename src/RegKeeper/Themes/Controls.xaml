@@ -238,22 +238,22 @@
         </Setter>
     </Style>
 
-    <!-- page header of every screen: 24 title, 13 grey description capped at 640 -->
+    <!-- page header of every screen: 32 bold title, one grey line of description -->
     <Style x:Key="Title" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource DisplayFont}"/>
-        <Setter Property="FontSize" Value="24"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="FontSize" Value="32"/>
+        <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
-        <Setter Property="Margin" Value="0,0,0,6"/>
+        <Setter Property="Margin" Value="0,0,0,4"/>
     </Style>
     <Style x:Key="Section" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontSize" Value="15.5"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Margin" Value="0,20,0,10"/>
     </Style>
     <!-- hints and status lines; a status line that gains numbers after load counts them up -->
     <Style x:Key="Hint" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontSize" Value="12.5"/>
         <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
         <Setter Property="rk:Motion.CountUp" Value="True"/>
@@ -262,19 +262,19 @@
         <Setter Property="Foreground" Value="{DynamicResource DangerTextBrush}"/>
     </Style>
     <Style x:Key="Lead" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontSize" Value="14"/>
         <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
-        <Setter Property="MaxWidth" Value="640"/>
+        <Setter Property="MaxWidth" Value="820"/>
         <Setter Property="HorizontalAlignment" Value="Left"/>
     </Style>
     <Style x:Key="Figure" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource DisplayFont}"/>
-        <Setter Property="FontSize" Value="22"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="FontSize" Value="44"/>
+        <Setter Property="FontWeight" Value="Bold"/>
     </Style>
     <Style x:Key="Caption" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontSize" Value="12.5"/>
         <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
     </Style>
@@ -335,7 +335,7 @@
     </Style>
     <!-- inside a Metric: the label over the figure -->
     <Style x:Key="MetricLabel" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontSize" Value="12.5"/>
         <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
     </Style>
     <Style x:Key="MetricValue" TargetType="TextBlock">
@@ -377,10 +377,10 @@
         </DataTemplate.Triggers>
     </DataTemplate>
 
-    <!-- tag for short labels (type, category, scope): 22 tall, r6, white at low alpha; never cut, the column grows instead -->
+    <!-- tag for short labels (type, category, scope): 25 tall, r8, white at low alpha; never cut, the column grows instead -->
     <DataTemplate x:Key="Badge">
         <Border x:Name="p" Height="{StaticResource TagHeight}" CornerRadius="{StaticResource RTag}" Background="{DynamicResource TagBrush}" Padding="8,0" HorizontalAlignment="Left">
-            <TextBlock Text="{Binding}" FontSize="11.5" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}"/>
+            <TextBlock Text="{Binding}" FontSize="12.5" VerticalAlignment="Center" Foreground="{DynamicResource MutedBrush}"/>
         </Border>
         <DataTemplate.Triggers>
             <DataTrigger Binding="{Binding}" Value=""><Setter TargetName="p" Property="Visibility" Value="Collapsed"/></DataTrigger>
@@ -398,9 +398,9 @@
         </DataTemplate.Triggers>
     </DataTemplate>
 
-    <!-- 28px app icon tile with an 18px icon; a row without an icon shows its Glyph, or a generic app glyph -->
+    <!-- 36px app icon well with an 18px icon; a row without an icon shows its Glyph, or a generic app glyph -->
     <DataTemplate x:Key="AppIcon">
-        <Border Width="28" Height="28" CornerRadius="{StaticResource RTile}" BorderThickness="1" HorizontalAlignment="Center"
+        <Border Width="36" Height="36" CornerRadius="{StaticResource RTile}" BorderThickness="1" HorizontalAlignment="Center"
                 Background="{DynamicResource TileBrush}" BorderBrush="{DynamicResource TileEdgeBrush}">
             <Grid>
                 <TextBlock x:Name="g" Text="{Binding Glyph, FallbackValue=&#xE71D;}" FontFamily="{StaticResource Icons}" FontSize="{StaticResource IconSize}"
@@ -566,7 +566,7 @@
     <Style x:Key="SelectionBar" TargetType="ContentControl">
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="VerticalAlignment" Value="Bottom"/>
-        <Setter Property="Margin" Value="0,0,0,16"/>
+        <Setter Property="Margin" Value="0,0,0,18"/>
         <Setter Property="Focusable" Value="False"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -574,7 +574,7 @@
                     <Grid>
                         <Border CornerRadius="{StaticResource RCard}" Background="{DynamicResource BarBrush}" Effect="{DynamicResource BarShadow}"/>
                         <Border CornerRadius="{StaticResource RCard}" Background="{DynamicResource BarBrush}" BorderBrush="{DynamicResource BarEdgeBrush}"
-                                BorderThickness="1" Padding="14,8,8,8">
+                                BorderThickness="1" Padding="18,10,10,10">
                             <ContentPresenter/>
                         </Border>
                     </Grid>
@@ -584,10 +584,17 @@
     </Style>
     <!-- "can be undone": the undo arrow and a Reversible-coloured line -->
     <Style x:Key="Reversible" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontSize" Value="12.5"/>
         <Setter Property="Foreground" Value="{DynamicResource ReversibleBrush}"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="Margin" Value="0,0,14,0"/>
+    </Style>
+    <!-- the dock's vertical rule before the irreversible action -->
+    <Style x:Key="DockRule" TargetType="Border">
+        <Setter Property="Width" Value="1"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="Margin" Value="4,0,10,0"/>
+        <Setter Property="Background" Value="{DynamicResource BarEdgeBrush}"/>
     </Style>
     <Style x:Key="BarCount" TargetType="TextBlock">
         <Setter Property="FontWeight" Value="SemiBold"/>
@@ -665,11 +672,11 @@
             <Setter.Value>
                 <ControlTemplate TargetType="CheckBox">
                     <StackPanel Orientation="Horizontal" Background="Transparent">
-                        <Grid Width="16" Height="16" VerticalAlignment="Center">
-                            <Border x:Name="ring" Margin="-3" CornerRadius="7" BorderThickness="2" BorderBrush="{DynamicResource RingBrush}" Opacity="0"/>
-                            <Border x:Name="box" CornerRadius="4" BorderThickness="1" BorderBrush="{DynamicResource BorderStrongBrush}" Background="{DynamicResource SurfaceBrush}"/>
-                            <Border x:Name="h" CornerRadius="4" Background="{DynamicResource AccentBrush}" Opacity="0"/>
-                            <Path x:Name="c" Data="M3.5,8.5 L6.5,11.5 L12.5,5" Stroke="{DynamicResource OnAccentBrush}" StrokeThickness="1.75"
+                        <Grid Width="18" Height="18" VerticalAlignment="Center">
+                            <Border x:Name="ring" Margin="-3" CornerRadius="8" BorderThickness="2" BorderBrush="{DynamicResource RingBrush}" Opacity="0"/>
+                            <Border x:Name="box" CornerRadius="5" BorderThickness="1.5" BorderBrush="{DynamicResource BorderStrongBrush}" Background="Transparent"/>
+                            <Border x:Name="h" CornerRadius="5" Background="{DynamicResource AccentBrush}" Opacity="0"/>
+                            <Path x:Name="c" Data="M4.5,9.5 L7.5,12.5 L13.5,6" Stroke="{DynamicResource OnAccentBrush}" StrokeThickness="1.75"
                                   StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" StrokeDashArray="8 8" StrokeDashOffset="8"/>
                             <Rectangle x:Name="dash" Width="8" Height="1.75" RadiusX="0.9" RadiusY="0.9" Fill="{DynamicResource OnAccentBrush}" Visibility="Collapsed"/>
                         </Grid>
@@ -717,13 +724,14 @@
 
     <!-- radio buttons are segments of a pill control: SettingsView slides the active pill under the checked one -->
     <Style TargetType="RadioButton">
+        <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border Background="Transparent" Padding="12,0" MinHeight="24">
+                    <Border x:Name="b" Background="{TemplateBinding Background}" Padding="14,0" MinHeight="30" CornerRadius="9">
                         <ContentPresenter VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -739,20 +747,30 @@
         </Setter>
     </Style>
     <Style x:Key="Segments" TargetType="Border">
-        <Setter Property="CornerRadius" Value="{StaticResource RChip}"/>
+        <Setter Property="CornerRadius" Value="13"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
-        <Setter Property="Background" Value="{DynamicResource PaneBrush}"/>
-        <Setter Property="Padding" Value="3"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource LineSoftBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+        <Setter Property="Padding" Value="4"/>
         <Setter Property="HorizontalAlignment" Value="Left"/>
     </Style>
     <Style x:Key="Pill" TargetType="Border">
-        <Setter Property="CornerRadius" Value="12"/>
-        <Setter Property="Background" Value="{DynamicResource Surface2Brush}"/>
+        <Setter Property="CornerRadius" Value="9"/>
+        <Setter Property="Background" Value="{DynamicResource Surface3Brush}"/>
         <Setter Property="Visibility" Value="Hidden"/>
     </Style>
 
-    <!-- toggle: 32x18 track, 12px knob. Tag="pending" draws the wait ring (TweaksView marks a staged change) -->
+    <!-- one segment that paints its own active state (no sliding pill behind it) -->
+    <Style x:Key="Segment" TargetType="RadioButton" BasedOn="{StaticResource {x:Type RadioButton}}">
+        <Setter Property="FontSize" Value="13.5"/>
+        <Style.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Background" Value="{DynamicResource Surface3Brush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- toggle: 40x23 track, 17px knob. Tag="pending" draws the wait ring (TweaksView marks a staged change) -->
     <Style x:Key="Switch" TargetType="CheckBox">
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="Cursor" Value="Hand"/>
@@ -763,10 +781,11 @@
                 <ControlTemplate TargetType="CheckBox">
                     <Grid Background="Transparent">
                         <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition/></Grid.ColumnDefinitions>
-                        <Grid Width="32" Height="18" VerticalAlignment="Top" Margin="0,1,0,0">
-                            <Border x:Name="ring" Margin="-3" CornerRadius="12" BorderThickness="1.5" BorderBrush="{DynamicResource RingBrush}" Opacity="0"/>
-                            <Border x:Name="track" CornerRadius="9" BorderThickness="1" Background="{DynamicResource Surface2Brush}" BorderBrush="{DynamicResource BorderStrongBrush}"/>
-                            <Ellipse x:Name="knob" Width="12" Height="12" Margin="3,0" HorizontalAlignment="Left" Fill="{DynamicResource MutedBrush}"/>
+                        <Grid Width="40" Height="23" VerticalAlignment="Top">
+                            <Border x:Name="ring" Margin="-3" CornerRadius="14.5" BorderThickness="1.5" BorderBrush="{DynamicResource RingBrush}" Opacity="0"/>
+                            <Border x:Name="wait" Margin="-4" CornerRadius="15.5" BorderThickness="1.5" BorderBrush="{DynamicResource FaintBrush}" Opacity="0"/>
+                            <Border x:Name="track" CornerRadius="11.5" BorderThickness="1" Background="{DynamicResource Surface3Brush}" BorderBrush="{DynamicResource BorderStrongBrush}"/>
+                            <Ellipse x:Name="knob" Width="17" Height="17" Margin="3,0" HorizontalAlignment="Left" Fill="{DynamicResource MutedBrush}"/>
                         </Grid>
                         <ContentPresenter x:Name="text" Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center"/>
                     </Grid>
@@ -778,7 +797,7 @@
                             <Setter TargetName="knob" Property="HorizontalAlignment" Value="Right"/>
                         </Trigger>
                         <Trigger Property="Tag" Value="pending">
-                            <Setter TargetName="ring" Property="Opacity" Value="1"/>
+                            <Setter TargetName="wait" Property="Opacity" Value="1"/>
                         </Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="ring" Property="Opacity" Value="1"/>
@@ -795,19 +814,19 @@
         </Setter>
     </Style>
 
-    <!-- chip: a 30px filter toggle; checked sits on Surface2 with a check mark -->
+    <!-- chip: a 34px filter toggle; checked is filled white with ink text -->
     <Style x:Key="Chip" TargetType="CheckBox">
         <Setter Property="Height" Value="{StaticResource ChipHeight}"/>
         <Setter Property="Margin" Value="0,0,6,0"/>
         <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontSize" Value="13.5"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Foreground" Value="{DynamicResource MutedBrush}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="CheckBox">
-                    <Border x:Name="b" CornerRadius="{StaticResource RChip}" BorderThickness="1" Padding="12,0"
+                    <Border x:Name="b" CornerRadius="{StaticResource RChip}" BorderThickness="1" Padding="14,0"
                             Background="Transparent" BorderBrush="{DynamicResource BorderBrush}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock x:Name="mark" Text="&#xE73E;" FontFamily="{StaticResource Icons}" FontSize="11" Margin="0,1,6,0"
@@ -820,10 +839,9 @@
                             <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="b" Property="Background" Value="{DynamicResource Surface2Brush}"/>
-                            <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
-                            <Setter TargetName="mark" Property="Visibility" Value="Visible"/>
-                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+                            <Setter TargetName="b" Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+                            <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource OnPrimaryBrush}"/>
                         </Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="b" Property="BorderBrush" Value="{DynamicResource RingBrush}"/>

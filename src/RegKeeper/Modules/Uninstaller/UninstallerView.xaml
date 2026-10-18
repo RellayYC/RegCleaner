@@ -2,43 +2,45 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <DockPanel>
-        <!-- header: title and description, the counters on the right -->
+        <!-- header: title and description; export and refresh on the right, the uninstall commands live in the dock -->
         <DockPanel DockPanel.Dock="Top">
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                <ContentControl Style="{StaticResource Metric}">
-                    <StackPanel><TextBlock Text="Программы" Style="{StaticResource MetricLabel}"/><TextBlock x:Name="CountText" Style="{StaticResource MetricValue}"/></StackPanel>
-                </ContentControl>
-                <ContentControl Style="{StaticResource Metric}">
-                    <StackPanel><TextBlock Text="Занимают" Style="{StaticResource MetricLabel}"/><TextBlock x:Name="SizeText" Style="{StaticResource MetricValue}"/></StackPanel>
-                </ContentControl>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                <Button Content="Экспорт" Style="{StaticResource Ghost}" Click="Export_Click" ToolTip="Список программ в CSV"/>
+                <Button Content="&#xE72C;" Style="{StaticResource IconBtn}" Margin="0" ToolTip="Обновить" AutomationProperties.Name="Обновить" Click="Refresh_Click"/>
             </StackPanel>
             <StackPanel>
                 <TextBlock Text="Удаление программ" Style="{StaticResource Title}"/>
                 <TextBlock Style="{StaticResource Lead}" Text="Запускает штатный деинсталлятор, затем ищет оставшиеся папки и ключи реестра. Ключи уходят в Центр отмены, папки в корзину."/>
             </StackPanel>
         </DockPanel>
-        <!-- toolbar: one row; the rarer commands are under "⋯", the irreversible one in the selection bar -->
-        <DockPanel DockPanel.Dock="Top" Margin="{StaticResource Toolbar}">
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="12,0,0,0">
-                <Button Content="Удалить" Style="{StaticResource Primary}" Click="Uninstall_Click"/>
-                <Button Content="Тихое удаление" Click="Quiet_Click" ToolTip="QuietUninstallString / msiexec /qb, если есть"/>
-                <Button Content="&#xE72C;" Style="{StaticResource IconBtn}" ToolTip="Обновить" AutomationProperties.Name="Обновить" Click="Refresh_Click"/>
-                <Button Style="{StaticResource More}" Margin="0">
-                    <Button.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Убрать запись" Tag="&#xE894;" ToolTip="Удалить только запись из списка (ключ Uninstall)" Click="RemoveEntry_Click"/>
-                            <MenuItem Header="Папка" Tag="&#xE838;" Click="Folder_Click"/>
-                            <MenuItem Header="Ключ в редакторе" Tag="&#xE8A7;" Click="Key_Click"/>
-                            <Separator/>
-                            <MenuItem Header="Экспорт" Tag="&#xEDE1;" Click="Export_Click"/>
-                        </ContextMenu>
-                    </Button.ContextMenu>
-                </Button>
+        <!-- where the space goes: a treemap of the biggest programs; a block and its row share the tick -->
+        <ContentControl DockPanel.Dock="Top" Style="{StaticResource Card}" Margin="0,18,0,0" Padding="18,14,18,18">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+                    <Border DockPanel.Dock="Right" Style="{StaticResource Segments}">
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton x:Name="BySize" Style="{StaticResource Segment}" Content="Размер" IsChecked="True" Checked="MapMode_Checked"/>
+                            <RadioButton x:Name="ByIdle" Style="{StaticResource Segment}" Content="Давно не запускались" Checked="MapMode_Checked"
+                                         ToolTip="Не запускались 90 дней и дольше (по данным Prefetch)"/>
+                        </StackPanel>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Где занято место" Style="{StaticResource Section}" Margin="0"/>
+                        <TextBlock x:Name="CountText" Style="{StaticResource Caption}"/>
+                    </StackPanel>
+                </DockPanel>
+                <Canvas x:Name="Map" Tag="data" Height="168" ClipToBounds="True" SizeChanged="Map_SizeChanged"/>
+            </DockPanel>
+        </ContentControl>
+        <!-- search and the quick filters -->
+        <DockPanel DockPanel.Dock="Top" Margin="0,18,0,12">
+            <TextBox x:Name="Search" Style="{StaticResource SearchBox}" Width="290" Margin="0,0,14,0" TextChanged="Search_TextChanged" ToolTip="Поиск по названию и издателю"/>
+            <StackPanel x:Name="Chips" Orientation="Horizontal">
+                <CheckBox Style="{StaticResource Chip}" Content="Все" Tag="all" IsChecked="True" Click="Chip_Click"/>
+                <CheckBox Style="{StaticResource Chip}" Content="Большие" Tag="big" Click="Chip_Click" ToolTip="Больше 1 ГБ"/>
+                <CheckBox Style="{StaticResource Chip}" Content="Недавние" Tag="new" Click="Chip_Click" ToolTip="Установлены за последние 30 дней"/>
+                <CheckBox Style="{StaticResource Chip}" Content="Только мои" Tag="mine" Click="Chip_Click" ToolTip="Установлены только для текущего пользователя"/>
             </StackPanel>
-            <Grid>
-                <Grid.ColumnDefinitions><ColumnDefinition MaxWidth="420"/></Grid.ColumnDefinitions>
-                <TextBox x:Name="Search" Style="{StaticResource SearchBox}" TextChanged="Search_TextChanged" ToolTip="Поиск по названию и издателю"/>
-            </Grid>
         </DockPanel>
         <Grid>
         <DataGrid x:Name="Grid" SelectionMode="Single" MouseDoubleClick="Grid_DoubleClick" ContextMenuOpening="Grid_ContextMenuOpening">
@@ -49,42 +51,67 @@
                     <MenuItem x:Name="MenuFav" Header="В избранное" Tag="&#xE734;" Click="Fav_Click"/>
                     <MenuItem x:Name="MenuRun" Header="Запустить" Tag="&#xE768;" Click="Run_Click"/>
                     <Separator/>
+                    <MenuItem Header="Папка" Tag="&#xE838;" Click="Folder_Click"/>
+                    <MenuItem Header="Ключ в редакторе" Tag="&#xE8A7;" Click="Key_Click"/>
                     <MenuItem Header="Подробнее..." Tag="&#xE946;" Click="Details_Click"/>
                 </ContextMenu>
             </DataGrid.ContextMenu>
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Binding="{Binding Checked, UpdateSourceTrigger=PropertyChanged}" Width="48"/>
-                <DataGridTemplateColumn Width="62" CellTemplate="{StaticResource AppIcon}" IsReadOnly="True"/>
-                <!-- favourites carry a filled star before the name -->
+                <DataGridTemplateColumn Width="58" CellTemplate="{StaticResource AppIcon}" IsReadOnly="True"/>
+                <!-- name over publisher; favourites carry a filled star before the name -->
                 <DataGridTemplateColumn Header="Название" SortMemberPath="Name" Width="3*" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <DockPanel>
-                                <TextBlock x:Name="star" Text="&#xE735;" FontFamily="{StaticResource Icons}" FontSize="12" Margin="0,0,6,0"
-                                           VerticalAlignment="Center" Visibility="Collapsed"/>
-                                <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="0,8" VerticalAlignment="Center"/>
-                            </DockPanel>
+                            <StackPanel VerticalAlignment="Center">
+                                <DockPanel>
+                                    <TextBlock x:Name="star" Text="&#xE735;" FontFamily="{StaticResource Icons}" FontSize="12" Margin="0,0,6,0"
+                                               VerticalAlignment="Center" Visibility="Collapsed"/>
+                                    <TextBlock Text="{Binding Name}" FontWeight="Medium" TextTrimming="CharacterEllipsis"/>
+                                </DockPanel>
+                                <TextBlock Text="{Binding Publisher}" Style="{StaticResource Caption}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
                             <DataTemplate.Triggers>
                                 <DataTrigger Binding="{Binding Favorite}" Value="True"><Setter TargetName="star" Property="Visibility" Value="Visible"/></DataTrigger>
                             </DataTemplate.Triggers>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn IsReadOnly="True" Header="Издатель" Binding="{Binding Publisher}" Width="2*"/>
-                <DataGridTextColumn IsReadOnly="True" Header="Версия" Binding="{Binding Version}" Width="110"/>
-                <DataGridTextColumn IsReadOnly="True" Header="Размер" Binding="{Binding SizeText}" SortMemberPath="SizeBytes" Width="90"/>
-                <DataGridTextColumn IsReadOnly="True" Header="Установлено" Binding="{Binding DateText}" SortMemberPath="InstallDate" Width="130"/>
-                <DataGridTemplateColumn IsReadOnly="True" Header="Для" SortMemberPath="Scope" Width="180"><DataGridTemplateColumn.CellTemplate><DataTemplate><ContentPresenter Content="{Binding Scope}" ContentTemplate="{StaticResource Badge}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                <DataGridTextColumn IsReadOnly="True" Header="Версия" Binding="{Binding Version}" Width="130"><DataGridTextColumn.ElementStyle><Style TargetType="TextBlock"><Setter Property="TextTrimming" Value="CharacterEllipsis"/><Setter Property="TextWrapping" Value="NoWrap"/><Setter Property="VerticalAlignment" Value="Center"/></Style></DataGridTextColumn.ElementStyle></DataGridTextColumn>
+                <DataGridTextColumn IsReadOnly="True" Header="Размер" Binding="{Binding SizeText}" SortMemberPath="SizeBytes" Width="100"/>
+                <DataGridTextColumn IsReadOnly="True" Header="Запуск" Binding="{Binding LastRunText}" SortMemberPath="LastRun" Width="120"/>
+                <DataGridTemplateColumn IsReadOnly="True" Header="Для кого" SortMemberPath="Scope" Width="190"><DataGridTemplateColumn.CellTemplate><DataTemplate><ContentPresenter Content="{Binding Scope}" ContentTemplate="{StaticResource Badge}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                <DataGridTemplateColumn Width="52" IsReadOnly="True">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Style="{StaticResource IconBtn}" Content="&#xE712;" Width="32" MinHeight="32" Height="32" Margin="0"
+                                    ToolTip="Ещё" AutomationProperties.Name="Ещё" Click="RowMore_Click"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
             <TextBlock Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=Grid}" Text="Ничего не найдено. Измените запрос."/>
-            <!-- ticked or selected programs -->
+            <!-- ticked or selected programs: the uninstall commands; the irreversible one after the rule -->
             <ContentControl x:Name="Bar" Style="{StaticResource SelectionBar}" Visibility="Collapsed">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock x:Name="BarText" Style="{StaticResource BarCount}"/>
-                    <TextBlock Style="{StaticResource Reversible}"><Run Text="&#xE7A7;" FontFamily="{StaticResource Icons}"/> <Run Text="Ключи можно вернуть из Центра отмены"/></TextBlock>
-                    <Button Content="Удалить" Style="{StaticResource SmallPrimary}" Click="Uninstall_Click"/>
-                    <Button Content="Принудительно" Style="{StaticResource SmallDanger}" Margin="0" Click="Force_Click" ToolTip="Без деинсталлятора: сразу поиск и удаление следов"/>
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,18,0">
+                        <TextBlock x:Name="BarText" Style="{StaticResource BarCount}" Margin="0"/>
+                        <TextBlock Style="{StaticResource Reversible}" Margin="0"><Run Text="&#xE7A7;" FontFamily="{StaticResource Icons}"/> <Run Text="Следы в реестре можно вернуть"/></TextBlock>
+                    </StackPanel>
+                    <Button Content="Удалить" Style="{StaticResource Primary}" Click="Uninstall_Click"/>
+                    <Button Content="Тихо" Click="Quiet_Click" ToolTip="QuietUninstallString / msiexec /qb, если есть"/>
+                    <Button Style="{StaticResource More}">
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Убрать запись" Tag="&#xE894;" ToolTip="Удалить только запись из списка (ключ Uninstall)" Click="RemoveEntry_Click"/>
+                                <MenuItem Header="Папка" Tag="&#xE838;" Click="Folder_Click"/>
+                                <MenuItem Header="Ключ в редакторе" Tag="&#xE8A7;" Click="Key_Click"/>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+                    <Border Style="{StaticResource DockRule}"/>
+                    <Button Content="Принудительно" Style="{StaticResource DangerBtn}" Margin="0" Click="Force_Click" ToolTip="Без деинсталлятора: сразу поиск и удаление следов"/>
                 </StackPanel>
             </ContentControl>
         </Grid>

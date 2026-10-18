@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using Microsoft.Win32;
 using RegKeeper.Core;
 
@@ -17,7 +18,10 @@ public partial class UninstallerView : UserControl
     {
         InitializeComponent();
         L.Apply(this);
-        _bar = Ui.Bar(Grid, Bar, BarText, () => Targets.Count);
+        _bar = Ui.Bar(Grid, Bar, BarText, () => Targets.Count, n => L.T($"Выбрано: {n}") + " · " + Sys.Size(Targets.Sum(a => a.SizeBytes)));
+        RoutedEventHandler redraw = (_, _) => Dispatcher.BeginInvoke(DrawMap);
+        Grid.AddHandler(System.Windows.Controls.Primitives.ToggleButton.CheckedEvent, redraw, true);
+        Grid.AddHandler(System.Windows.Controls.Primitives.ToggleButton.UncheckedEvent, redraw, true);
         Loaded += async (_, _) => { if (_all.Count == 0) await Reload(); };
     }
 
@@ -29,10 +33,12 @@ public partial class UninstallerView : UserControl
             {
                 var apps = Inventory.Load();
                 var favs = Favorites;
+                var runs = LastRuns();
                 foreach (var a in apps)
                 {
                     a.Icon = Inventory.LoadIcon(a.DisplayIcon != "" ? a.DisplayIcon : a.UninstallString);
                     a.Favorite = favs.Contains(a.KeyPath);
+                    if (a.MainExe is { } exe && runs.TryGetValue(Path.GetFileName(exe), out var t)) a.LastRun = t;
                 }
                 return apps;
             });
@@ -41,18 +47,136 @@ public partial class UninstallerView : UserControl
         if (_pendingFocus != null) FocusOn(_pendingFocus);
     }
 
+    /// <summary>Last run per exe file name: the newest Prefetch file "NAME.EXE-HASH.pf" (needs admin; empty without it).</summary>
+    static Dictionary<string, DateTime> LastRuns()
+    {
+        var map = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            foreach (var f in new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Prefetch")).EnumerateFiles("*.pf"))
+                if (f.Name.LastIndexOf('-') is > 0 and var dash && f.Name[..dash] is var exe
+                    && (!map.TryGetValue(exe, out var t) || t < f.LastWriteTime)) map[exe] = f.LastWriteTime;
+        }
+        catch (Exception e) when (e is UnauthorizedAccessException or IOException) { }
+        return map;
+    }
+
+    string _chip = "all";
+
     void ApplyFilter()
     {
         var q = Search.Text.Trim();
+        var mine = "HKEY_CURRENT_USER";
         var list = _all.Where(a => q == "" || a.Name.Contains(q, StringComparison.OrdinalIgnoreCase)
                                           || a.Publisher.Contains(q, StringComparison.OrdinalIgnoreCase))
+                       .Where(a => _chip switch
+                       {
+                           "big" => a.SizeBytes >= 1L << 30,
+                           "new" => a.InstallDate >= DateTime.Today.AddDays(-30),
+                           "mine" => a.KeyPath.StartsWith(mine, StringComparison.OrdinalIgnoreCase),
+                           _ => true,
+                       })
                        .OrderByDescending(a => a.Favorite).ToList(); // stable: favourites first, each part keeps name order
         Grid.ItemsSource = list;
-        CountText.Text = list.Count.ToString();
-        SizeText.Text = Sys.Size(list.Sum(a => a.SizeBytes));
+        CountText.Text = L.T($"{list.Count} программ · {Sys.Size(list.Sum(a => a.SizeBytes))}");
+        DrawMap();
     }
 
     void Search_TextChanged(object s, TextChangedEventArgs e) => ApplyFilter();
+
+    void Chip_Click(object s, RoutedEventArgs e)
+    {
+        var chip = (CheckBox)s;
+        foreach (var c in Chips.Children.OfType<CheckBox>()) c.IsChecked = c == chip;
+        _chip = (string)chip.Tag;
+        ApplyFilter();
+    }
+
+    void MapMode_Checked(object s, RoutedEventArgs e) { if (Map != null) DrawMap(); }
+    void Map_SizeChanged(object s, SizeChangedEventArgs e) => DrawMap();
+
+    /// <summary>Treemap of the listed programs by size (or only the ones idle 90+ days); the rest merge into one block.
+    /// Clicking a block ticks its program, the same tick as the row.</summary>
+    void DrawMap()
+    {
+        Map.Children.Clear();
+        if (Map.ActualWidth < 10 || Grid.ItemsSource is not IEnumerable<InstalledApp> listed) return;
+        var idle = DateTime.Today.AddDays(-90);
+        var apps = listed.Where(a => a.SizeBytes > 0 && (BySize.IsChecked == true || a.LastRun < idle)).OrderByDescending(a => a.SizeBytes).ToList();
+        if (apps.Count == 0)
+        {
+            Map.Children.Add(new TextBlock { Text = L.T("Нет программ с известным размером"), Style = (Style)FindResource("Caption") });
+            return;
+        }
+        var top = apps.Take(14).Select(a => (App: (InstalledApp?)a, Size: a.SizeBytes)).ToList();
+        if (apps.Skip(14).Sum(a => a.SizeBytes) is > 0 and var rest) top.Add((null, rest));
+        Split(top, new Rect(0, 0, Map.ActualWidth, Map.ActualHeight));
+    }
+
+    // ponytail: halves by size along the longer side, not squarified; fine for ~15 blocks
+    void Split(List<(InstalledApp? App, long Size)> items, Rect r)
+    {
+        if (items.Count == 1) { Block(items[0].App, items[0].Size, r); return; }
+        var total = (double)items.Sum(i => i.Size);
+        int cut = 1; double left = items[0].Size;
+        while (cut < items.Count - 1 && left + items[cut].Size <= total / 2) left += items[cut++].Size;
+        var share = left / total;
+        var (a, b) = r.Width >= r.Height
+            ? (new Rect(r.X, r.Y, r.Width * share, r.Height), new Rect(r.X + r.Width * share, r.Y, r.Width * (1 - share), r.Height))
+            : (new Rect(r.X, r.Y, r.Width, r.Height * share), new Rect(r.X, r.Y + r.Height * share, r.Width, r.Height * (1 - share)));
+        Split(items.GetRange(0, cut), a);
+        Split(items.GetRange(cut, items.Count - cut), b);
+    }
+
+    void Block(InstalledApp? app, long size, Rect r)
+    {
+        var on = app?.Checked == true;
+        var big = r.Width * r.Height > 9000;
+        var text = new StackPanel { Margin = new Thickness(10, 8, 26, 0) };
+        if (r.Width > 70 && r.Height > 36)
+        {
+            text.Children.Add(new TextBlock { Text = app?.Name ?? L.T("Остальные"), FontSize = 12.5, FontWeight = FontWeights.Medium, TextTrimming = TextTrimming.CharacterEllipsis });
+            if (r.Height > 52) text.Children.Add(new TextBlock { Text = Sys.Size(size), FontSize = 12, Opacity = 0.65 });
+        }
+        var cell = new Grid();
+        cell.Children.Add(text);
+        if (on)
+            cell.Children.Add(new Border
+            {
+                Width = 18, Height = 18, CornerRadius = new CornerRadius(9), Margin = new Thickness(0, 7, 7, 0),
+                HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top,
+                Background = (Brush)FindResource("OnPrimaryBrush"),
+                Child = new TextBlock { Text = "\uE73E", FontFamily = (FontFamily)FindResource("Icons"), FontSize = 10, Foreground = (Brush)FindResource("PrimaryBrush"),
+                                        HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
+            });
+        var b = new Border
+        {
+            Width = Math.Max(r.Width - 4, 0), Height = Math.Max(r.Height - 4, 0), CornerRadius = new CornerRadius(8), Child = cell,
+            Background = (Brush)FindResource(on ? "PrimaryBrush" : big ? "Surface3Brush" : "Surface2Brush"),
+            ToolTip = (app?.Name ?? L.T("Остальные")) + " · " + Sys.Size(size),
+            Cursor = app != null ? Cursors.Hand : null,
+        };
+        System.Windows.Documents.TextElement.SetForeground(b, (Brush)FindResource(on ? "OnPrimaryBrush" : "TextBrush"));
+        if (app != null)
+            b.MouseLeftButtonUp += (_, _) =>
+            {
+                app.Checked = !app.Checked;
+                Grid.Items.Refresh();
+                _bar();
+                DrawMap();
+            };
+        Canvas.SetLeft(b, r.X + 2);
+        Canvas.SetTop(b, r.Y + 2);
+        Map.Children.Add(b);
+    }
+
+    void RowMore_Click(object s, RoutedEventArgs e)
+    {
+        Grid.SelectedItem = ((FrameworkElement)s).DataContext;
+        if (!PrepareMenu()) return;
+        Grid.ContextMenu.PlacementTarget = (UIElement)s;
+        Grid.ContextMenu.IsOpen = true;
+    }
 
     InstalledApp? Selected => Grid.SelectedItem as InstalledApp;
 
@@ -75,13 +199,19 @@ public partial class UninstallerView : UserControl
 
     void Grid_ContextMenuOpening(object s, ContextMenuEventArgs e)
     {
-        if (Selected is not { } app) { e.Handled = true; return; }
+        if (!PrepareMenu()) e.Handled = true;
+    }
+
+    bool PrepareMenu()
+    {
+        if (Selected is not { } app) return false;
         MenuCheck.Header = app.Checked ? L.T("Снять выбор") : L.T("Выбрать");
         MenuFav.Header = app.Favorite ? L.T("Убрать из избранного") : L.T("В избранное");
         MenuFav.Tag = app.Favorite ? "\uE735" : "\uE734";
         var n = _all.Count(a => a.Checked);
         MenuUninstall.Header = n > 0 ? L.T($"Удалить отмеченные ({n})") : L.T("Удалить");
         MenuRun.IsEnabled = app.MainExe != null;
+        return true;
     }
 
     void Check_Click(object s, RoutedEventArgs e)
@@ -90,6 +220,7 @@ public partial class UninstallerView : UserControl
         app.Checked = !app.Checked;
         Grid.Items.Refresh();
         _bar();
+        DrawMap();
     }
 
     void Fav_Click(object s, RoutedEventArgs e)

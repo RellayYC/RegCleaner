@@ -108,6 +108,7 @@ public class SmokeTests
         void Check(object? o, string where) { if (o is string s && s != "Русский" && s.Any(c => c is >= 'А' and <= 'я' or 'ё' or 'Ё')) found.Add($"{where}: {s}"); }
         void Walk(object node)
         {
+            if (node is FrameworkElement { Tag: "data" }) return; // row data drawn outside a grid (treemap blocks)
             if (node is Window w) Check(w.Title, "Title");
             if (node is TextBlock t) Check(t.Text, "Text");
             if (node is DataGrid g) foreach (var c in g.Columns) Check(c.Header, "Column");
@@ -226,7 +227,7 @@ public class SmokeTests
         Pump();
         try
         {
-            Assert.Equal(5, menu.Items.OfType<MenuItem>().Count());
+            Assert.Equal(7, menu.Items.OfType<MenuItem>().Count());
             Assert.True(menu.ActualWidth >= 210, "menu template not applied");
             if (Environment.GetEnvironmentVariable("RK_SHOTS") is { Length: > 0 } dir) ShotOf(menu, Path.Combine(dir, $"menu-{theme}.png"));
         }
