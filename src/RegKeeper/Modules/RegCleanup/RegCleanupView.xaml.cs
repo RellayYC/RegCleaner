@@ -40,9 +40,10 @@ public partial class RegCleanupView : UserControl
             ? t.Date == DateTime.Today ? L.T($"Проверено сегодня в {t:HH:mm}") : L.T($"Проверено {t:d MMMM} в {t:HH:mm}")
             : L.T("Ещё не проверялось");
 
-    async Task Scan() => await Ui.Busy(this, async () =>
+    // cancelled: the previous result stays as it was
+    async Task Scan() => await Ui.Busy(this, async ct =>
     {
-        _all = await Task.Run(RegScanner.Scan);
+        _all = await Task.Run(() => RegScanner.Scan(ct));
         _scanned = true;
         Microsoft.Win32.Registry.SetValue(MainWindow.Key, "LastProblems", _all.Count.ToString());
         Microsoft.Win32.Registry.SetValue(MainWindow.Key, "LastScan", DateTime.Now.ToString("o"));

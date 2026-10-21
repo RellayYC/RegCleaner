@@ -13,22 +13,23 @@ public static class RegFile
 {
     public const string Header = "Windows Registry Editor Version 5.00";
 
-    public static string Export(IEnumerable<string> keys, bool recursive = true)
+    public static string Export(IEnumerable<string> keys, bool recursive = true, CancellationToken ct = default)
     {
         var sb = new StringBuilder(Header).Append("\r\n");
-        foreach (var k in keys) AppendKey(sb, Reg.Normalize(k), recursive);
+        foreach (var k in keys) AppendKey(sb, Reg.Normalize(k), recursive, ct);
         return sb.ToString();
     }
 
-    public static void AppendKey(StringBuilder sb, string path, bool recursive)
+    public static void AppendKey(StringBuilder sb, string path, bool recursive, CancellationToken ct = default)
     {
+        ct.ThrowIfCancellationRequested();
         using var k = Reg.Open(path);
         if (k == null) return;
         sb.Append("\r\n[").Append(path).Append("]\r\n");
         // sorted so exports are deterministic (registry enumeration order carries no meaning)
         foreach (var v in Reg.Values(k).OrderBy(v => v.Name, StringComparer.OrdinalIgnoreCase)) sb.Append(FormatValue(v)).Append("\r\n");
         if (recursive)
-            foreach (var sub in Reg.SubKeys(k).Order(StringComparer.OrdinalIgnoreCase)) AppendKey(sb, path + "\\" + sub, true);
+            foreach (var sub in Reg.SubKeys(k).Order(StringComparer.OrdinalIgnoreCase)) AppendKey(sb, path + "\\" + sub, true, ct);
     }
 
     public static void Save(string file, string text) => File.WriteAllText(file, text, Encoding.Unicode);

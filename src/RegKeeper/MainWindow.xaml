@@ -15,7 +15,7 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
 
-        <!-- title bar: the window title (Ui.Busy adds "Esc: отмена" to it), the command bar, the window buttons -->
+        <!-- title bar: the window title, the command bar, the window buttons -->
         <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" FontSize="13" Foreground="{DynamicResource MutedBrush}"
                    Margin="20,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
         <!-- Ctrl+K: one box for programs, registry keys and tweaks; it hands the text to the module's own search -->
@@ -189,6 +189,24 @@
         <!-- the outgoing page as a picture while it fades (Motion.SwapPage) -->
         <Image x:Name="Ghost" Grid.Column="2" Margin="{StaticResource PagePad}" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Top"
                IsHitTestVisible="False" Visibility="Collapsed"/>
+
+        <!-- stops whatever cancellable job runs (Ui.Busy with a token), same as Esc -->
+        <Border x:Name="CancelPill" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,12,0,0" Visibility="Collapsed">
+            <Grid>
+            <Border CornerRadius="{StaticResource RControl}" Background="{DynamicResource BarBrush}" Effect="{DynamicResource BarShadow}"/>
+            <Button x:Name="CancelBtn" Style="{StaticResource Ghost}" Margin="0" Padding="12,0,8,0" BorderBrush="{DynamicResource BarEdgeBrush}"
+                    Background="{DynamicResource BarBrush}" Foreground="{DynamicResource TextBrush}" Focusable="False"
+                    AutomationProperties.Name="Отмена" Click="Cancel_Click">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xE711;" FontFamily="{StaticResource Icons}" FontSize="12" Margin="0,0,9,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Отмена" VerticalAlignment="Center"/>
+                    <Border Margin="10,0,0,0" Padding="7,2" CornerRadius="6" Background="{DynamicResource Surface2Brush}" VerticalAlignment="Center">
+                        <TextBlock Text="Esc" FontSize="11.5" Foreground="{DynamicResource FaintBrush}"/>
+                    </Border>
+                </StackPanel>
+            </Button>
+            </Grid>
+        </Border>
 
         <!-- a new version found by the background check (MainWindow.CheckUpdate); the cross hides it until the next check -->
         <Border x:Name="UpdateToast" Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,12,20,0" Width="300"

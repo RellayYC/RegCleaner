@@ -127,7 +127,7 @@ public partial class DiskCleanupView : UserControl
             if (Interlocked.Exchange(ref pending, 1) == 0)
                 Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, () => { pending = 0; Refresh(); });
         }
-        // Esc stops starting new rules; rules already being walked finish, the rest stay unanalyzed.
+        // Cancel (Esc or the pill) stops the walks under way too, DISM included; every unfinished rule stays unanalyzed.
         // DISM first (minutes), and no chunking: one big folder must not hold back the rules queued behind it.
         await Ui.Busy(Actions, ct => Task.Run(() =>
         {
@@ -135,7 +135,8 @@ public partial class DiskCleanupView : UserControl
             var queue = System.Collections.Concurrent.Partitioner.Create(rules.OrderByDescending(r => r.ComponentStore), System.Collections.Concurrent.EnumerablePartitionerOptions.NoBuffering);
             Parallel.ForEach(queue, new ParallelOptions { CancellationToken = ct }, r =>
             {
-                Winapp2.Analyze(r, ignore);
+                try { Winapp2.Analyze(r, ignore, ct); }
+                catch (OperationCanceledException) { return; }
                 Done();
             });
         }));
@@ -188,7 +189,7 @@ public partial class DiskCleanupView : UserControl
     async void Download_Click(object s, RoutedEventArgs e)
     {
         var count = 0;
-        await Ui.Busy(this, async () => count = await Winapp2.Download());
+        await Ui.Busy(this, async ct => count = await Winapp2.Download(ct));
         if (count == 0) return;
         Ui.Info(L.T($"winapp2.ini обновлён, правил в базе: {count}."));
         await Reload();

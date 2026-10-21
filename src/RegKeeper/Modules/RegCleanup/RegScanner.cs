@@ -29,17 +29,19 @@ public static class RegScanner
     const string Wow = @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion";
     public static readonly string IgnorePath = Path.Combine(AppPaths.Data, "regignore.txt");
 
-    public static List<RegIssue> Scan()
+    public static List<RegIssue> Scan(CancellationToken ct = default)
     {
         var ignore = LoadIgnore();
         var checks = new Func<IEnumerable<RegIssue>>[]
         {
             Uninstall, AppPathKeys, SharedDlls, MuiCache, Run, InstallerFolders, Applications, Firewall,
-            () => Com(Hklm + @"SOFTWARE\Classes\CLSID"), () => Com(Hklm + @"SOFTWARE\WOW6432Node\Classes\CLSID"),
-            () => Com(Hkcu + @"Software\Classes\CLSID"), TypeLibs,
+            () => Com(Hklm + @"SOFTWARE\Classes\CLSID", ct), () => Com(Hklm + @"SOFTWARE\WOW6432Node\Classes\CLSID", ct),
+            () => Com(Hkcu + @"Software\Classes\CLSID", ct), () => TypeLibs(ct),
         };
-        return checks.AsParallel().SelectMany(c => c().ToList()).Where(i => !ignore.Contains(i.Id))
+        var list = checks.AsParallel().SelectMany(c => c().ToList()).Where(i => !ignore.Contains(i.Id))
             .OrderBy(i => i.Category).ThenBy(i => i.Key).ToList();
+        ct.ThrowIfCancellationRequested(); // a cut-short walk is never shown as the result
+        return list;
     }
 
     static IEnumerable<RegIssue> Uninstall()
@@ -125,10 +127,11 @@ public static class RegScanner
     static string As32(string s) => s.Replace("%ProgramFiles%", "%ProgramFiles(x86)%", StringComparison.OrdinalIgnoreCase)
         .Replace("%CommonProgramFiles%", "%CommonProgramFiles(x86)%", StringComparison.OrdinalIgnoreCase);
 
-    static IEnumerable<RegIssue> Com(string clsidRoot)
+    // COM and TypeLib walk thousands of keys: they are the ones that look at the token
+    static IEnumerable<RegIssue> Com(string clsidRoot, CancellationToken ct)
     {
         var wow = clsidRoot.Contains("WOW6432Node");
-        foreach (var clsid in Reg.SubKeys(clsidRoot))
+        foreach (var clsid in Reg.SubKeys(clsidRoot).TakeWhile(_ => !ct.IsCancellationRequested))
             foreach (var server in new[] { "InprocServer32", "LocalServer32" })
                 if (Reg.GetString($@"{clsidRoot}\{clsid}\{server}", "") is { } path && MissingNonSystem(path) && !(wow && !MissingNonSystem(As32(path))))
                 {
@@ -138,10 +141,10 @@ public static class RegScanner
     }
 
     /// <summary>TypeLib\{guid}\{version}\{lcid}\win32|win64 → file. A version is broken when none of its files exist.</summary>
-    static IEnumerable<RegIssue> TypeLibs()
+    static IEnumerable<RegIssue> TypeLibs(CancellationToken ct)
     {
         var root = Hklm + @"SOFTWARE\Classes\TypeLib"; // shared between views, WOW6432Node\Classes\TypeLib is the same key
-        foreach (var guid in Reg.SubKeys(root))
+        foreach (var guid in Reg.SubKeys(root).TakeWhile(_ => !ct.IsCancellationRequested))
                 foreach (var ver in Reg.SubKeys($@"{root}\{guid}"))
                 {
                     var verKey = $@"{root}\{guid}\{ver}";

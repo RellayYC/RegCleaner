@@ -396,7 +396,6 @@
  "Удалена запись: ": "Removed entry: ",
  "Папка программы неизвестна или не существует.": "The program folder is unknown or does not exist.",
  "Название;Издатель;Версия;Размер, байт;Установлено;Папка;Ключ": "Name;Publisher;Version;Size, bytes;Installed;Folder;Key",
- " - Esc: отмена": " - Esc: cancel",
  "Отмена": "Cancel",
  "RegKeeper: контроль автозагрузки": "RegKeeper: startup monitor",
  "Открыть автозагрузку": "Open startup",

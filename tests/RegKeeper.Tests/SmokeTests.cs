@@ -63,6 +63,7 @@ public class SmokeTests
                 ShowSnapshots(views.OfType<SnapshotsView>().Single());
                 ShowTweaks(views.OfType<TweaksView>().Single());
                 UpdateToastComesBack(win, $"{theme} {lang}");
+                CancelPillStops(win, (UserControl)host.Content,$"{theme} {lang}");
                 SnapLayoutsHitTest(win);
                 if (theme == Theme.Dark) DialogKeys(win, lang);
                 if (lang == L.En && Russian(win, views) is { Count: > 0 } ru) Assert.Fail("untranslated:\n" + string.Join("\n", ru));
@@ -277,6 +278,26 @@ public class SmokeTests
         Assert.Equal(9, (int)SendMessage(hwnd, 0x84, IntPtr.Zero, lp));
     }
 
+    /// <summary>A job that would never end on its own: the pill shows while it runs, its click ends it as cancelled, the pill goes.</summary>
+    static void CancelPillStops(MainWindow win, UserControl view, string where)
+    {
+        var pill = (Border)win.FindName("CancelPill");
+        Assert.False(pill.IsVisible, $"{where}: cancel pill shown with nothing running");
+        var job = Ui.Busy(view, ct => Task.Delay(Timeout.Infinite, ct));
+        Pump();
+        Assert.True(pill.IsVisible && !view.IsEnabled, $"{where}: cancel pill not shown during a cancellable job");
+        var corner = pill.TranslatePoint(new Point(pill.ActualWidth / 2, 0), (FrameworkElement)win.Content);
+        Assert.True(Math.Abs(corner.X - view.TranslatePoint(new Point(view.ActualWidth / 2, 0), (FrameworkElement)win.Content).X) < 40 && corner.Y < 80,
+            $"{where}: cancel pill at {corner}, not top centre of the page");
+        ((IInvokeProvider)new ButtonAutomationPeer((Button)win.FindName("CancelBtn")).GetPattern(PatternInterface.Invoke)).Invoke();
+        var sw = Stopwatch.StartNew();
+        while (!job.IsCompleted && sw.Elapsed < TimeSpan.FromSeconds(5)) { Thread.Sleep(20); Pump(); }
+        Assert.True(job.IsCompleted, $"{where}: the cancel click did not end the job");
+        Assert.False(job.Result, $"{where}: a cancelled job reported as done");
+        Pump();
+        Assert.True(!pill.IsVisible && view.IsEnabled, $"{where}: pill left on or page left disabled after cancel");
+    }
+
     static void UpdateToastComesBack(MainWindow win, string where)
     {
         var toast = (Border)win.FindName("UpdateToast");
@@ -329,11 +350,10 @@ public class SmokeTests
         var win = new Window { Title = "T", Content = owner, Left = -20000, ShowInTaskbar = false };
         win.Show();
         var done = false;
-        string? busyTitle = null;
         _ = Run();
         async Task Run()
         {
-            await Ui.Busy(owner, async ct => { busyTitle = win.Title; await Task.Delay(-1, ct); });
+            await Ui.Busy(owner, async ct => await Task.Delay(-1, ct));
             done = true;
         }
         Pump();
@@ -343,7 +363,6 @@ public class SmokeTests
         try
         {
             Assert.True(done, "Esc did not cancel");
-            Assert.Contains("Esc", busyTitle);
             Assert.Equal("T", win.Title);
             Assert.True(owner.IsEnabled);
             Assert.Empty(problems);

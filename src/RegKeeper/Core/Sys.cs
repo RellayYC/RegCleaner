@@ -88,14 +88,14 @@ public static partial class Sys
         _ => L.T($"{bytes / 1024.0 / 1024 / 1024:0.##} ГБ")
     };
 
-    public static long DirSize(string dir)
+    public static long DirSize(string dir, CancellationToken ct = default)
     {
         try
         {
             return new DirectoryInfo(dir).EnumerateFiles("*", new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true, AttributesToSkip = FileAttributes.ReparsePoint })
-                .Sum(f => f.Length);
+                .Sum(f => { ct.ThrowIfCancellationRequested(); return f.Length; });
         }
-        catch { return 0; }
+        catch (Exception e) when (e is not OperationCanceledException) { return 0; }
     }
 
     /// <summary>Moves files/folders to the Recycle Bin (silent). Returns false if the shell refused or a path is protected.</summary>

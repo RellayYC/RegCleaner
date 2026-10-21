@@ -329,6 +329,28 @@ public partial class MainWindow : Window
             { RepeatBehavior = RepeatBehavior.Forever, EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut } });
     }
 
+    readonly List<CancellationTokenSource> _cancels = new();
+
+    /// <summary>Ui.Busy with a token: the "Отмена" pill shows while any such job runs and stops them all.</summary>
+    internal void AddCancel(CancellationTokenSource cts)
+    {
+        _cancels.Add(cts);
+        CancelBtn.IsEnabled = true;
+        CancelPill.Visibility = Visibility.Visible;
+    }
+
+    internal void RemoveCancel(CancellationTokenSource cts)
+    {
+        _cancels.Remove(cts);
+        if (_cancels.Count == 0) CancelPill.Visibility = Visibility.Collapsed;
+    }
+
+    void Cancel_Click(object sender, RoutedEventArgs e)
+    {
+        _cancels.ForEach(c => c.Cancel());
+        CancelBtn.IsEnabled = false; // the job ends at its next check; one click is enough
+    }
+
     internal const string Key = @"HKEY_CURRENT_USER\Software\RegKeeper";
 
     /// <summary>Closing the window hides it to the tray instead of quitting; off by default. HKCU\Software\RegKeeper\CloseToTray.</summary>

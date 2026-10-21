@@ -53,7 +53,7 @@ public static partial class Leftovers
         "oracle", "mozilla", "classes", "policies", "wow6432node", "commonfiles", "packages", "temp", "programs",
     };
 
-    public static List<Leftover> Find(InstalledApp app, IEnumerable<InstalledApp> others)
+    public static List<Leftover> Find(InstalledApp app, IEnumerable<InstalledApp> others, CancellationToken ct = default)
     {
         var names = NameTokens(app.Name, app.Publisher);
         var pubs = PublisherTokens(app.Publisher);
@@ -64,15 +64,16 @@ public static partial class Leftovers
 
         var installDir = app.InstallDir;
         if (installDir != null && Directory.Exists(installDir) && !IsUsedByOthers(installDir, otherDirs))
-            result.Add(new Leftover { Kind = "Папка", Path = installDir, Size = Sys.DirSize(installDir) }); // i18n: keep
+            result.Add(new Leftover { Kind = "Папка", Path = installDir, Size = Sys.DirSize(installDir, ct) }); // i18n: keep
 
         foreach (var dir in FindFolders(FolderBases, names, pubs, vendorShared))
             if (!result.Any(r => IsSameOrInside(dir, r.Path)) && !IsUsedByOthers(dir, otherDirs))
             {
                 result.RemoveAll(r => IsSameOrInside(r.Path, dir));
-                result.Add(new Leftover { Kind = "Папка", Path = dir, Size = Sys.DirSize(dir) }); // i18n: keep
+                result.Add(new Leftover { Kind = "Папка", Path = dir, Size = Sys.DirSize(dir, ct) }); // i18n: keep
             }
 
+        ct.ThrowIfCancellationRequested();
         foreach (var key in FindKeys(names, pubs, vendorShared))
             result.Add(new Leftover { Kind = "Ключ реестра", Path = key }); // i18n: keep
         if (Reg.Exists(app.KeyPath))

@@ -85,35 +85,32 @@ public static class Ui
         }
     }
 
-    /// <summary>Busy that Esc cancels (the window title says so); a cancelled run is not an error.</summary>
-    public static async Task Busy(FrameworkElement owner, Func<CancellationToken, Task> work)
+    /// <summary>Busy that Esc or the window's "Отмена" pill cancels; a cancelled run is not an error.
+    /// True when the work ran to the end (not cancelled, no error).</summary>
+    public static async Task<bool> Busy(FrameworkElement owner, Func<CancellationToken, Task> work)
     {
         using var cts = new CancellationTokenSource();
         var w = Window.GetWindow(owner);
         KeyEventHandler esc = (_, e) => { if (e.Key == Key.Escape) cts.Cancel(); };
-        var title = w?.Title;
-        if (w != null)
-        {
-            w.PreviewKeyDown += esc;
-            w.Title = title + L.T(" - Esc: отмена");
-        }
+        var main = w as MainWindow;
+        if (w != null) w.PreviewKeyDown += esc;
+        main?.AddCancel(cts);
+        var done = false;
         try
         {
             await Busy(owner, async () =>
             {
                 if (w != null) Keyboard.Focus(w); // the focused control is disabled now; keys must still reach the window
-                try { await work(cts.Token); }
+                try { await work(cts.Token); done = true; }
                 catch (OperationCanceledException) when (cts.IsCancellationRequested) { }
             });
         }
         finally
         {
-            if (w != null)
-            {
-                w.PreviewKeyDown -= esc;
-                w.Title = title;
-            }
+            if (w != null) w.PreviewKeyDown -= esc;
+            main?.RemoveCancel(cts);
         }
+        return done;
     }
 
     /// <summary>Text prompt; multiline for REG_MULTI_SZ and the like.</summary>

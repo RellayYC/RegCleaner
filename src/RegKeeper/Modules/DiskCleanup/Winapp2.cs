@@ -233,17 +233,17 @@ public static partial class Winapp2
     public static void SaveChecked(IEnumerable<CleanRule> rules) =>
         File.WriteAllLines(CheckedPath, rules.Where(r => r.Checked).Select(r => r.Key));
 
-    public static async Task<int> Download()
+    public static async Task<int> Download(CancellationToken ct = default)
     {
         // 1.7 MB: the default 100 s is not enough on a slow link
         using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
         string text;
-        try { text = await http.GetStringAsync(Url); }
-        catch (Exception e) when (e is HttpRequestException or TaskCanceledException)
+        try { text = await http.GetStringAsync(Url, ct); }
+        catch (Exception e) when (e is HttpRequestException or TaskCanceledException && !ct.IsCancellationRequested)
         { throw new IOException(L.T("Не удалось скачать winapp2.ini с GitHub, проверьте подключение к интернету.\n") + e.Message, e); }
         var count = Parse(text).Count;
         if (count < 500) throw new InvalidDataException(L.T($"Загруженный файл не похож на winapp2.ini (правил: {count})."));
-        await File.WriteAllTextAsync(IniPath, text);
+        await File.WriteAllTextAsync(IniPath, text, CancellationToken.None); // never half a file
         return count;
     }
 
@@ -323,14 +323,15 @@ public static partial class Winapp2
     static bool IsRoot(string dir) =>
         dir.TrimEnd('\\').Length <= 3 || Vars.Values.SelectMany(v => v).Any(v => v.TrimEnd('\\').Equals(dir.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase));
 
-    /// <summary>Fills Found/Size/Count, then flags the rule analyzed, so a row reading it mid-walk never sees half a list.</summary>
-    public static void Analyze(CleanRule r, IReadOnlyList<string> ignore)
+    /// <summary>Fills Found/Size/Count, then flags the rule analyzed, so a row reading it mid-walk never sees half a list.
+    /// A cancelled walk throws and leaves the rule unanalyzed.</summary>
+    public static void Analyze(CleanRule r, IReadOnlyList<string> ignore, CancellationToken ct = default)
     {
-        Walk(r, ignore);
+        Walk(r, ignore, ct);
         r.Analyzed = true;
     }
 
-    static void Walk(CleanRule r, IReadOnlyList<string> ignore)
+    static void Walk(CleanRule r, IReadOnlyList<string> ignore, CancellationToken ct)
     {
         if (r.RecycleBin)
         {
@@ -341,7 +342,7 @@ public static partial class Winapp2
         }
         if (r.ComponentStore)
         {
-            try { (r.Size, r.Count) = ParseComponentStore(Dism("/AnalyzeComponentStore")); }
+            try { (r.Size, r.Count) = ParseComponentStore(Dism("/AnalyzeComponentStore", ct)); }
             catch (IOException) { (r.Size, r.Count) = (0, 0); }
             return;
         }
@@ -354,8 +355,9 @@ public static partial class Winapp2
             foreach (var dir in ExpandVars(fk.Dir).SelectMany(d => Glob(d)))
             {
                 List<FileInfo> list;
-                try { list = new DirectoryInfo(dir).EnumerateFiles("*", fk.Recurse || fk.RemoveSelf ? Deep : Shallow).ToList(); }
-                catch { continue; }
+                try { list = new DirectoryInfo(dir).EnumerateFiles("*", fk.Recurse || fk.RemoveSelf ? Deep : Shallow)
+                        .Select(f => { ct.ThrowIfCancellationRequested(); return f; }).ToList(); }
+                catch (Exception e) when (e is not OperationCanceledException) { continue; }
                 foreach (var f in list)
                     if (fk.Patterns.Any(p => FileSystemName.MatchesSimpleExpression(p, f.Name))
                         && !excl.Any(x => x.IsMatch(f.FullName)) && !ignore.Any(i => Leftovers.IsSameOrInside(f.FullName, i))
@@ -468,15 +470,18 @@ public static partial class Winapp2
             throw new UnauthorizedAccessException($"{path}: {new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()).Message}");
     }
 
-    /// <summary>dism.exe /Online /Cleanup-Image with a fixed operation; English output so it can be parsed.</summary>
-    internal static string Dism(string op)
+    /// <summary>dism.exe /Online /Cleanup-Image with a fixed operation; English output so it can be parsed.
+    /// Cancelling kills dism and its DismHost; only the read-only analysis passes a token.</summary>
+    internal static string Dism(string op, CancellationToken ct = default)
     {
         var psi = new System.Diagnostics.ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "dism.exe"))
             { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
         foreach (var a in new[] { "/English", "/Online", "/Cleanup-Image", op }) psi.ArgumentList.Add(a);
         using var p = System.Diagnostics.Process.Start(psi)!;
+        using var kill = ct.Register(() => { try { p.Kill(true); } catch (InvalidOperationException) { } });
         var output = p.StandardOutput.ReadToEnd();
         p.WaitForExit();
+        ct.ThrowIfCancellationRequested();
         return p.ExitCode == 0 ? output : throw new IOException(L.T($"DISM {op}: код {p.ExitCode}\n{output.Trim()}"));
     }
 

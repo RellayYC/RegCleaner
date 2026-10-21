@@ -294,9 +294,10 @@ public partial class UninstallerView : UserControl
     async Task ScanAndClean(InstalledApp app)
     {
         List<Leftover> found = new();
-        await Ui.Busy(this, async () => found = await Task.Run(() => Leftovers.Find(app, _all)));
-        if (found.Count == 0) Ui.Info(L.T("Следов программы не найдено."));
-        else if (ChecklistWindow.Ask(L.T("Оставшиеся следы: ") + app.Name,
+        // cancelled or failed: nothing offered, the list still reloads (the uninstaller may have run)
+        var ok = await Ui.Busy(this, async ct => found = await Task.Run(() => Leftovers.Find(app, _all, ct)));
+        if (ok && found.Count == 0) Ui.Info(L.T("Следов программы не найдено."));
+        else if (ok && ChecklistWindow.Ask(L.T("Оставшиеся следы: ") + app.Name,
                      L.T("Найденные папки и ключи. Проверьте список: папки уйдут в корзину, ключи реестра можно вернуть в Центре отмены."), found))
         {
             var (done, failed) = Leftovers.Remove(found, L.T("Удаление: ") + app.Name);

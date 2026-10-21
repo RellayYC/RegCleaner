@@ -180,13 +180,13 @@ public partial class RegEditorView : UserControl
 
     void SelectParent() { if (_path?.Contains('\\') == true) _path = Reg.Parent(_path); }
 
-    // a whole hive takes minutes to export: off the UI thread, so the window stays alive
+    // a whole hive takes minutes to export: off the UI thread, so the window stays alive; cancelled = no file written
     async void Export_Click(object s, RoutedEventArgs e)
     {
         if (Current is not { } path) return;
         var dlg = new SaveFileDialog { Filter = L.T("Файлы реестра (*.reg)|*.reg"), FileName = Reg.Leaf(path) + ".reg" };
         if (dlg.ShowDialog() != true) return;
-        await Ui.Busy(this, () => Task.Run(() => RegFile.Save(dlg.FileName, RegFile.Export(new[] { path }))));
+        await Ui.Busy(this, ct => Task.Run(() => RegFile.Save(dlg.FileName, RegFile.Export(new[] { path }, ct: ct))));
     }
 
     void Import_Click(object s, RoutedEventArgs e)
