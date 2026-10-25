@@ -9,8 +9,18 @@
     <ApplicationIcon>..\RegKeeper\Assets\RegKeeper.ico</ApplicationIcon>
   </PropertyGroup>
 
+  <!-- the few WPF-free files it needs, compiled in rather than a reference to RegKeeper.dll: that one pulled the whole WPF
+       runtime into the tray process (and into this exe) -->
   <ItemGroup>
-    <ProjectReference Include="..\RegKeeper\RegKeeper.csproj" />
+    <Compile Include="..\RegKeeper\Core\Reg.cs" Link="Shared\Reg.cs" />
+    <Compile Include="..\RegKeeper\Core\Sys.cs" Link="Shared\Sys.cs" />
+    <Compile Include="..\RegKeeper\Core\Protect.cs" Link="Shared\Protect.cs" />
+    <Compile Include="..\RegKeeper\L.cs" Link="Shared\L.cs" />
+    <Compile Include="..\RegKeeper\Modules\Startup\RunEntries.cs" Link="Shared\RunEntries.cs" />
+    <Compile Include="..\RegKeeper\Modules\Startup\StartupWatch.cs" Link="Shared\StartupWatch.cs" />
+    <None Include="..\RegKeeper\Data\en.json" Link="Data\en.json" CopyToOutputDirectory="PreserveNewest" />
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
   </ItemGroup>
 
 </Project>
