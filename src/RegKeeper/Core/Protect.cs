@@ -67,6 +67,9 @@ public static class Protect
 
     static readonly string[] SystemBinaries = { ".exe", ".dll", ".sys", ".mui", ".efi", ".ocx", ".cpl", ".drv" };
 
+    static readonly Lazy<string> Windows = new(() => Full(Environment.GetFolderPath(Environment.SpecialFolder.Windows)));
+
+    // disk cleanup asks this for every file it deletes, so nothing here allocates per folder compared
     public static bool IsProtectedPath(string path)
     {
         if (string.IsNullOrWhiteSpace(path)) return true;
@@ -74,12 +77,12 @@ public static class Protect
         if (Path.GetPathRoot(path) is { } root && Same(Full(root), path)) return true;
         if (Folders.Value.Any(f => Same(f, path) || Inside(f, path))) return true;
         if (SealedFolders.Value.Any(f => Same(f, path) || Inside(path, f))) return true;
-        var windows = Full(Environment.GetFolderPath(Environment.SpecialFolder.Windows));
-        return Inside(path, windows) && SystemBinaries.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
+        return Inside(path, Windows.Value) && SystemBinaries.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
     }
 
     static string Full(string p) => Path.GetFullPath(p).TrimEnd('\\');
     static bool Same(string a, string b) => a.Equals(b, StringComparison.OrdinalIgnoreCase);
     /// <summary>Is <paramref name="inner"/> strictly inside <paramref name="outer"/>.</summary>
-    static bool Inside(string inner, string outer) => inner.StartsWith(outer + "\\", StringComparison.OrdinalIgnoreCase);
+    static bool Inside(string inner, string outer) =>
+        inner.Length > outer.Length && inner[outer.Length] == '\\' && inner.StartsWith(outer, StringComparison.OrdinalIgnoreCase);
 }

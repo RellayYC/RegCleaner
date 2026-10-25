@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.Windows;
 using System.Text.RegularExpressions;
 using System.Windows.Controls;
@@ -12,7 +11,7 @@ namespace RegKeeper.Modules;
 
 public partial class RegSearchView : UserControl
 {
-    readonly ObservableCollection<SearchHit> _hits = new();
+    readonly HitList _hits = new();
     readonly Action _bar;
     CancellationTokenSource? _cts;
     SearchOptions? _last;
@@ -93,7 +92,9 @@ public partial class RegSearchView : UserControl
         var buffer = new List<SearchHit>();
         void Flush()
         {
-            lock (buffer) { buffer.ForEach(_hits.Add); buffer.Clear(); }
+            List<SearchHit> batch;
+            lock (buffer) { batch = buffer.ToList(); buffer.Clear(); } // the grid takes them outside the lock, the walk never waits on it
+            batch.ForEach(_hits.Add);
             ScannedText.Text = search.Scanned.ToString("N0");
             FoundText.Text = _hits.Count.ToString("N0");
             _bar();
@@ -152,7 +153,7 @@ public partial class RegSearchView : UserControl
             if (tx.Errors.Count > 0) Ui.Info(L.T("Не удалось:\n") + string.Join("\n", tx.Errors.Take(20)));
         }
         catch (Exception ex) { Ui.Error(ex); }
-        done.ForEach(h => _hits.Remove(h));
+        _hits.RemoveAll(done);
         _bar();
     }
 

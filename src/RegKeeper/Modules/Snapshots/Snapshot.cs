@@ -110,9 +110,12 @@ public static class Snapshot
         catch { File.Delete(file); throw; }
     }
 
+    // buffered both ways: BinaryWriter/Reader hand gzip a few bytes per call, and each call is a round trip into zlib
+    const int BufferSize = 1 << 16;
+
     static BinaryWriter Writer(string file, string note, IEnumerable<string> roots)
     {
-        var w = new BinaryWriter(new GZipStream(File.Create(file), CompressionLevel.Fastest), Encoding.UTF8);
+        var w = new BinaryWriter(new BufferedStream(new GZipStream(File.Create(file), CompressionLevel.Fastest), BufferSize), Encoding.UTF8);
         w.Write(Magic);
         w.Write(note);
         w.Write(DateTime.Now.Ticks);
@@ -186,7 +189,7 @@ public static class Snapshot
 
     static BinaryReader Reader(string file, out SnapInfo info)
     {
-        var r = new BinaryReader(new GZipStream(File.OpenRead(file), CompressionMode.Decompress), Encoding.UTF8);
+        var r = new BinaryReader(new BufferedStream(new GZipStream(File.OpenRead(file), CompressionMode.Decompress), BufferSize), Encoding.UTF8);
         if (r.ReadString() != Magic) { r.Dispose(); throw new InvalidDataException(L.T("Не снимок RegKeeper: ") + file); }
         var note = r.ReadString();
         var date = new DateTime(r.ReadInt64());
