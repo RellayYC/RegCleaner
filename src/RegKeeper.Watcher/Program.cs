@@ -18,9 +18,10 @@ static class Program
         if (!first) return;
         ApplicationConfiguration.Initialize();
 
-        var known = File.Exists(StateFile)
-            ? new HashSet<string>(File.ReadAllLines(StateFile), StringComparer.OrdinalIgnoreCase)
-            : Save(StartupWatch.Ids(Autoruns.RunAndFolders()));
+        var fresh = !File.Exists(StateFile);
+        var known = fresh ? StartupWatch.Ids(Autoruns.RunAndFolders())
+            : new HashSet<string>(File.ReadAllLines(StateFile), StringComparer.OrdinalIgnoreCase);
+        var unsaved = fresh && !Save(known);
 
         using var tray = new NotifyIcon
         {
@@ -42,8 +43,9 @@ static class Program
             try { current = Autoruns.RunAndFolders().ToList(); }
             catch { return; }
             var added = StartupWatch.Added(current, known);
-            known = StartupWatch.Ids(current);
-            Save(known);
+            var ids = StartupWatch.Ids(current);
+            if (unsaved || !ids.SetEquals(known)) unsaved = !Save(ids); // written on a change (or after a failed write), not every tick
+            known = ids;
             if (added.Count == 0) return;
             tray.ShowBalloonTip(10000, L.T("Новая программа в автозагрузке"),
                 string.Join("\n", added.Select(a => $"{a.Name}: {a.Command}")) + L.T("\nНажмите, чтобы проверить."), ToolTipIcon.Warning);
@@ -53,15 +55,15 @@ static class Program
         tray.Visible = false;
     }
 
-    static HashSet<string> Save(HashSet<string> ids)
+    static bool Save(HashSet<string> ids)
     {
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(StateFile)!);
             File.WriteAllLines(StateFile, ids);
+            return true;
         }
-        catch { /* next tick retries */ }
-        return ids;
+        catch { return false; } // next tick retries
     }
 
     static void OpenStartup()

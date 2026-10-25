@@ -57,23 +57,28 @@ public static class RegFile
         var all = Encoding.Unicode.GetString(data);
         if (all[^1] != '\0') return false;
         s = all[..^1];
-        return s.IndexOfAny(new[] { '\0', '\r', '\n' }) < 0;
+        return s.AsSpan().IndexOfAny('\0', '\r', '\n') < 0;
     }
 
+    const string HexDigits = "0123456789abcdef";
+
+    // straight into one buffer: a string per byte made a 1 MB value cost a million allocations
     static string WrapHex(byte[] data, int firstLineUsed)
     {
-        var sb = new StringBuilder();
+        var sb = new StringBuilder(data.Length * 3 + data.Length / 8 + 8);
         var col = firstLineUsed;
         for (var i = 0; i < data.Length; i++)
         {
-            var piece = data[i].ToString("x2") + (i < data.Length - 1 ? "," : "");
-            if (col + piece.Length > 78 && i < data.Length - 1)
+            var last = i == data.Length - 1;
+            var width = last ? 2 : 3;
+            if (col + width > 78 && !last)
             {
                 sb.Append("\\\r\n  ");
                 col = 2;
             }
-            sb.Append(piece);
-            col += piece.Length;
+            sb.Append(HexDigits[data[i] >> 4]).Append(HexDigits[data[i] & 15]);
+            if (!last) sb.Append(',');
+            col += width;
         }
         return sb.ToString();
     }
@@ -86,9 +91,14 @@ public static class RegFile
         for (var i = 0; i < lines.Length; i++)
         {
             var line = lines[i].Trim();
-            // hex data continues on the next line after a trailing backslash
-            while (line.EndsWith('\\') && line.Contains("=hex", StringComparison.OrdinalIgnoreCase) && i + 1 < lines.Length)
-                line = line[..^1] + lines[++i].Trim();
+            // hex data continues on the next line after a trailing backslash; joined in one builder, since re-concatenating
+            // the growing line made a 1 MB value (40 000 lines) take over a minute
+            if (line.EndsWith('\\') && line.Contains("=hex", StringComparison.OrdinalIgnoreCase) && i + 1 < lines.Length)
+            {
+                var sb = new StringBuilder(line);
+                while (sb.Length > 0 && sb[sb.Length - 1] == '\\' && i + 1 < lines.Length) sb.Remove(sb.Length - 1, 1).Append(lines[++i].Trim());
+                line = sb.ToString();
+            }
             if (line == "" || line.StartsWith(';') || line.StartsWith(Header) || line == "REGEDIT4") continue;
 
             if (line.StartsWith('[') && line.EndsWith(']'))
@@ -153,9 +163,22 @@ public static class RegFile
             hex = rest[(close + 2)..];
         }
         else throw new FormatException(L.T("Неизвестный формат данных: ") + rest);
-        var bytes = hex.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(b => byte.Parse(b, NumberStyles.HexNumber)).ToArray();
-        return new RawValue(name, type, bytes);
+        return new RawValue(name, type, ParseHex(hex));
+    }
+
+    /// <summary>"00, ff,1a" → bytes; empty entries are skipped. Reads in place: a string per byte made big values crawl.</summary>
+    static byte[] ParseHex(string hex)
+    {
+        var bytes = new List<byte>(hex.Length / 3 + 1);
+        var rest = hex.AsSpan();
+        while (true)
+        {
+            var comma = rest.IndexOf(',');
+            var b = (comma < 0 ? rest : rest[..comma]).Trim();
+            if (!b.IsEmpty) bytes.Add(byte.Parse(b, NumberStyles.HexNumber));
+            if (comma < 0) return bytes.ToArray();
+            rest = rest[(comma + 1)..];
+        }
     }
 
     /// <summary>Applies parsed ops through an undo transaction (so an import can be rolled back).</summary>

@@ -142,7 +142,8 @@ public static class Reg
         return k == null ? null : GetString(k, name);
     }
 
-    public static RawValue? Read(RegistryKey k, string name)
+    /// <summary>Raw value; with <paramref name="wanted"/>, values of other types are skipped (null) before their data is fetched.</summary>
+    public static RawValue? Read(RegistryKey k, string name, Func<uint, bool>? wanted = null)
     {
         SafeRegistryHandle h;
         try { h = k.Handle; } // throws on some protected keys (e.g. under HKLM\SECURITY)
@@ -150,6 +151,7 @@ public static class Reg
         uint size = 0;
         var rc = RegQueryValueExW(h, name, IntPtr.Zero, out var type, null, ref size);
         if (rc != 0 && rc != ErrorMoreData) return null;
+        if (wanted != null && !wanted(type)) return null;
         while (true)
         {
             var buf = new byte[size];

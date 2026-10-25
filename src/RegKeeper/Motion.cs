@@ -393,7 +393,7 @@ public static class Motion
     {
         readonly Border b; readonly RadialGradientBrush br; readonly UIElement host;
         Point at, to;
-        bool tracking;
+        bool tracking, lit;
 
         public Light(Border b, RadialGradientBrush br, UIElement host)
         {
@@ -423,10 +423,16 @@ public static class Motion
             at = to = Pos(e);
             Place();
             b.BeginAnimation(UIElement.OpacityProperty, A(1, "TSpotIn", "EaseEnter"));
+            lit = true;
             Track(On);
         }
 
-        void Move(object s, MouseEventArgs e) { if (e.StylusDevice == null) to = Pos(e); }
+        void Move(object s, MouseEventArgs e)
+        {
+            if (e.StylusDevice != null) return;
+            to = Pos(e);
+            if (lit) Track(On);
+        }
 
         void Leave(object s, MouseEventArgs e) => Off();
 
@@ -434,6 +440,7 @@ public static class Motion
 
         void Off()
         {
+            lit = false;
             b.BeginAnimation(UIElement.OpacityProperty, A(0, "TSpotOut", "EaseExit"));
             Track(false);
             Size(1, false);
@@ -460,7 +467,10 @@ public static class Motion
 
         void Frame(object? s, EventArgs e)
         {
-            at += (to - at) * D("SpotLerp", 0.2);
+            var gap = to - at;
+            // caught up: a resting cursor must not keep WPF drawing every frame (it did, under any hovered button); a move restarts it
+            if (gap.LengthSquared < 0.25) { at = to; Place(); Track(false); return; }
+            at += gap * D("SpotLerp", 0.2);
             Place();
         }
 

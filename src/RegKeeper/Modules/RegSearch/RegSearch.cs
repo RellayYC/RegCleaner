@@ -1,3 +1,6 @@
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Text.RegularExpressions;
 using Microsoft.Win32;
 using RegKeeper.Core;
@@ -13,6 +16,24 @@ public sealed record SearchHit(HitKind Kind, string Key, string? ValueName, stri
     public string ShortKey => Reg.Short(Key);
     public string NameText => ValueName == null ? "" : ValueName == "" ? L.T("(По умолчанию)") : ValueName;
     public string Display => ValueName == null ? Reg.Short(Key) : $"{Reg.Short(Key)} → {(ValueName == "" ? L.T("(По умолчанию)") : ValueName)}";
+}
+
+/// <summary>The search grid's hits. Removing a batch is one reset: removed one by one, each hit cost a search of the list
+/// and a regroup of the grid, which froze the window for a long time after deleting thousands.</summary>
+public sealed class HitList : ObservableCollection<SearchHit>
+{
+    public void RemoveAll(IEnumerable<SearchHit> gone)
+    {
+        CheckReentrancy();
+        var set = gone.ToHashSet(ReferenceEqualityComparer.Instance);
+        var keep = Items.Where(h => !set.Contains(h)).ToList();
+        if (keep.Count == Items.Count) return;
+        Items.Clear();
+        keep.ForEach(Items.Add);
+        OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
+        OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
+        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+    }
 }
 
 public sealed record SearchOptions(string Pattern, bool Keys = true, bool Names = true, bool Data = true,
@@ -51,11 +72,12 @@ public sealed class RegSearch
         ct.ThrowIfCancellationRequested();
         Interlocked.Increment(ref Scanned);
         if (o.Keys && path.Contains('\\') && rx.IsMatch(Reg.Leaf(path))) yield return new(HitKind.Key, path, null, Reg.Leaf(path));
+        // names come from one enumeration; data is fetched only for the string types it can match in (binary blobs are most of HKLM)
         if (o.Names || o.Data)
-            foreach (var v in Reg.Values(k))
+            foreach (var name in Reg.ValueNames(k))
             {
-                if (o.Names && v.Name != "" && rx.IsMatch(v.Name)) yield return new(HitKind.Name, path, v.Name, v.Name);
-                if (o.Data && DataText(v) is { } text && rx.IsMatch(text)) yield return new(HitKind.Data, path, v.Name, text);
+                if (o.Names && name != "" && rx.IsMatch(name)) yield return new(HitKind.Name, path, name, name);
+                if (o.Data && Reg.Read(k, name, IsText) is { } v && DataText(v) is { } text && rx.IsMatch(text)) yield return new(HitKind.Data, path, name, text);
             }
         foreach (var name in Reg.SubKeys(k))
         {
@@ -74,6 +96,8 @@ public sealed class RegSearch
         RawValue.MultiSz => string.Join("\n", v.AsMulti()),
         _ => null,
     };
+
+    static bool IsText(uint type) => type is RawValue.Sz or RawValue.ExpandSz or RawValue.MultiSz;
 
     /// <summary>Data, then value names, then keys deepest-first: a rename never invalidates a pending hit.</summary>
     static IEnumerable<SearchHit> SafeOrder(IEnumerable<SearchHit> hits) =>
