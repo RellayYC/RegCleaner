@@ -17,6 +17,7 @@ public sealed class CleanRule : System.ComponentModel.INotifyPropertyChanged
     public string Key { get; init; } = "";
     public string Name { get; init; } = "";
     public string Category { get; set; } = "";
+    public string Product { get; set; } = "";
     public string? Warning { get; set; }
     bool _checked;
     public bool Checked { get => _checked; set { _checked = value; Raise(nameof(Checked)); } }
@@ -156,7 +157,7 @@ public static partial class Winapp2
             if (line.StartsWith('[') && line.EndsWith(']'))
             {
                 var key = line[1..^1].TrimEnd(' ', '*');
-                rules.Add(r = new CleanRule { Key = key, Name = Ru(L.T(key)) }); // our built-ins use Russian names as keys
+                rules.Add(r = new CleanRule { Key = key, Name = Ru(L.T(key)), Product = ProductName(key) }); // our built-ins use Russian names as keys
                 continue;
             }
             var eq = line.IndexOf('=');
@@ -171,6 +172,8 @@ public static partial class Winapp2
                 case "regkey": r.RegKeys.Add(val); break;
                 case "warning": r.Warning = Ru(L.T(val)); break;
                 case "section":
+                    if (val.EndsWith(" Web Browser", StringComparison.OrdinalIgnoreCase))
+                        r.Product = val[..^" Web Browser".Length];
                     r.Category = val.Equals("Games", StringComparison.OrdinalIgnoreCase) ? L.T("Игры")
                         : val.EndsWith(" Web Browser", StringComparison.OrdinalIgnoreCase) ? L.T("Браузеры") : val; // the browser is in the rule name
                     break;
@@ -183,6 +186,14 @@ public static partial class Winapp2
         }
         foreach (var x in rules.Where(x => x.Category == "")) x.Category = L.T("Прочее");
         return rules;
+    }
+
+    static string ProductName(string key)
+    {
+        foreach (var (tail, _) in RuTails.Value)
+            if (key.Length > tail.Length && key.EndsWith(tail, StringComparison.OrdinalIgnoreCase))
+                return key[..^tail.Length];
+        return key;
     }
 
     static FileKey ParseFileKey(string val)

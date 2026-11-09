@@ -770,5 +770,12 @@
  "Открыть папку": "Open folder",
  "Проверяются автоматически: при запуске и каждые 6 часов": "Checked automatically: on start and every 6 hours",
  "Анализ всего": "Analyze all",
- "Посчитать все правила, и неотмеченные тоже": "Measure every rule, unticked ones too"
+ "Посчитать все правила, и неотмеченные тоже": "Measure every rule, unticked ones too",
+  "Браузер": "Browser",
+  "Обновления Windows": "Windows updates",
+  "Временные файлы": "Temporary files",
+  "Ошибки и отчёты": "Errors and reports",
+  "Кэш Windows": "Windows cache",
+  "Поиск внутри выбранной вкладки": "Search within the selected tab",
+  "В этой вкладке нет правил. Измените запрос или выберите другую вкладку.": "No rules in this tab. Change the search or select another tab."
 }

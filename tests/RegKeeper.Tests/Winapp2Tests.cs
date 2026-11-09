@@ -16,6 +16,60 @@ public class Winapp2Tests : IDisposable
     }
 
     [Fact]
+    public void DiskTabs_GroupProductsAndKeepEveryRule_InBothLanguages()
+    {
+        var language = L.Current;
+        try
+        {
+            foreach (var lang in new[] { L.Ru, L.En })
+            {
+                L.Current = lang;
+                var rules = Winapp2.Parse("""
+                    [Chrome Caches *]
+                    Section=Google Chrome Web Browser
+                    [Chrome Cookies *]
+                    Section=Google Chrome Web Browser
+                    [Firefox Crash Reports *]
+                    LangSecRef=3026
+                    [Steam Cache *]
+                    Section=Games
+                    [Steam Logs *]
+                    Section=Games
+                    [Game With Spaces *]
+                    Section=Games
+                    [Tool Logs *]
+                    LangSecRef=3024
+                    [Временные файлы пользователя]
+                    Section=Windows
+                    [Загрузки Windows Update]
+                    Section=Windows
+                    [Component cleanup]
+                    ComponentStore=1
+                    [Recycle bin]
+                    RecycleBin=1
+                    [Unknown application]
+                    """);
+                Assert.Equal(new[] { "browser", "games", "windows" }, rules.Select(DiskCleanupView.Kind).Distinct());
+                Assert.Equal("Google Chrome", DiskCleanupView.Subcategory(rules[0]));
+                Assert.Equal(DiskCleanupView.Subcategory(rules[0]), DiskCleanupView.Subcategory(rules[1]));
+                Assert.Equal("Firefox", DiskCleanupView.Subcategory(rules[2]));
+                Assert.Equal("Steam", DiskCleanupView.Subcategory(rules[3]));
+                Assert.Equal(DiskCleanupView.Subcategory(rules[3]), DiskCleanupView.Subcategory(rules[4]));
+                Assert.Equal("Game With Spaces", DiskCleanupView.Subcategory(rules[5]));
+                Assert.Equal(L.T("Утилиты"), DiskCleanupView.Subcategory(rules[6]));
+                Assert.Equal(L.T("Временные файлы"), DiskCleanupView.Subcategory(rules[7]));
+                Assert.Equal(L.T("Обновления Windows"), DiskCleanupView.Subcategory(rules[8]));
+                Assert.Equal(DiskCleanupView.Subcategory(rules[8]), DiskCleanupView.Subcategory(rules[9]));
+                Assert.Equal(L.T("Корзина"), DiskCleanupView.Subcategory(rules[10]));
+                Assert.All(rules, r => Assert.False(string.IsNullOrWhiteSpace(DiskCleanupView.Subcategory(r))));
+                Assert.Equal(rules.Count, rules.GroupBy(r => (DiskCleanupView.Kind(r), DiskCleanupView.Subcategory(r))).Sum(g => g.Count()));
+                Assert.Equal("Chrome Caches", rules[0].Key);
+            }
+        }
+        finally { L.Current = language; }
+    }
+
+    [Fact]
     public void Analyze_Clean_RespectsPatternsExcludesAndRemoveSelf()
     {
         Touch(@"App\Cache\a.tmp");

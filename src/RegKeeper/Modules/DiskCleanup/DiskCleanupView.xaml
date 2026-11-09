@@ -16,7 +16,7 @@
                 <TextBlock x:Name="Status" Style="{StaticResource DangerText}" TextWrapping="Wrap" Margin="0,6,0,0" Visibility="Collapsed" Text="База winapp2.ini не загружена. Скачайте её в меню «⋯»."/>
             </StackPanel>
         </DockPanel>
-        <!-- hero: what the ticked rules found, then the same split by the four big groups -->
+        <!-- hero: what the ticked rules found, then the same split by the three tabs -->
         <ContentControl DockPanel.Dock="Top" Style="{StaticResource Card}" Margin="0,18,0,0" Padding="22,18">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Left" VerticalAlignment="Center" MinWidth="230" Margin="0,0,24,0">
@@ -43,6 +43,16 @@
                 </ItemsControl>
             </DockPanel>
         </ContentControl>
+        <Border DockPanel.Dock="Top" Style="{StaticResource Segments}" Margin="0,18,0,0">
+            <WrapPanel>
+                <RadioButton x:Name="BrowserTab" Content="Браузер" Tag="browser" GroupName="DiskTabs" Style="{StaticResource Segment}" Checked="Kind_Checked"/>
+                <RadioButton Content="Игры" Tag="games" GroupName="DiskTabs" Style="{StaticResource Segment}" Checked="Kind_Checked"/>
+                <RadioButton Content="Windows" Tag="windows" GroupName="DiskTabs" Style="{StaticResource Segment}" Checked="Kind_Checked"/>
+            </WrapPanel>
+        </Border>
+        <ScrollViewer DockPanel.Dock="Top" MaxHeight="120" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,12,0,0" Focusable="False">
+            <WrapPanel x:Name="Subtabs"/>
+        </ScrollViewer>
         <!-- search; bulk ticks and the database under "⋯" -->
         <DockPanel DockPanel.Dock="Top" Margin="0,18,0,12">
             <Button DockPanel.Dock="Right" Style="{StaticResource More}" Margin="0">
@@ -56,10 +66,10 @@
                     </ContextMenu>
                 </Button.ContextMenu>
             </Button>
-            <TextBox x:Name="Search" Style="{StaticResource SearchBox}" Width="290" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск по названию и категории"/>
+            <TextBox x:Name="Search" Style="{StaticResource SearchBox}" Width="290" HorizontalAlignment="Left" TextChanged="Search_TextChanged" ToolTip="Поиск внутри выбранной вкладки"/>
         </DockPanel>
         <Grid>
-            <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+            <ScrollViewer x:Name="RuleScroll" VerticalScrollBarVisibility="Auto" Focusable="False">
                 <!-- a card per group: a tri-state tick, the rules in two columns, folded until opened -->
                 <ItemsControl x:Name="Groups" Focusable="False" Margin="0,0,0,90">
                     <ItemsControl.ItemTemplate>
@@ -116,7 +126,7 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
-            <TextBlock Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=Groups}" Text="Ничего не найдено. Измените запрос."/>
+            <TextBlock Style="{StaticResource GridEmpty}" Tag="{Binding ElementName=Groups}" Text="В этой вкладке нет правил. Измените запрос или выберите другую вкладку."/>
             <!-- ticked rules: the summary, untick, cleaning after the rule -->
             <ContentControl x:Name="Bar" Style="{StaticResource SelectionBar}" Visibility="Collapsed">
                 <StackPanel Orientation="Horizontal">

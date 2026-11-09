@@ -33,13 +33,15 @@ public partial class DiskCleanupView : UserControl
     List<CleanRule> _all = new();
     List<CleanRule> _visible = new();
     List<CleanGroup> _groups = new();
-    readonly HashSet<string> _open = new() { L.T("Windows") };
+    string _kind = "browser";
+    readonly Dictionary<string, string> _subcategories = new();
     readonly Action _bar;
 
     public DiskCleanupView()
     {
         InitializeComponent();
         L.Apply(this);
+        BrowserTab.IsChecked = true;
         _bar = Ui.Bar(Groups, Bar, BarText, () => _all.Count(r => r.Checked),
                       n => L.T($"Отмечено: {n}") + (Found() is { } f ? " · " + Sys.Size(f) : ""));
         Loaded += async (_, _) => { if (_all.Count == 0) await Reload(); };
@@ -52,23 +54,74 @@ public partial class DiskCleanupView : UserControl
         Status.Visibility = File.Exists(Winapp2.IniPath) ? Visibility.Collapsed : Visibility.Visible;
     });
 
-    // ponytail: four fixed groups by category name; Parse folds "<name> Web Browser" sections into Browsers
-    static (string Name, string Glyph)[] Kinds => [(L.T("Windows"), ""), (L.T("Браузеры"), ""), (L.T("Приложения"), ""), (L.T("Игры"), "")];
-    static string Kind(CleanRule r) =>
-        r.Category == L.T("Windows") || r.ComponentStore || r.RecycleBin ? Kinds[0].Name
-        : r.Category == L.T("Браузеры") || r.Category == L.T("Интернет") || r.Category is "Firefox" or "Google Chrome" or "Microsoft Edge" ? Kinds[1].Name
-        : r.Category == L.T("Игры") ? Kinds[3].Name
-        : Kinds[2].Name;
+    static (string Id, string Name, string Glyph)[] Kinds =>
+        [("browser", L.T("Браузер"), ""), ("games", L.T("Игры"), ""), ("windows", L.T("Windows"), "")];
+
+    internal static string Kind(CleanRule r) =>
+        r.Category == L.T("Windows") || r.ComponentStore || r.RecycleBin ? "windows"
+        : r.Category == L.T("Браузеры") || r.Category == L.T("Интернет") || r.Category is "Firefox" or "Google Chrome" or "Microsoft Edge" ? "browser"
+        : r.Category == L.T("Игры") ? "games" : "windows";
+
+    internal static string Subcategory(CleanRule r)
+    {
+        if (Kind(r) != "windows") return r.Product.Length > 0 ? r.Product : r.Name;
+        if (r.ComponentStore || r.Key.Contains("Windows Update", StringComparison.OrdinalIgnoreCase)
+            || r.Key == "Предыдущая версия Windows (Windows.old)") return L.T("Обновления Windows"); // i18n: keep (stable rule keys)
+        if (r.RecycleBin) return L.T("Корзина");
+        if (r.Key is "Временные файлы пользователя" or "Временные файлы Windows") return L.T("Временные файлы"); // i18n: keep (stable rule keys)
+        if (r.Key is "Дампы памяти" or "Отчёты об ошибках Windows") return L.T("Ошибки и отчёты"); // i18n: keep (stable rule keys)
+        if (r.Key == "Кэш эскизов и значков") return L.T("Кэш Windows"); // i18n: keep (stable rule keys)
+        return r.Category == L.T("Windows") ? L.T("Система") : r.Category;
+    }
 
     void ApplyFilter()
     {
+        if (Search == null || Subtabs == null) return;
         var q = Search.Text.Trim();
-        _visible = q == "" ? _all : _all.Where(r => r.Name.Contains(q, StringComparison.OrdinalIgnoreCase)
-                                                    || r.Category.Contains(q, StringComparison.OrdinalIgnoreCase)).ToList();
-        _groups = Kinds.Select(k => new CleanGroup { Name = k.Name, Glyph = k.Glyph, Items = _visible.Where(r => Kind(r) == k.Name).ToList(), Open = q != "" || _open.Contains(k.Name) })
-                       .Where(g => g.Items.Count > 0).ToList();
+        var matches = _all.Where(r => Kind(r) == _kind && (q == ""
+            || (r.Name + " " + r.Category + " " + Subcategory(r)).Contains(q, StringComparison.OrdinalIgnoreCase))).ToList();
+        var categories = matches.Select(Subcategory).Distinct().OrderBy(c => c).ToList();
+        var selected = _subcategories.GetValueOrDefault(_kind, "");
+        if (!categories.Contains(selected)) selected = categories.FirstOrDefault() ?? "";
+        // A search may temporarily hide the remembered subtab.
+        if (q == "") _subcategories[_kind] = selected;
+        Subtabs.Children.Clear();
+        foreach (var category in categories)
+        {
+            var tab = new RadioButton { Content = category, Tag = category, GroupName = "DiskSubtabs",
+                Style = (Style)FindResource("Segment"), IsChecked = category == selected,
+                Margin = new Thickness(0, 0, 6, 6) };
+            tab.Checked += Subtab_Checked;
+            Subtabs.Children.Add(tab);
+        }
+        ShowRules(matches.Where(r => Subcategory(r) == selected).ToList());
+    }
+
+    void ShowRules(List<CleanRule> rules)
+    {
+        _visible = rules;
+        _groups = rules.GroupBy(r => r.Category).Select(g => new CleanGroup
+        {
+            Name = g.Key, Items = g.ToList(), Open = true
+        }).ToList();
         Groups.ItemsSource = _groups;
+        RuleScroll.ScrollToTop();
         UpdateStatus();
+    }
+
+    void Kind_Checked(object s, RoutedEventArgs e)
+    {
+        _kind = (string)((FrameworkElement)s).Tag;
+        ApplyFilter();
+    }
+
+    void Subtab_Checked(object s, RoutedEventArgs e)
+    {
+        var category = (string)((FrameworkElement)s).Tag;
+        _subcategories[_kind] = category;
+        var q = Search.Text.Trim();
+        ShowRules(_all.Where(r => Kind(r) == _kind && Subcategory(r) == category && (q == ""
+            || (r.Name + " " + r.Category + " " + category).Contains(q, StringComparison.OrdinalIgnoreCase))).ToList());
     }
 
     long? Found() => _all.Any(r => r.Analyzed) ? _all.Where(r => r.Analyzed && r.Checked).Sum(r => r.Size) : null;
@@ -79,7 +132,7 @@ public partial class DiskCleanupView : UserControl
         FreeText.Text = free is { } f ? Sys.Size(f) : "-";
         FreeHint.Text = free == null ? L.T("Размер появится после анализа") : L.T($"По отмеченным правилам: {_all.Count(r => r.Checked)}");
         CleanBtn.Content = free is > 0 ? L.T($"Очистить {Sys.Size(free.Value)}") : L.T("Очистить");
-        Tiles.ItemsSource = Kinds.Select(k => new CleanGroup { Name = k.Name, Glyph = k.Glyph, Items = _all.Where(r => Kind(r) == k.Name).ToList() }).ToList();
+        Tiles.ItemsSource = Kinds.Select(k => new CleanGroup { Name = k.Name, Glyph = k.Glyph, Items = _all.Where(r => Kind(r) == k.Id).ToList() }).ToList();
         _bar?.Invoke();
         if (free == null) return;
         // the sidebar counter and the Windows Apps "can be freed" card read this
@@ -102,7 +155,6 @@ public partial class DiskCleanupView : UserControl
     {
         var g = (CleanGroup)((FrameworkElement)s).DataContext;
         g.Open = !g.Open;
-        if (!_open.Remove(g.Name) && g.Open) _open.Add(g.Name);
     }
 
     /// <summary>Group sums and the hero after sizes or ticks changed; the rows follow their rules themselves.</summary>
