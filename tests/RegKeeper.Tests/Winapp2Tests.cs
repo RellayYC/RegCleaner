@@ -104,6 +104,85 @@ public class Winapp2Tests : IDisposable
     }
 
     [Fact]
+    public void OverlappingRules_CountAndDeleteEachSelectedFileOnce()
+    {
+        Touch(@"Cache\shared.tmp", 23);
+        Touch(@"Cache\keep.tmp", 7);
+        var rules = Winapp2.Parse($"""
+            [First]
+            FileKey1={_base}\Cache|*.tmp|RECURSE
+            [Second]
+            FileKey1={_base}\Cache|shared.tmp
+            """);
+        foreach (var rule in rules) { rule.Checked = true; Winapp2.Analyze(rule, Array.Empty<string>()); }
+        rules[0].Found.Single(l => l.Path.EndsWith("keep.tmp")).Checked = false;
+        Assert.Equal((23L, 1L), Winapp2.Totals(rules));
+        Assert.Equal(RegKeeper.Core.Sys.Size(23), new CleanGroup { Items = rules }.SizeText);
+        using var tx = RegKeeper.Core.UndoTx.Begin("test overlapping cleanup");
+        Assert.Equal((23L, 0), Winapp2.Clean(rules, tx));
+        Assert.True(File.Exists(Path.Combine(_base, @"Cache\keep.tmp")));
+        Assert.False(File.Exists(Path.Combine(_base, @"Cache\shared.tmp")));
+    }
+
+    [Fact]
+    public void RemovedSinceAnalysis_IsNotReportedAsFreed()
+    {
+        Touch(@"Cache\gone.tmp", 23);
+        var rule = Winapp2.Parse($"[Test]\nFileKey1={_base}\\Cache|*").Single();
+        Winapp2.Analyze(rule, Array.Empty<string>());
+        File.Delete(Path.Combine(_base, @"Cache\gone.tmp"));
+        using var tx = RegKeeper.Core.UndoTx.Begin("test disappeared cleanup");
+        Assert.Equal((0L, 0), Winapp2.Clean(new[] { rule }, tx));
+    }
+
+    [Fact]
+    public void Catalog_DeduplicatesShaderAliasesAndRepeatedSections()
+    {
+        var rules = Winapp2.Parse(Winapp2.Builtin);
+        var originalCount = rules.Count;
+        rules.AddRange(Winapp2.Parse("""
+            [Microsoft DirectX Shader Cache *]
+            [NVIDIA Shader Cache *]
+            [Intel Shader Cache *]
+            [Временные файлы Windows]
+            """));
+        var unique = Winapp2.DeduplicateRules(rules);
+        Assert.Equal(originalCount, unique.Count);
+        Assert.Same(rules[0], unique[0]);
+    }
+
+    [Fact]
+    public void AddedWindowsRules_AreOptInFileOnlyAndMatchInIsolatedFolders()
+    {
+        var all = Winapp2.Parse(Winapp2.Builtin);
+        var first = all.FindIndex(r => r.Key == "Кэш шейдеров DirectX");
+        var added = all.Skip(first).Where(r => !r.ComponentStore).ToList();
+        Assert.Equal(20, added.Count);
+        var n = 0;
+        foreach (var rule in added)
+        {
+            Assert.False(rule.DefaultOn);
+            Assert.False(rule.Force);
+            Assert.NotEmpty(rule.DetectFile);
+            Assert.Empty(rule.RegKeys);
+            Assert.NotEmpty(rule.Files);
+            Assert.Equal("windows", DiskCleanupView.Kind(rule));
+            Assert.NotEqual("Система", DiskCleanupView.Subcategory(rule));
+            var isolated = new CleanRule();
+            foreach (var fk in rule.Files)
+            {
+                var dir = "Rule" + n++;
+                var name = fk.Patterns[0].Replace("*", "sample").Replace("?", "x");
+                Touch(Path.Combine(dir, name));
+                Touch(Path.Combine(dir, "nested", name));
+                isolated.Files.Add(fk with { Dir = Path.Combine(_base, dir) });
+            }
+            Winapp2.Analyze(isolated, Array.Empty<string>());
+            Assert.Equal(rule.Files.Sum(fk => fk.Recurse || fk.RemoveSelf ? 2L : 1L), isolated.Count);
+        }
+    }
+
+    [Fact]
     public void Russian_TranslatesNamesByTail_KeepsKeyForTicks()
     {
         var rules = Winapp2.Parse("""

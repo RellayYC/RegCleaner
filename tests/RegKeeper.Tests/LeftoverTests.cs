@@ -68,6 +68,57 @@ public class LeftoverTests : IDisposable
     }
 
     [Fact]
+    public void ForceLeftovers_FindInstallDirAndEntry_RemoveOnlyCheckedTestKey()
+    {
+        // Never register a real program: the key lives only in our GUID scratch branch.
+        var id = "RegKeeperForceTest_" + Guid.NewGuid().ToString("N");
+        var key = @"HKEY_CURRENT_USER\Software\" + id + @"\Entry";
+        var dir = Dir(id);
+        File.WriteAllText(Path.Combine(dir, "keep.txt"), "synthetic app data");
+        using (var k = RegKeeper.Core.Reg.Create(key)) k.SetValue("DisplayName", id);
+        try
+        {
+            var app = new InstalledApp { Name = id, InstallLocation = dir, KeyPath = key, UninstallString = Path.Combine(dir, "missing-uninstall.exe") };
+            Assert.True(app.Broken); // force removal does not need an uninstaller command
+            var found = Leftovers.Find(app, new[] { app });
+            Assert.Equal(dir, app.InstallDir);
+            Assert.Contains(found, l => l.Path == dir && !l.IsRegistry);
+            Assert.Contains(found, l => l.Path == key && l.IsRegistry);
+            Assert.All(found, l => Assert.True(l.Path == dir || l.Path == key || l.Path == RegKeeper.Core.Reg.Parent(key)));
+            foreach (var leftover in found) leftover.Checked = leftover.Path == key;
+            var (done, failed) = Leftovers.Remove(found, id);
+            Assert.Equal(1, done);
+            Assert.Empty(failed);
+            Assert.False(RegKeeper.Core.Reg.Exists(key));
+            Assert.True(File.Exists(Path.Combine(dir, "keep.txt")));
+        }
+        finally { RegKeeper.Core.Reg.DeleteTree(@"HKEY_CURRENT_USER\Software\" + id); }
+    }
+
+    [Fact]
+    public void ForceLeftovers_RefreshedInventoryDoesNotTreatSameRegistryEntryAsAnotherApp()
+    {
+        var id = "RegKeeperForceTest_" + Guid.NewGuid().ToString("N");
+        var dir = Dir(id);
+        var key = @"HKEY_CURRENT_USER\Software\" + id;
+        var target = new InstalledApp { Name = id, InstallLocation = dir, KeyPath = key };
+        // A previous batch item finished ScanAndClean -> Reload; the target snapshot is now stale.
+        var refreshed = new InstalledApp { Name = id, InstallLocation = dir, KeyPath = key.ToUpperInvariant() };
+        Assert.Contains(Leftovers.Find(target, new[] { refreshed }), l => l.Path == dir);
+    }
+
+    [Fact]
+    public void ForceLeftovers_DoesNotOfferInstallDirSharedWithOtherApp()
+    {
+        var id = "RegKeeperForceTest_" + Guid.NewGuid().ToString("N");
+        var dir = Dir(id);
+        var child = Dir(Path.Combine(id, "OtherProduct"));
+        var app = new InstalledApp { Name = id, InstallLocation = dir, KeyPath = @"HKEY_CURRENT_USER\Software\" + id };
+        var other = new InstalledApp { Name = id + "Other", InstallLocation = child, KeyPath = app.KeyPath + "Other" };
+        Assert.DoesNotContain(Leftovers.Find(app, new[] { app, other }), l => l.Path == dir);
+    }
+
+    [Fact]
     public void SharedVendorFolderNeverOffered()
     {
         Dir(@"Microsoft\Widget");

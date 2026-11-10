@@ -66,7 +66,7 @@ public static partial class Winapp2
     public static readonly string IgnorePath = Path.Combine(AppPaths.Data, "cleanup_ignore.txt");
     static readonly string CheckedPath = Path.Combine(AppPaths.Data, "cleanup_checked.txt");
 
-    const string Builtin = """
+    internal const string Builtin = """
         [Временные файлы пользователя]
         Section=Windows
         Default=1
@@ -107,6 +107,116 @@ public static partial class Winapp2
         Force=1
         DetectFile=%SystemDrive%\Windows.old
         FileKey1=%SystemDrive%\Windows.old|*|REMOVESELF
+        [Кэш шейдеров DirectX]
+        Section=Windows
+        DetectFile=%LocalAppData%\D3DSCache
+        Warning=кэш восстановится; первый запуск игр может быть медленнее
+        FileKey1=%LocalAppData%\D3DSCache|*|RECURSE
+        [Кэш шейдеров NVIDIA]
+        Section=Windows
+        DetectFile1=%LocalAppData%\NVIDIA
+        DetectFile2=%LocalLowAppData%\NVIDIA
+        DetectFile3=%LocalAppData%\NVIDIA Corporation\NV_Cache
+        Warning=кэш восстановится; первый запуск игр может быть медленнее
+        FileKey1=%LocalAppData%\NVIDIA\DXCache|*|RECURSE
+        FileKey2=%LocalAppData%\NVIDIA\GLCache|*|RECURSE
+        FileKey3=%LocalAppData%\NVIDIA\ComputeCache|*|RECURSE
+        FileKey4=%LocalAppData%\NVIDIA Corporation\NV_Cache|*|RECURSE
+        FileKey5=%LocalLowAppData%\NVIDIA\DXCache|*|RECURSE
+        FileKey6=%LocalLowAppData%\NVIDIA\PerDriverVersion\DXCache|*|RECURSE
+        FileKey7=%AppData%\NVIDIA\ComputeCache|*|RECURSE
+        [Кэш шейдеров AMD]
+        Section=Windows
+        DetectFile=%LocalAppData%\AMD
+        Warning=кэш восстановится; первый запуск игр может быть медленнее
+        FileKey1=%LocalAppData%\AMD\DxCache|*|RECURSE
+        FileKey2=%LocalAppData%\AMD\DxcCache|*|RECURSE
+        FileKey3=%LocalAppData%\AMD\GLCache|*|RECURSE
+        FileKey4=%LocalAppData%\AMD\VkCache|*|RECURSE
+        [Кэш шейдеров Intel]
+        Section=Windows
+        DetectFile1=%LocalLowAppData%\Intel\ShaderCache
+        DetectFile2=%ProgramData%\Intel\ShaderCache
+        Warning=кэш восстановится; первый запуск игр может быть медленнее
+        FileKey1=%LocalLowAppData%\Intel\ShaderCache|*|RECURSE
+        FileKey2=%ProgramData%\Intel\ShaderCache|*|RECURSE
+        [Кэш оптимизации доставки]
+        Section=Windows
+        DetectFile=%WinDir%\ServiceProfiles\NetworkService\AppData\Local\Microsoft\Windows\DeliveryOptimization\Cache
+        FileKey1=%WinDir%\ServiceProfiles\NetworkService\AppData\Local\Microsoft\Windows\DeliveryOptimization\Cache|*|RECURSE
+        [Архивные журналы обслуживания CBS]
+        Section=Windows
+        DetectFile=%WinDir%\Logs\CBS
+        Warning=журналы могут понадобиться для диагностики неполадок
+        FileKey1=%WinDir%\Logs\CBS|CbsPersist_*.log;CbsPersist_*.cab
+        [Журналы DISM]
+        Section=Windows
+        DetectFile=%WinDir%\Logs\DISM
+        Warning=журналы могут понадобиться для диагностики неполадок
+        FileKey1=%WinDir%\Logs\DISM|*.log;*.bak
+        [Журналы установки Windows]
+        Section=Windows
+        DetectFile=%WinDir%\Panther
+        Warning=журналы могут понадобиться для диагностики неполадок
+        FileKey1=%WinDir%\Panther|*.log;*.etl|RECURSE
+        [Журналы установки устройств]
+        Section=Windows
+        DetectFile=%WinDir%\INF
+        Warning=журналы могут понадобиться для диагностики неполадок
+        FileKey1=%WinDir%\INF|setupapi*.log;setupapi*.log.*
+        [Отладочные журналы Windows]
+        Section=Windows
+        DetectFile=%WinDir%\debug
+        Warning=журналы могут понадобиться для диагностики неполадок
+        FileKey1=%WinDir%\debug|*.log;*.bak|RECURSE
+        [Диагностические трассы Windows]
+        Section=Windows
+        DetectFile=%ProgramData%\Microsoft\Diagnosis\ETLLogs
+        Warning=журналы могут понадобиться для диагностики неполадок
+        FileKey1=%ProgramData%\Microsoft\Diagnosis\ETLLogs|*.etl|RECURSE
+        [Отчёты производительности Windows]
+        Section=Windows
+        DetectFile=%SystemDrive%\PerfLogs\System
+        Warning=журналы могут понадобиться для диагностики неполадок
+        FileKey1=%SystemDrive%\PerfLogs\System\Diagnostics|*.html;*.xml;*.etl;*.blg|RECURSE
+        FileKey2=%SystemDrive%\PerfLogs\System\Performance|*.html;*.xml;*.etl;*.blg|RECURSE
+        [Дампы ядра LiveKernelReports]
+        Section=Windows
+        DetectFile=%WinDir%\LiveKernelReports
+        Warning=дампы могут понадобиться для диагностики сбоев
+        FileKey1=%WinDir%\LiveKernelReports|*.dmp|RECURSE
+        [Временные файлы служб Windows]
+        Section=Windows
+        DetectFile=%WinDir%\ServiceProfiles\*\AppData\Local\Temp
+        FileKey1=%WinDir%\ServiceProfiles\*\AppData\Local\Temp|*|RECURSE
+        [Системные временные файлы Windows]
+        Section=Windows
+        DetectFile=%WinDir%\SystemTemp
+        FileKey1=%WinDir%\SystemTemp|*|RECURSE
+        [Временные файлы Интернета]
+        Section=Windows
+        DetectFile=%LocalAppData%\Microsoft\Windows\INetCache
+        FileKey1=%LocalAppData%\Microsoft\Windows\INetCache|*|RECURSE
+        [Временные файлы приложений Store]
+        Section=Windows
+        DetectFile=%LocalAppData%\Packages\*\TempState
+        Warning=закройте приложения Store перед очисткой
+        FileKey1=%LocalAppData%\Packages\*\TempState|*|RECURSE
+        [Интернет-кэш приложений Store]
+        Section=Windows
+        DetectFile=%LocalAppData%\Packages\*\AC\INetCache
+        Warning=закройте приложения Store перед очисткой
+        FileKey1=%LocalAppData%\Packages\*\AC\INetCache|*|RECURSE
+        [Журналы winget]
+        Section=Windows
+        DetectFile=%LocalAppData%\Packages\Microsoft.DesktopAppInstaller_*\LocalState\DiagOutputDir
+        Warning=журналы могут понадобиться для диагностики неполадок
+        FileKey1=%LocalAppData%\Packages\Microsoft.DesktopAppInstaller_*\LocalState\DiagOutputDir|*.log;*.txt
+        [Журналы оркестратора обновлений]
+        Section=Windows
+        DetectFile=%ProgramData%\USOShared\Logs
+        Warning=журналы могут понадобиться для диагностики неполадок
+        FileKey1=%ProgramData%\USOShared\Logs|*.log;*.etl|RECURSE
         [Устаревшие компоненты обновлений]
         Section=Windows
         Warning=установленные обновления нельзя будет удалить, DISM работает несколько минут
@@ -231,7 +341,7 @@ public static partial class Winapp2
         var rules = Parse(Builtin);
         if (File.Exists(IniPath)) rules.AddRange(Parse(File.ReadAllText(IniPath)));
         var saved = File.Exists(CheckedPath) ? File.ReadAllLines(CheckedPath).ToHashSet() : null;
-        rules = rules.AsParallel().AsOrdered().Where(Applies).ToList(); // ~4000 detections, mostly disk probes
+        rules = DeduplicateRules(rules.AsParallel().AsOrdered().Where(Applies)); // ~4000 detections, mostly disk probes
         foreach (var r in rules)
         {
             r.Checked = saved == null ? r.DefaultOn : saved.Contains(r.Key) || saved.Contains(r.Name); // older versions saved the shown name
@@ -239,6 +349,31 @@ public static partial class Winapp2
             if (exe != null) r.Icon = Inventory.LoadIcon(exe);
         }
         return rules;
+    }
+
+    internal static List<CleanRule> DeduplicateRules(IEnumerable<CleanRule> rules)
+    {
+        // The built-in comes first; keep its reviewed scope instead of showing the same cache twice.
+        static string Key(CleanRule r) => r.Key switch
+        {
+            "Microsoft DirectX Shader Cache" => "Кэш шейдеров DirectX", // i18n: keep (stable keys)
+            "NVIDIA Shader Cache" => "Кэш шейдеров NVIDIA", // i18n: keep
+            "Intel Shader Cache" => "Кэш шейдеров Intel", // i18n: keep
+            _ => r.Key
+        };
+        return rules.DistinctBy(Key, StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    static string ObjectId(Leftover l) => l.Kind + "\0" + l.Path.TrimEnd('\\') + "\0" + l.ValueName;
+
+    /// <summary>Rules can overlap (including the community database). Count each selected object only once.</summary>
+    internal static (long Size, long Count) Totals(IEnumerable<CleanRule> rules)
+    {
+        var list = rules.Where(r => r.Analyzed).ToList();
+        var objects = list.Where(r => !r.RecycleBin && !r.ComponentStore).SelectMany(r => r.Found)
+            .Where(l => l.Checked && l.Kind != "Папка").DistinctBy(ObjectId, StringComparer.OrdinalIgnoreCase).ToList(); // i18n: keep
+        var special = list.Where(r => r.RecycleBin || r.ComponentStore).DistinctBy(r => (r.RecycleBin, r.ComponentStore)).ToList();
+        return (objects.Sum(l => l.Size) + special.Sum(r => r.Size), objects.Count + special.Sum(r => r.Count));
     }
 
     public static void SaveChecked(IEnumerable<CleanRule> rules) =>
@@ -400,8 +535,11 @@ public static partial class Winapp2
     {
         long freed = 0;
         var failed = 0;
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var specials = new HashSet<(bool, bool)>();
         foreach (var r in rules)
         {
+            if ((r.RecycleBin || r.ComponentStore) && !specials.Add((r.RecycleBin, r.ComponentStore))) continue;
             if (r.RecycleBin)
             {
                 if (r.Count > 0 && SHEmptyRecycleBin(IntPtr.Zero, null, SHERB_NOCONFIRMATION | SHERB_NOPROGRESSUI | SHERB_NOSOUND) == 0) freed += r.Size;
@@ -417,17 +555,19 @@ public static partial class Winapp2
                 continue;
             }
             // files in parallel (thousands of small deletes are latency-bound), then folders and registry in order
-            Parallel.ForEach(r.Found.Where(l => l.Checked && l.Kind == "Файл"), l => // i18n: keep
+            var files = r.Found.Where(l => l.Checked && l.Kind == "Файл" && seen.Add(ObjectId(l))).ToList(); // i18n: keep
+            Parallel.ForEach(files, l =>
             {
                 try
                 {
                     if (Protect.IsProtectedPath(l.Path)) { Interlocked.Increment(ref failed); return; }
+                    if (!File.Exists(l.Path)) return; // another process may have removed it since analysis
                     Remove(l.Path, r.Force);
                     Interlocked.Add(ref freed, l.Size);
                 }
                 catch (Exception e) when (e is IOException or UnauthorizedAccessException) { Interlocked.Increment(ref failed); }
             });
-            foreach (var l in r.Found.Where(l => l.Checked && l.Kind != "Файл")) // i18n: keep
+            foreach (var l in r.Found.Where(l => l.Checked && l.Kind != "Файл" && seen.Add(ObjectId(l)))) // i18n: keep
             {
                 try
                 {

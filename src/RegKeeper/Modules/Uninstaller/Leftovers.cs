@@ -57,9 +57,11 @@ public static partial class Leftovers
     {
         var names = NameTokens(app.Name, app.Publisher);
         var pubs = PublisherTokens(app.Publisher);
+        // Reload recreates the inventory between batch items; registry identity, not object identity, identifies self.
+        var otherApps = others.Where(o => o != app && (app.KeyPath == "" || !o.KeyPath.Equals(app.KeyPath, StringComparison.OrdinalIgnoreCase))).ToList();
         // Vendor folder/key is offered whole only if no other installed app comes from the same publisher (Valve, Learning Machines...).
-        var vendorShared = others.Any(o => o != app && PublisherTokens(o.Publisher).Overlaps(pubs));
-        var otherDirs = others.Where(o => o != app).Select(o => o.InstallDir).Where(d => d != null).Select(d => d!).ToList();
+        var vendorShared = otherApps.Any(o => PublisherTokens(o.Publisher).Overlaps(pubs));
+        var otherDirs = otherApps.Select(o => o.InstallDir).Where(d => d != null).Select(d => d!).ToList();
         var result = new List<Leftover>();
 
         var installDir = app.InstallDir;

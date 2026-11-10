@@ -262,6 +262,65 @@ public class SmokeTests
             if (Environment.GetEnvironmentVariable("RK_SHOTS") is { Length: > 0 } dir) Shot(details, Path.Combine(dir, $"details-{theme}.png"));
         }
         finally { details.Close(); }
+
+        UninstallerForceUsesCheckedTargets((UninstallerView)host.Content);
+    }
+
+    // Headless confirmation always declines: only synthetic inventory data reaches Force_Click.
+    static void UninstallerForceUsesCheckedTargets(UninstallerView view)
+    {
+        const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        var all = typeof(UninstallerView).GetField("_all", flags)!;
+        var previous = all.GetValue(view);
+        var grid = (DataGrid)view.FindName("Grid");
+        var previousSource = grid.ItemsSource;
+        var previousSelection = grid.SelectedItem;
+        var previousHeadless = Ui.Headless;
+        var prompts = new List<string>();
+        var first = new InstalledApp { Name = "Force test checked A", Checked = true };
+        var second = new InstalledApp { Name = "Force test checked B", Checked = true };
+        var selected = new InstalledApp { Name = "Force test selected only" };
+        var fake = new List<InstalledApp> { first, second, selected };
+        try
+        {
+            all.SetValue(view, fake);
+            grid.ItemsSource = fake;
+            grid.SelectedItem = null;
+            Ui.Headless = prompts.Add;
+            var force = Descendants(view).OfType<Button>().Single(b => Equals(b.Content, L.T("Принудительно")));
+            void Click() { prompts.Clear(); force.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); }
+
+            Click(); // treemap ticks need not select a row
+            Assert.Contains(first.Name, Assert.Single(prompts));
+            Assert.Contains(second.Name, prompts[0]);
+            grid.SelectedItem = selected;
+            Click(); // checked programs take precedence over an unrelated selected row
+            Assert.Contains(first.Name, Assert.Single(prompts));
+            Assert.Contains(second.Name, prompts[0]);
+            Assert.DoesNotContain(selected.Name, prompts[0]);
+            first.Checked = second.Checked = false;
+            Click();
+            Assert.Contains(selected.Name, Assert.Single(prompts));
+            grid.SelectedItem = null;
+            Click();
+            Assert.Empty(prompts);
+        }
+        finally
+        {
+            Ui.Headless = previousHeadless;
+            all.SetValue(view, previous);
+            grid.ItemsSource = previousSource;
+            grid.SelectedItem = previousSelection;
+        }
+
+        static IEnumerable<DependencyObject> Descendants(DependencyObject root)
+        {
+            foreach (var child in LogicalTreeHelper.GetChildren(root).OfType<DependencyObject>())
+            {
+                yield return child;
+                foreach (var descendant in Descendants(child)) yield return descendant;
+            }
+        }
     }
 
     // the update card sits top right, its cross hides it, and the next found update brings it back

@@ -22,7 +22,7 @@ public sealed class CleanGroup : INotifyPropertyChanged
         get => Items.All(r => r.Checked) ? true : Items.Any(r => r.Checked) ? null : false;
         set { foreach (var r in Items) r.Checked = value == true; Raise(); }
     }
-    long Found => Items.Where(r => r.Analyzed && r.Checked).Sum(r => r.Size);
+    long Found => Winapp2.Totals(Items.Where(r => r.Checked)).Size;
     public string SizeText => Items.Any(r => r.Analyzed) ? Sys.Size(Found) : "-";
     public string Summary => L.T($"Правил: {Items.Count} · отмечено {Items.Count(r => r.Checked)}");
     public void Raise(params string[] names) { foreach (var n in names.Append(nameof(State)).Append(nameof(SizeText)).Append(nameof(Summary))) PropertyChanged?.Invoke(this, new(n)); }
@@ -66,11 +66,12 @@ public partial class DiskCleanupView : UserControl
     {
         if (Kind(r) != "windows") return r.Product.Length > 0 ? r.Product : r.Name;
         if (r.ComponentStore || r.Key.Contains("Windows Update", StringComparison.OrdinalIgnoreCase)
-            || r.Key == "Предыдущая версия Windows (Windows.old)") return L.T("Обновления Windows"); // i18n: keep (stable rule keys)
+            || r.Key is "Предыдущая версия Windows (Windows.old)" or "Загрузки Windows Update" or "Кэш оптимизации доставки" or "Журналы оркестратора обновлений") return L.T("Обновления Windows"); // i18n: keep (stable rule keys)
         if (r.RecycleBin) return L.T("Корзина");
-        if (r.Key is "Временные файлы пользователя" or "Временные файлы Windows") return L.T("Временные файлы"); // i18n: keep (stable rule keys)
-        if (r.Key is "Дампы памяти" or "Отчёты об ошибках Windows") return L.T("Ошибки и отчёты"); // i18n: keep (stable rule keys)
-        if (r.Key == "Кэш эскизов и значков") return L.T("Кэш Windows"); // i18n: keep (stable rule keys)
+        if (r.Key.Contains("временные файлы", StringComparison.OrdinalIgnoreCase)) return L.T("Временные файлы"); // i18n: keep
+        if (r.Key is "Дампы памяти" or "Отчёты об ошибках Windows" or "Дампы ядра LiveKernelReports") return L.T("Ошибки и отчёты"); // i18n: keep
+        if (r.Key.Contains("журналы", StringComparison.OrdinalIgnoreCase) || r.Key is "Диагностические трассы Windows" or "Отчёты производительности Windows") return L.T("Журналы и диагностика"); // i18n: keep
+        if (r.Key.Contains("кэш", StringComparison.OrdinalIgnoreCase)) return L.T("Кэш Windows"); // i18n: keep
         return r.Category == L.T("Windows") ? L.T("Система") : r.Category;
     }
 
@@ -124,7 +125,7 @@ public partial class DiskCleanupView : UserControl
             || (r.Name + " " + r.Category + " " + category).Contains(q, StringComparison.OrdinalIgnoreCase))).ToList());
     }
 
-    long? Found() => _all.Any(r => r.Analyzed) ? _all.Where(r => r.Analyzed && r.Checked).Sum(r => r.Size) : null;
+    long? Found() => _all.Any(r => r.Analyzed) ? Winapp2.Totals(_all.Where(r => r.Checked)).Size : null;
 
     void UpdateStatus()
     {
@@ -207,7 +208,8 @@ public partial class DiskCleanupView : UserControl
         var rules = _all.Where(r => r.Checked && r.Analyzed && r.Count > 0).ToList();
         if (rules.Count == 0) { Ui.Info(L.T("Нечего удалять.")); return; }
         var warn = rules.Where(r => r.Warning != null).Select(r => $"• {r.Name}: {r.Warning}").ToList();
-        if (!Ui.Confirm(L.T($"Удалить {rules.Sum(r => r.Count)} объектов ({Sys.Size(rules.Sum(r => r.Size))}) по {rules.Count} правилам?\n") +
+        var totals = Winapp2.Totals(rules);
+        if (!Ui.Confirm(L.T($"Удалить {totals.Count} объектов ({Sys.Size(totals.Size)}) по {rules.Count} правилам?\n") +
                         L.T("Файлы удаляются без корзины.") + (warn.Count > 0 ? L.T("\n\nВнимание:\n") + string.Join("\n", warn) : ""))) return;
 
         (long Freed, int Failed) res = default;

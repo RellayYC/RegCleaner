@@ -285,10 +285,15 @@ public partial class UninstallerView : UserControl
 
     async void Force_Click(object s, RoutedEventArgs e)
     {
-        if (Selected is not { } app) return;
-        if (!Ui.Confirm(L.T($"Принудительно удалить «{app.Name}» без деинсталлятора?\nБудут найдены и удалены папки и ключи программы."))) return;
-        if (!CloseRunning(app)) return;
-        await ScanAndClean(app);
+        var apps = Targets;
+        if (apps.Count == 0) return;
+        var names = string.Join("», «", apps.Select(a => a.Name));
+        if (!Ui.Confirm(L.T($"Принудительно удалить «{names}» без деинсталлятора?\nБудут найдены и удалены папки и ключи программы."))) return;
+        foreach (var app in apps)
+        {
+            if (!CloseRunning(app)) return;
+            await ScanAndClean(app);
+        }
     }
 
     async Task ScanAndClean(InstalledApp app)
